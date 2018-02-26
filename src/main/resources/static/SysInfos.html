@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>VX-API-Status</title>
+    <link rel="stylesheet" href="https://cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap.min.css"
+          integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u"
+          crossorigin="anonymous">
+    <script src="https://cdn.bootcss.com/jquery/1.12.4/jquery.min.js"></script>
+    <script src="https://cdn.bootcss.com/bootstrap/3.3.7/js/bootstrap.min.js"
+            integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
+            crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="css/main.css">
+</head>
+
+<body style="min-width: 1310px;">
+<nav class="navbar navbar-inverse">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <a href="/static/Application.html" class="navbar-brand" style="font-family: 微软雅黑;color: white;font-size: 24px;">VX-API</a>
+        </div>
+        <span class="login-out"><a href="/loginOut" style="color: white">退出</a></span>
+    </div>
+</nav>
+<div class="container-fluid">
+    <ul class="nav nav-sidebar col-xs-2 col-md-2">
+        <li id='aGroup' class="nv">
+            <a href="/static/Application.html">应用列表</a>
+        </li>
+        <li id='aControl' class="nv current">
+            <a href="#">运行状态</a>
+        </li>
+    </ul>
+
+
+    <div class="rightP col-xs-8 col-md-8">
+        <div class="panel panel-default">
+            <div class="panel-heading">系统运行状态</div>
+            <div class="panel-body">
+                <div class="row">
+                    <div class="col-lg-3 col-sm-12">
+                        <div class="sys-info-block">
+                            <h3><span class="vxApiRunTime">0D0H0s</span></h3>
+                            <h3>运行时间</h3>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-sm-12">
+                        <div class="sys-info-block">
+                            <h3><span class="appCount">0</span></h3>
+                            <h3>运行应用数</h3>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-sm-12">
+                        <div class="sys-info-block">
+                            <h3><span class="errorCount">0</span></h3>
+                            <h3>异常发生次数</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-lg-3 col-sm-12">
+                        <div class="sys-info-block">
+                            <h3><span class="availableProcessors">0</span></h3>
+                            <h3>CPU核心数量</h3>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-sm-12">
+                        <div class="sys-info-block">
+                            <h3><span class="totalMemory">0</span></h3>
+                            <h3>JVM-内存总量</h3>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-sm-12">
+                        <div class="sys-info-block">
+                            <h3><span class="freeMemory">0</span></h3>
+                            <h3>JVM-空闲内存</h3>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-sm-12">
+                        <div class="sys-info-block">
+                            <h3><span class="maxMemory">0</span></h3>
+                            <h3>JVM-最大内存</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    
+     <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">
+                    <div class="row">
+                        <div class="col-md-10" style="line-height: 30px;"> 全局IP黑名单</div>
+                        <div class="col-md-1">
+                            <button type="button" class="btn btn-info right black-ip-cancel" style="margin-top: 1px;display: none;" onclick="btnCancel(this)">取消</button>
+                        </div>
+                        <div class="col-md-1">
+                            <button type="button" class="btn btn-success right black-ip-success" style="margin-top: 1px;display: none;" onclick="submitIpUpdate()">确定</button>
+                            <button type="button" class="btn btn-primary right black-ip-update" style="margin-top: 1px" onclick="btnUpdate(this)">编辑</button>
+                        </div>
+                    </div>
+                </h3>
+            </div>
+            <div class="panel-body">
+                <span class="ip-span-del-tips red" style="display: none;padding-left: 10px"> 操作提示:双击IP地址进行删除IP,双击取消放弃编辑</span>
+                <div class="ip-span-box">
+                </div>
+                <div class="add-ip-span-box" style="display: none;;margin:20px 0;text-align: center"><input type="text" style="border-radius: 4px;" class="console-textbox" id="add-ip-span" placeholder="请输入想要列入黑名单的ip地址"> <span class="btn btn-success" style="margin-top:1px;" onclick="addIpSpan()">添加</span></div>
+            </div>
+        </div>
+    
+    </div>
+    
+    <!-- rightP End -->
+</div>
+
+<script src="js/main.js"></script>
+<script>
+//标记是否在修改状态
+var isUpdateStatus = false;
+var isCancel =false;
+//存储修改前状态
+var ipSpanBox;
+//修改黑名单
+function btnUpdate(btn) {
+    isUpdateStatus = true;
+    isCancel=false;
+    ipSpanBox=$(".ip-span-box").html();
+    $($(btn)).hide();
+    $(".black-ip-success").show();
+    $(".black-ip-cancel").show();
+    $(".badge-box").show();
+    $(".ip-span-del-tips").show();
+    $(".add-ip-span-box").show();
+}
+//取消修改黑名单
+function btnCancel(btn) {
+    if (isCancel == true){
+        isUpdateStatus = false;
+        $(".ip-span-box").html(ipSpanBox);
+        $(btn).hide();
+        $(".black-ip-success").hide();
+        $(".badge-box").hide();
+        $(".ip-span-del-tips").hide();
+        $(".add-ip-span-box").hide();
+        $(".black-ip-update").show();
+    }else{
+        isCancel=true;
+    }
+
+}
+var clickVar=null;
+//删除黑名单
+function delIpSpan(btn) {
+    if(isUpdateStatus){
+        if (clickVar == null){
+            clickVar=btn;
+        }else{
+            if (clickVar == btn){
+                $(btn).remove();
+                clickVar=null;
+            }else{
+                clickVar=null;
+            }
+        }
+    }
+}
+//添加给名单
+function addIpSpan() {
+    var ip =  $("#add-ip-span").val();
+    if(ip != ''){
+        $(".ip-span-box").append($("<span class='btn btn-default black-ip-btn' onclick='delIpSpan(this)'><span class='ip'>"+ip+"</span> <span class='badge badge-box' style='display: inline-block'>×</span></span>"));
+    }
+}
+//确定修改全局黑名单
+function submitIpUpdate() {
+    var item = $(".ip");
+    var iplist=new Array();
+    for(var i=0;i<item.length;i++){
+        iplist.push($(item[i]).text().toString().trim());
+    }
+    console.log(iplist);
+    $.ajax({
+        type: "post",
+        url: '/static/sysReplaceIpList',
+        data: JSON.stringify(iplist),
+        dataType: "json",
+        success: function (result) {
+            if (result.status == 200) {
+                var res = result.data;
+                location.reload();
+            } else {
+                alert("更新黑名单失败");
+                console.log("更新黑名单失败:" + result.status + " ,msg:"
+                        + result.msg + " ,data:");
+                console.log(result.data);
+            }
+        },
+        error: function () {
+            alert("更新黑名单失败!");
+        }
+    });
+}
+
+
+$(function(){
+	get(0);
+});
+function get(id) {
+    $.ajax({
+        type: "get",
+        url: '/static/sysInfo',
+        async: true,
+        data: id,
+        dataType: "json",
+        success: function (result) {
+            if (result.status == 200) {
+                var res = result.data;
+                console.log(res);
+                $(".vxApiRunTime").text(res.vxApiRunTime);
+                $(".appCount").text(res.appCount);
+                $(".errorCount").text(res.errorCount);
+                $(".availableProcessors").text(res.availableProcessors);
+                $(".totalMemory").text(res.totalMemory + "M");
+                $(".freeMemory").text(res.freeMemory + "M");
+                $(".maxMemory").text(res.maxMemory + "M");
+                var item = res.content;
+                for(var i=0;i<item.length;i++){
+                	 $(".ip-span-box").append($("<span class='btn btn-default black-ip-btn' onclick='delIpSpan(this)'><span class='ip'>"+item[i]+"</span> <span class='badge badge-box' style='display:none'>×</span></span>"));
+                }
+            } else {
+                alert("获取失败");
+                console.log("获取失败status:" + result.status + " ,msg:"
+                        + result.msg + " ,data:");
+                console.log(result.data);
+            }
+        },
+        error: function () {
+            alert("获取应用失败");
+        }
+    });
+}
+</script>
+</body>
+
+</html>

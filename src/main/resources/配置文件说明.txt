@@ -1,0 +1,70 @@
+==============code format : UTF-8================
+=========================================================
+==================vertx: vert.x的配置=====================
+=========================================================
+vert.x配置为json格式
+eventLoopPoolSize = Vert.x实例中使用的Event Loop线程的数量,默认值为:2 * Runtime.getRuntime().availableProcessors()可用的处理器个数;
+workerPoolSize = Vert.x实例中支持的Worker线程的最大数量,默认值为20;
+internalBlockingPoolSize = 内部阻塞线程池最大线程数,这个参数主要被Vert.x的一些内部操作使用，默认值为20;
+blockedThreadCheckInterval = 阻塞线程检查的时间间隔,默认1000,单位ms,即1秒;
+maxEventLoopExecuteTime =  Event Loop的最大执行时间,默认2 * 1000 * 1000000,单位ns,即2秒;
+maxWorkerExecuteTime = Worker线程的最大执行时间,默认60 * 1000 * 1000000,单位ns,即60秒;
+haEnabled = 是否支持HA架构,默认值false;
+quorumSize = 【HA模式有效】支持了HA模式过后,此方法设置冲裁节点的数量,默认值1;
+haGroup = 【HA模式有效】支持了HA模式过后,可根据不同的组名将Vert.x进行逻辑分组,此方法设置当前Vert.x的逻辑组名,默认DEFAULT;
+warningExceptionTime = 如果线程阻塞时间超过了这个阀值,那么就会打印警告的堆栈信息,默认为5 * 1000 * 1000000,单位ns,即5秒;
+preferNativeTransport = 在unix环境下是否使用epoll优化,默认值false
+更多配置请参考VertxOptions 网址: http://vertx.io/docs/apidocs/io/vertx/core/VertxOptions.html
+
+=========================================================
+=================cluster: vert.x集群配置===================
+=========================================================
+clusterType = 使用集群的模式,默认NONE(不使用集群),只支持zookeeper如果需要别的集群方式可以在VxApiLauncher与VxApiMain中配置项修改
+clusterConf = 集群的配置文件JSON格式,默认:
+{
+	"zookeeperHosts": "127.0.0.1",
+	"sessionTimeout": 20000,
+	"connectTimeout": 3000,
+	"rootPath": "io.vertx",
+	"vxApiConfPath":"/io.vertx/vx.api.gateway/conf",  //集群时以json格式存储Verticle应用的配置,数据库配置,客户端配置的节点
+	"retry": {
+		"initialSleepTime": 100,
+		"intervalTimes": 10000,
+		"maxTimes": 5
+	}
+}
+更多zookeeper配置请参考: http://vertxchina.github.io/vertx-translation-chinese/clustering/ApacheZookeeper.html
+
+=========================================================
+========verticleConfig: Verticle应用的配置==================
+=========================================================
+worker = 是否设置为worker verticle, 默认false
+multiThreaded = 是否设置为多线程worker verticle, 默认false
+isolationGroup = 设置隔离组
+workerPoolName = 设置worker线程池的名字
+workerPoolSize = 设置worker线程池的大小, 默认20
+ha = 设置是否启用高可用, 默认false
+instances = 设置应用的实例数量, 默认1
+maxWorkerExecuteTime = 设置worker的最大执行时间, 以ns为单位,默认60000000000
+extraClasspath = 额外的classPath, JsonArray格式
+isolatedClasses = 设置隔离组, JsonArray格式
+
+=============================================
+=============dataConfig: 数据库配置 =========
+=============================================
+url = 数据库 JDBC 连接地址
+driver_clas = JDBC 驱动
+user = 数据库用户名
+password = 数据库密码
+initial_pool_size = 连接池初始连接数, 默认3
+max_pool_size = 连接池最大连接数, 默认15
+min_pool_size = 连接池最小连接数
+max_statements = 预处理SQL语句最小缓存数, 默认 0
+max_statements_per_connection = 每个数据库连接的最大预处理SQL缓存数, 默认0
+max_idle_time = 空闲连接保留时间, 默认0 (代表一直保留)
+
+=============================================
+=============clientConfig: 客户端配置 ==========
+=============================================
+clientPort = 网关的客户端服务端口,默认5256
+

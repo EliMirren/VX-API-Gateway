@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="webkit|ie=edge">
+    <title>VX-API-CREATE-API</title>
+    <link rel="stylesheet" href="https://cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap.min.css"
+          integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u"
+          crossorigin="anonymous">
+    <script src="https://cdn.bootcss.com/jquery/1.12.4/jquery.min.js"></script>
+    <script src="https://cdn.bootcss.com/bootstrap/3.3.7/js/bootstrap.min.js"
+            integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
+            crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="css/main.css">
+</head>
+
+<body style="font-size: 16px;min-width: 1250px">
+<nav class="navbar navbar-inverse">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <a href="Application.html" class="navbar-brand" style="font-family: 微软雅黑;color: white;font-size: 24px;">VX-API</a>
+        </div>
+        <span class="login-out">退出</span>
+    </div>
+</nav>
+<input type="hidden" id="appName" value="">
+<div class="container">
+    <ol class="breadcrumb">
+        <li>
+            <a href="/static/Application.html">应用列表</a>
+        </li>
+        <li>
+            <a href="javascript:history.go(-1);">API管理</a>
+        </li>
+        <li>新建API</li>
+    </ol>
+    <div class="rightP">
+        <div id="apiList" class="cont ">
+            <!-- 创建API -->
+            <div id="apiListModal" cur='1'>
+                <ul class="console-clearfix">
+                    <li class="console-guidebar-default guidebar-current cApiNav cApiNav1">基本信息</li>
+
+                    <li class="console-guidebar-default cApiNav cApiNav2">定义API请求</li>
+
+                    <li class="console-guidebar-default cApiNav cApiNav3">定义API后端服务</li>
+
+                    <li class="console-guidebar-default cApiNav cApiNav4">定义返回结果</li>
+
+                </ul>
+                <!-- 头部 -->
+
+                <div class="createApiPage">
+                    <!-- 1.25 S! -->
+                    <div class="modal " id="senateEdit" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel">
+                        <div class="modal-dialog" role="document">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <button type="button" class="close" data-dismiss="modal" onclick='modalClose(this)' aria-label="Close">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                    <h4 class="modal-title" style="text-align:left;" id="exampleModalLabel">编辑更多</h4>
+                                </div>
+
+                                <div console-scope="contentScope" class="ng-scope console-dialog-body-container">
+
+                                    <div class="console-form console-mb2 ng-scope">
+
+                                        <div class="console-form-row senateType">
+                                            <div class="console-form-header ng-binding">类型</div>
+                                            <div class="console-form-body">
+                                                <div class="console-form-tip-inline ng-binding senateTit">String</div>
+                                            </div>
+                                        </div>
+
+                                        <div class="console-form-row senateMaxlength">
+                                            <div class="console-form-header ng-binding">最大长度</div>
+                                            <div class="console-form-body">
+                                                <input type="number"
+                                                       class="console-textbox console-width-2 ng-pristine ng-valid ng-valid-number senateMaxlen">
+                                            </div>
+                                        </div>
+
+                                        <div class="console-form-row  senateEnum">
+                                            <div class="console-form-header ng-binding">枚举</div>
+                                            <div class="console-form-body">
+                                                <input type="text" style="width: 74.5% !important;"
+                                                       class="console-textbox console-width-12 ng-pristine ng-valid"
+                                                       placeholder="用逗号(,)隔开">
+                                            </div>
+                                        </div>
+
+                                        <div class="console-form-row  ng-hide  senateMinv">
+                                            <div class="console-form-header ng-binding">最小值</div>
+                                            <div class="console-form-body">
+                                                <input  class="console-textbox console-width-3 ng-pristine ng-valid ng-valid-number">
+                                            </div>
+                                        </div>
+
+                                        <div class="console-form-row ng-hide senateMaxv">
+                                            <div class="console-form-header ng-binding">最大值</div>
+                                            <div class="console-form-body">
+                                                <input class="console-textbox console-width-3 ng-pristine ng-valid ng-valid-number">
+                                            </div>
+                                        </div>
+
+
+                                        <div class="console-form-row senateVify">
+                                            <div class="console-form-header ng-binding ">正则验证</div>
+                                            <div class="console-form-body">
+                                                    <textarea style="width:74.5% !important;" placeholder="输入正则表达式"
+                                                              class="console-textarea console-width-12 ng-pristine ng-valid"
+                                                              rows="4"></textarea>
+                                            </div>
+                                        </div>
+                                    </div>
+
+
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-default" onclick='modalClose(this)'
+                                            data-dismiss="modal">关闭
+                                    </button>
+                                    <button type="button" class="btn btn-success senateEnter">确定</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- 1.25 E! -->
+                    <div class="console-panel createAPI1">
+                        <div class="console-panel-header">
+                            <span class="console-panel-header-line"></span>
+                            <div class="console-float-left ng-binding">基本配置</div>
+                        </div>
+                        <div class="console-panel-body console-p4 console-pt6 console-pb6">
+                            <div class="console-form">
+                                <div class="console-form-row clearfloat">
+                                    <div class="console-form-header ng-binding">
+                                        <span class="red">* </span>API名称
+                                    </div>
+                                    <div class="console-form-body">
+                                        <input type="text" id="apiName"
+                                               class="console-textbox console-width-4 ng-pristine ng-valid"
+                                               placeholder="请输入API的名称">
+                                    </div>
+                                </div>
+                                <div class="console-form-row clearfloat">
+                                    <div class="console-form-header ng-binding">
+                                        <span class="red">* </span>API描述
+                                    </div>
+                                    <div class="console-form-body">
+                                        <textarea type="text" id="apiDescribe"
+                                                  class="console-textarea console-width-6 ng-pristine ng-valid"
+                                                  maxlength="90" placeholder="请用一句话描述该API的作用"></textarea>
+                                    </div>
+                                </div>
+                                <!--安全认证配置,当有新的认证方式只需要在select中添加一个option值,值的内容时处理器在工厂中的名字-->
+                                <div class="console-form-row clearfloat">
+                                    <div class="console-form-header ng-binding">安全认证</div>
+                                    <div class="console-form-body">
+                                        <select id="auth-options-name"
+                                                class="console-selectbox console-width-4 ng-pristine ng-valid">
+                                            <option value="none" class="ng-binding">不认证</option>
+                                            <option value="sessionTokenAuth" class="ng-binding">session-token</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="console-form-row clearfloat auth-hide-show">
+                                    <div class="console-form-header ng-binding">
+                                        <span class="red">* </span>认证配置文件
+                                    </div>
+                                    <div class="console-form-body">
+                                        <textarea type="text" id="auth-options-config" rows="6"
+                                                  class="console-textarea console-width-6 ng-pristine ng-valid"
+                                                  placeholder="请输入认证需要的配置文件json格式"></textarea>
+                                    </div>
+                                </div>
+
+                                <div class="console-form-row clearfloat">
+                                    <div class="console-form-header ng-binding">访问限制/单位</div>
+                                    <div class="console-form-body">
+                                        <select id="limitUnit"
+                                                class="console-selectbox console-width-4 ng-pristine ng-valid">
+                                            <option value="none" class="ng-binding">不限制</option>
+                                            <option value="DAYS" class="ng-binding">一天</option>
+                                            <option value="HOURS" class="ng-binding">一小时</option>
+                                            <option value="MINUTES" class="ng-binding">一分钟</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="console-form-row clearfloat limit-hide-show">
+                                    <div class="console-form-header ng-binding">API访问次数</div>
+                                    <div class="console-form-body">
+                                        <input type="text" id="apiLimit" placeholder="请输入API在限制单位中最大访问次数,默认-1无限制"
+                                               class="console-textbox console-width-4 ng-pristine ng-valid">
+                                    </div>
+                                </div>
+                                <div class="console-form-row clearfloat limit-hide-show">
+                                    <div class="console-form-header ng-binding">IP访问次数</div>
+                                    <div class="console-form-body">
+                                        <input type="text" id="ipLimit" placeholder="请输入用户IP在限制单位中最大访问次数,默认-1无限制"
+                                               class="console-textbox console-width-4 ng-pristine ng-valid">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!--前置与后置处理器,当有新的处理器只需要在select中添加一个option值,值的内容时处理器在工厂中的名字-->
+                    <div class="console-panel createAPI1" style="margin-top:15px;">
+                        <div class="console-panel-header">
+                            <span class="console-panel-header-line"></span>
+                            <div class="console-float-left ng-binding">前置与后置处理器</div>
+                        </div>
+                        <div class="console-panel-body console-p4 console-pt6 console-pb6">
+                            <div class="console-form-row clearfloat">
+                                <div class="console-form-header ng-binding">前置处理器</div>
+                                <div class="console-form-body">
+                                    <select id="beforeHandler"
+                                            class="console-selectbox console-width-4 ng-pristine ng-valid">
+                                        <option value="none" class="ng-binding">不启用</option>
+                                        <!--<option value="这里填写前置处理器在工厂中的名字" class="ng-binding">session-token</option>-->
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="console-form-row clearfloat beforeHandler-hide-show">
+                                <div class="console-form-header ng-binding">
+                                    <span class="red">* </span>前置处理器配置文件
+                                </div>
+                                <div class="console-form-body">
+                                        <textarea type="text" id="beforeHandlerOptions" rows="6"
+                                                  class="console-textarea console-width-6 ng-pristine ng-valid"
+                                                  placeholder="请输入前置处理器需要的配置文件json格式"></textarea>
+                                </div>
+                            </div>
+
+                            <div class="console-form-row">
+                                <div class="console-form-header ng-binding">后置处理器</div>
+                                <div class="console-form-body">
+                                    <select id="afterHandler"
+                                            class="console-selectbox console-width-4 ng-pristine ng-valid">
+                                        <option value="none" class="ng-binding">不启用</option>
+                                        <!--<option value="这里填写后置处理器在工厂中的名字" class="ng-binding">session-token</option>-->
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="console-form-row clearfloat afterHandler-hide-show">
+                                <div class="console-form-header ng-binding">
+                                    <span class="red">* </span>后置处理器配置文件
+                                </div>
+                                <div class="console-form-body">
+                                        <textarea id="afterHandlerOptions" type="text" rows="6"
+                                                  class="console-textarea console-width-6 ng-pristine ng-valid"
+                                                  placeholder="请输入后置处理器需要的配置文件json格式"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="console-panel console-mt4 createAPI2  hide">
+                        <div class="console-panel-header">
+                            <span class="console-panel-header-line"></span>
+                            <div class="console-float-left ng-binding">请求基础定义</div>
+                        </div>
+                        <div class="console-panel-body console-p4 console-pt6 console-pb6">
+
+                            <table width="100%" class="descriptionTable">
+                                <tbody>
+                                <tr>
+                                    <td style="padding-right:20px;text-align: right;border: 0" class="ng-binding">
+                                        <span class="red">* </span>请求Path
+                                    </td>
+                                    <td style="border: 0;padding-bottom:0;">
+                                        <input type="text" id="path"
+                                               class="console-textbox console-width-4 ng-pristine ng-valid"
+                                               placeholder="请输入Path 示例: /test">
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td></td>
+                                    <td style="padding-top: 0;">
+                                        <span class="console-form-tip-block ng-binding">请求Path必须以 / 开头,如果Path带请求参数需要加上 : 号,示例:[/test/:name]该Path会取name位置的值</span>
+                                    </td>
+                                </tr>
+
+                                <tr>
+                                    <td style="padding-right:20px;text-align: right;border: 0" class="ng-binding">
+                                       	 请求类型/consumes
+                                    </td>
+                                    <td style="border: 0;padding-bottom:1px;">
+                                        <input type="text" id="consumes"
+                                               class="console-textbox console-width-4 ng-pristine ng-valid"
+                                               placeholder="请输入接收的处理类型,多个以,号隔开,默认所有类型">
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td></td>
+                                    <td style="padding-top: 0;">
+                                                <span class="console-form-tip-block ng-binding">设置API只处理请求Content-Type:为指定的类型的请求,* 代表任意 示例: */json
+                                                    <br/>代表该API只处理请求Content-Type:任意/json结尾的数据格式,默认处理所有类型,多个以,号隔开 </span>
+                                    </td>
+                                </tr>
+
+                                <tr>
+                                    <td style="padding-right:20px;text-align: right;" class="ng-binding">HTTP Method
+                                    </td>
+                                    <td>
+                                        <select type="text" id="method"
+                                                class="console-selectbox console-width-4 ng-valid ng-dirty">
+                                            <option value="ALL" selected="selected">ALL</option>
+                                            <option value="GET">GET</option>
+                                            <option value="HEAD">HEAD</option>
+                                            <option value="PUT">PUT</option>
+                                            <option value="POST">POST</option>
+                                            <option value="DELETE">DELETE</option>
+                                            <option value="PATCH">PATCH</option>
+                                            <option value="TRACE">TRACE</option>
+                                            <option value="CONNECT">CONNECT</option>
+                                            <option value="PATCH">PATCH</option>
+                                            <option value="OPTIONS">OPTIONS</option>
+                                            <option value="OTHER">OTHER</option>
+                                        </select>
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+
+                            <div class="console-panel console-mt4">
+                                <div class="console-panel-header">
+                                    <span class="console-panel-header-line"></span>
+                                    <div class="console-float-left ng-binding">入参定义</div>
+
+                                </div>
+                                <div class="request-param-setter ng-isolate-scope ng-pristine ng-valid newParam-setter">
+                                    <table>
+                                        <tbody>
+                                        <tr>
+                                            <th width="150" class="ng-binding">参数名</th>
+                                            <th width="150" class="ng-binding">参数位置</th>
+                                            <th width="150" class="ng-binding">类型</th>
+                                            <th width="60" class="ng-binding">必填</th>
+                                            <th class="ng-binding">默认值</th>
+                                            <th class="ng-binding">描述</th>
+                                            <th class="ng-binding">操作</th>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                    <div class="pagination-gird-container console-clearfix">
+                                            <span class="console-mr1 console-button-wrap ng-isolate-scope" icon="add"
+                                                  size="tiny" theme="green">
+                                                <a class="console-button console-button-green console-button-tiny addParams">
+                                                    <i ng-if="!!icon" class="icon-add"></i>
+                                                    <span>
+                                                        <span class="ng-scope ng-binding">增加一条</span>
+                                                    </span>
+                                                </a>
+                                            </span>
+                                    </div>
+                                    <div class="pagination-gird-container request-param-setter-errormessage ng-binding ng-hide">
+                                        <i class="icon-no-2 console-mr1 console-inline-block"></i>
+                                    </div>
+                                </div>
+                            </div>
+
+
+                        </div>
+                    </div>
+
+
+                    <!-- 定义API后端服务 -->
+                    <div class="console-panel console-mt4 createAPI3 hide">
+                        <div class="console-panel-header">
+                            <span class="console-panel-header-line"></span>
+                            <div class="console-float-left ng-binding">后端基础定义</div>
+                        </div>
+                        <div class="console-panel-body console-p4 console-pt6 console-pb6">
+                            <div class="console-form">
+                                <table width="100%" class="descriptionTable">
+                                    <tr>
+                                        <td width="18%" style="padding-right:20px;text-align: right;"
+                                            class="ng-binding">
+                                         	   后端服务类型
+                                        </td>
+                                        <td data-spm-anchor-id="0.0.0.i13.2012c63dQkymuR">
+                                            <label class="console-radio" onclick="http_httpsOnClick()">
+                                                <input type="radio" checked="checked" name="backendType"
+                                                       value="HTTP_HTTPS" id="backendType_http_s"
+                                                       class="ng-valid ng-dirty">
+                                                <span>HTTP/HTTPS</span>
+                                            </label>
+                                            <label class="console-radio" style="margin-left:10px;"
+                                                   onclick="redirectOnClick()">
+                                                <input type="radio" name="backendType" value="REDIRECT"
+                                                       class="ng-valid ng-dirty">
+                                                <span>页面跳转</span>
+                                            </label>
+                                             <label class="console-radio" style="margin-left:10px;"
+                                                   onclick="varsOnClick()">
+                                                <input type="radio" name="backendType" value="CUSTOM"
+                                                       class="ng-valid ng-dirty">
+                                                <span>自定义服务</span>
+                                            </label>
+                                        </td>
+                                    </tr>
+                                    <tbody class="http_https_body">
+                                    <tr>
+                                        <td align="right" style="padding-right:20px;text-align: right;">HTTP Method</td>
+                                        <td>
+                                            <select class="console-selectbox console-width-4 ng-pristine ng-valid" id="serverMethod">
+                                                <option value="GET" selected="selected">GET</option>
+                                                <option value="POST">POST</option>
+                                                <option value="OPTIONS">OPTIONS</option>
+                                                <option value="HEAD">HEAD</option>
+                                                <option value="PUT">PUT</option>
+                                                <option value="DELETE">DELETE</option>
+                                                <option value="TRACE">TRACE</option>
+                                                <option value="CONNECT">CONNECT</option>
+                                                <option value="PATCH">PATCH</option>
+                                                <option value="OTHER">OTHER</option>
+                                            </select>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td align="right" style="padding-right:20px;text-align: right;"
+                                            class="ng-binding">后端超时
+                                        </td>
+                                        <td>
+                                            <input type="text" value="6000"
+                                                   class="console-textbox console-width-1 ng-pristine ng-valid"
+                                                   style="border-radius: 0px;" id="serverTimeOut" maxlength="7"
+                                                    placeholder="请输入请求后台等待超时毫秒"
+                                                   >
+                                            <span>ms</span>
+                                        </td>
+                                    </tr>
+                                    <tr class="balance-hide-show" style="display: none;">
+                                        <td width="18%" style="padding-right:20px;text-align: right;"
+                                            class="ng-binding"> 负载均衡策略
+                                        </td>
+                                        <td data-spm-anchor-id="0.0.0.i13.2012c63dQkymuR">
+                                            <label class="console-radio">
+                                                <input type="radio" checked="checked" name="balanceType"
+                                                       value="POLLING_AVAILABLE" class="ng-valid ng-dirty">
+                                                <span>轮询可用连接 </span>
+                                            </label>
+                                            <label class="console-radio" style="margin-left:10px;">
+                                                <input type="radio" name="balanceType" value="IP_HASH"
+                                                       class="ng-valid ng-dirty">
+                                                <span>IP哈希化 </span>
+                                            </label>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td align="right" style="padding-right:20px;text-align: right;"
+                                            class="ng-binding" title="当后台连接失败大于2次时,该服务URL会标记为不可用,系统会根据重试时间测试该URL是否可用,如果可用则改为可用">
+                                            	请求服务失败重试时间:
+                                        </td>
+                                        <td>
+                                            <input type="text" value="30000"
+                                                   class="console-textbox console-width-1 ng-pristine ng-valid"
+                                                   style="border-radius: 0px;" id="serverRetryTime" maxlength="7" 
+                                                   placeholder="请输入当后台连接失败大于2次时的重试时间">
+                                            <span>ms</span>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding-right:20px;text-align: right;border-right: 1px solid #e1e6eb;border-bottom: none;"
+                                            class="ng-binding">
+                                            <span class="red">* </span>后端服务URL
+                                        </td>
+                                        <td style="border: none;padding-top: 0px;">
+                                            <span class="console-form-tip-block ng-binding">如果有Path请求参数需要加上 : 号,示例:[http://127.0.0.1/test/:name]该URL会填充name位置的值<br></span>
+                                       		<span>权重表示该URL被访问的次数,比如A=1,B=3,在4次请求中A被请求1次,B被请求3次,IP哈希化时,A被分配1次,B被分配3次</span>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td style="border-right: 1px solid #e1e6eb;border-bottom: none;"></td>
+                                        <td style="padding-top: 3px; border: none" class="input-server-box">
+                                            <input type="text"
+                                                   class="console-textbox console-width-4 ng-pristine ng-valid input-server-url"
+                                                   placeholder="请输入URL 示例: http://127.0.0.1/test">
+                                                   	 权重: <input type="text" class="console-textbox input-server-weight"  placeholder="权重值" style="width: 60px">
+                                            <a class="console-button console-button-green console-button-tiny"
+                                               style="width:auto;" onclick='addServerURL()'>
+                                            <span>
+                                                <span class="ng-scope ng-binding">增加一条</span>
+                                            </span>
+                                            </a>
+                                            <a style="white-space:nowrap"><span style='cursor:pointer;' class=""
+                                                                                onclick='testServerURL(this)'> 测试连接</span></a>
+                                        </td>
+                                    </tr>
+                                    </tbody>
+                                    <tbody class="vars_body" style="display: none;">
+                                    <tr>
+                                        <td align="right" style="padding-right:20px;text-align: right;">服务类型</td>
+                                        <td>
+                                        	<!-- 当有新的服务是可以在这里添加Option是,可以修改NewAPICustomSelectChange.js中的改变事件设置默认值 -->
+                                            <select class="console-selectbox console-width-4 ng-pristine ng-valid"
+                                                    id="custom_server_type">
+                                                <option value="GET_SERVER_UNIX_TIMESTAMP" selected="selected">返回UNIX时间戳</option>
+                                                <option value="GET_CONSTANT_VALUE">返回自定义变量</option>
+                                                <option value="SESSION_TOKEN_GRANT_AUTH">Session-Token授权</option>
+                                            </select>
+                                            <span class="custom_server_type_tips">$(val) 为返回结果值的占位符,VX-API会将其替换为时间戳</span>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td align="right" style="padding-right:20px;text-align: right;"
+                                            class="ng-binding">配置文件
+                                        </td>
+                                        <td>
+                                            <textarea id="custom-option" type="text" rows="6"
+                                                      class="console-textarea console-width-6 ng-pristine ng-valid"
+                                                      placeholder="请输入自定义服务处理器需要的配置文件json格式" style="width: 600px;">{"resultFormat":"$(val)"}</textarea>
+                                        </td>
+                                    </tr>
+                                    
+                                    </tbody>
+                                    <tbody class="redirect_body" style="display: none;">
+                                    <tr>
+                                        <td align="right" style="padding-right:20px;text-align: right;"
+                                            class="ng-binding">跳转页面的URL
+                                        </td>
+                                        <td>
+                                            <input type="text" id="redirect_url"
+                                                   class="console-textbox console-width-1 ng-pristine ng-valid"
+                                                   style="border-radius: 0px;" placeholder="请输入跳转的页面">
+                                        </td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+
+                            </div>
+                        </div>
+
+
+                        <div class="console-panel console-mt4">
+                            <div class="console-panel-header">
+                                <span class="console-panel-header-line"></span>
+                                <div class="console-float-left ng-binding">后端服务参数配置</div>
+
+                            </div>
+                            <div class="request-param-setter ng-isolate-scope ng-pristine ng-valid txt-center bParam-config">
+                                <table>
+                                    <tbody>
+                                    <tr>
+                                        <th class="ng-binding">后端参数名称</th>
+                                        <th class="ng-binding">后端参数位置</th>
+                                        <th class="ng-binding">对应入参名称</th>
+                                        <th class="ng-binding">对应入参位置</th>
+                                        <th class="ng-binding">对应入参类型</th>
+                                        <th class="ng-binding">操作</th>
+                                    </tr>
+                                    <!-- ngRepeat: item in value -->
+
+                                    <!-- end ngRepeat: item in value -->
+                                    </tbody>
+                                </table>
+                                <div class="pagination-gird-container request-param-setter-errormessage ng-binding ng-hide">
+                                    <i class="icon-no-2 console-mr1 console-inline-block"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="console-panel console-mt4">
+                            <div class="console-panel-header">
+                                <span class="console-panel-header-line"></span>
+                                <div class="console-float-left ng-binding clearfloat">透传用户请求参数
+
+                                </div>
+                            </div>
+                            <div class="api-param-map-setter passParamBody">
+                                <table>
+                                    <tbody>
+                                    <tr>
+                                        <th width="20%" class="ng-binding">请求参数名字</th>
+                                        <th width="20%" class="ng-binding">请求参数位置</th>
+                                        <th width="20%" class="ng-binding">后端参数名字</th>
+                                        <th class="ng-binding">后端参数位置</th>
+                                        <th width="10%" class="ng-binding">操作</th>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="pagination-gird-container request-param-setter-errormessage ng-binding ng-hide">
+                                <i class="icon-no-2 console-mr1 console-inline-block"></i>
+                            </div>
+                            <div class="pagination-gird-container console-clearfix">
+                                    <span class="console-button-wrap ng-isolate-scope" theme="green" size="tiny"
+                                          icon="add">
+                                        <a class="console-button console-button-green console-button-tiny addPassParam">
+                                            <span>
+                                                <span class="ng-scope ng-binding">增加一条</span>
+                                            </span>
+                                        </a>
+                                    </span>
+                            </div>
+                        </div>
+
+                        <div class="console-panel console-mt4">
+                            <div class="console-panel-header">
+                                <span class="console-panel-header-line"></span>
+                                <div class="console-float-left ng-binding clearfloat">自定义常量参数
+
+                                </div>
+                            </div>
+
+                            <div class="api-param-map-setter ms1">
+                                <table>
+                                    <tbody>
+                                    <tr>
+                                        <th width="20%" class="ng-binding">后端参数名称</th>
+                                        <th width="20%" class="ng-binding">参数值</th>
+                                        <th width="20%" class="ng-binding">参数位置</th>
+                                        <th class="ng-binding">描述</th>
+                                        <th width="10%" class="ng-binding">操作</th>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="pagination-gird-container request-param-setter-errormessage ng-binding ng-hide">
+                                <i class="icon-no-2 console-mr1 console-inline-block"></i>
+                            </div>
+                            <div class="pagination-gird-container console-clearfix">
+                                    <span class="console-button-wrap ng-isolate-scope" theme="green" size="tiny"
+                                          icon="add">
+                                        <a class="console-button console-button-green console-button-tiny addConstant">
+                                            <span>
+                                                <span class="ng-scope ng-binding">增加一条</span>
+                                            </span>
+                                        </a>
+                                    </span>
+                            </div>
+                        </div>
+
+
+                        <div class="console-panel console-mt4">
+                            <div class="console-panel-header">
+                                <span class="console-panel-header-line"></span>
+                                <div class="console-float-left ng-binding">系统参数
+                                        <span class="console-form-tip-inline console-grey console-ml2">
+                                            <a class="console-mr2" href="javascript:;" style="white-space:nowrap">
+                                                <i class="icon-help-2 console-mr1 console-inline-block"></i>
+                                            </a>
+                                        </span>
+                                </div>
+                            </div>
+
+                            <div class="api-param-map-setter ms2">
+                                <table>
+                                    <tbody>
+                                    <tr>
+                                        <th width="20%" class="ng-binding">系统参数名</th>
+                                        <th width="20%" class="ng-binding">后端参数名称</th>
+                                        <th width="20%" class="ng-binding">参数位置</th>
+                                        <th width="20%" class="ng-binding">描述</th>
+                                        <th width="10%" class="ng-binding">操作</th>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div class="pagination-gird-container console-clearfix">
+                                    <span class="console-button-wrap ng-isolate-scope" theme="green" size="tiny"
+                                          icon="add">
+                                        <a target=""
+                                           class="console-button console-button-green console-button-tiny addSysParam">
+                                            <i class="icon-add"></i>
+                                            <span>
+                                                <span class="ng-scope ng-binding"
+                                                      style="display:inline-block;">增加一条</span>
+                                            </span>
+                                        </a>
+                                    </span>
+                            </div>
+                        </div>
+                        <!-- createApiPage End -->
+                    </div>
+                    <!-- createAPI3 End -->
+
+
+                    <div class="console-panel console-mt4 createAPI4 hide">
+                        <div class="console-panel-header">
+                            <span class="console-panel-header-line"></span>
+                            <div class="console-float-left ng-binding">返回结果基础定义</div>
+                        </div>
+                        <div class="console-panel-body console-p4 console-pt6 console-pb6">
+                            <div class="console-form">
+                                <div class="console-form-row">
+                                    <div class="console-form-header ng-binding">返回ContentType</div>
+                                    <div class="console-form-body">
+                                        <select id="content-type"
+                                                class="console-selectbox console-width-4 ng-pristine ng-valid">
+                                            <option value="application/json;charset=UTF-8" class="ng-binding">JSON
+                                                (application/json;charset=UTF-8)
+                                            </option>
+                                            <option value="text/plain;charset=UTF-8" class="ng-binding">文本
+                                                (text/plain;charset=UTF-8)
+                                            </option>
+                                            <option value="application/octet-stream;charset=UTF-8" class="ng-binding">
+                                             	   二进制
+                                                (application/octet-stream;charset=UTF-8)
+                                            </option>
+                                            <option value="application/xml;charset=UTF-8" class="ng-binding">XML
+                                                (application/xml;charset=UTF-8)
+                                            </option>
+                                            <option value="text/html;charset=UTF-8" class="ng-binding">HTML
+                                                (text/html;charset=UTF-8)
+                                            </option>
+                                            <option value="custom" class="ng-binding">自定义</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="console-form-row" id="custom-content-type-hide-show" style="display: none;">
+                                    <div class="console-form-header ng-binding">自定义Content-Type</div>
+                                    <div class="console-form-body">
+                                        <input value="" class="console-textbox ng-pristine ng-valid ng-valid-pattern"
+                                               id="custom-content-type" type="text" placeholder="请输入自定义返回类型值">
+                                    </div>
+                                </div>
+
+                                <div class="console-form-row  result-header-body">
+                                    <div class="console-form-header ng-binding">透传header值</div>
+                                    <div class="console-form-body">
+                                        <div>
+                                            <input type="text"
+                                                   class="console-textbox console-width-4 ng-pristine ng-valid input-result-header-name"
+                                                   placeholder="请输入header名字">
+                                            <a style="white-space:nowrap"><span style='cursor:pointer;' class=""
+                                                                                onclick='addResultHeader()'>添加</span></a>
+                                        </div>
+
+                                    </div>
+                                </div>
+                                <div class="console-form-row">
+                                    <div class="console-form-header ng-binding">访问限制返回</div>
+                                    <div class="console-form-body">
+                                        <textarea placeholder="请输入当访问受限制时要返回的结果"
+                                                  class="console-textarea console-width-7 ng-pristine ng-valid"
+                                                  id="limitExample"></textarea>
+                                    </div>
+                                </div>
+                                <div class="console-form-row">
+                                    <div class="console-form-header ng-binding">发生异常/失败返回</div>
+                                    <div class="console-form-body">
+                                        <textarea placeholder="请输入当发生了异常要返回的结果"
+                                                  class="console-textarea console-width-7 ng-pristine ng-valid"
+                                                  id="failureExample"></textarea>
+                                    </div>
+                                </div>
+                                <div class="console-form-row">
+                                    <div class="console-form-header ng-binding">网关入口参数检查失败返回</div>
+                                    <div class="console-form-body">
+                                        <textarea placeholder="请输入网关入口参数检查失败要返回的结果"
+                                                  class="console-textarea console-width-7 ng-pristine ng-valid"
+                                                  id="apiEnterCheckFailureExample"></textarea>
+                                    </div>
+                                </div>
+
+                                <div class="console-form-row">
+                                    <div class="console-form-header ng-binding">无法连接上后台服务器返回</div>
+                                    <div class="console-form-body">
+                                        <textarea placeholder="请输入VX-API无法连接上后台服务器时的返回结果"
+                                                  class="console-textarea console-width-7 ng-pristine ng-valid"
+                                                  id="cantConnServerExample"></textarea>
+                                    </div>
+                                </div>
+                                <div class="console-form-row">
+                                    <div class="console-form-header ng-binding">返回结果示例</div>
+                                    <div class="console-form-body">
+                                        <textarea placeholder="该值只作为展示如果操作成功返回值的例子,没有实际作用"
+                                                  class="console-textarea console-width-7 ng-pristine ng-valid" rows="5"
+                                                  id="successExample"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="console-panel console-mt4">
+                            <div class="console-panel-header">
+                                <span class="console-panel-header-line"></span>
+                                <div class="console-float-left ng-binding">可能会发生的错误码提示定义</div>
+                            </div>
+
+                            <div class="api-param-map-setter ms3">
+                                <table>
+                                    <tbody>
+                                    <tr>
+                                        <th width="25%" class="ng-binding">错误码</th>
+                                        <th width="25%" class="ng-binding">错误信息</th>
+                                        <th width="35%" class="ng-binding">描述</th>
+                                        <th width="10%" class="ng-binding">操作</th>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="pagination-gird-container request-param-setter-errormessage ng-binding ng-hide">
+                                <i class="icon-no-2 console-mr1 console-inline-block"></i>
+                            </div>
+                            <div class="pagination-gird-container console-clearfix">
+                                    <span class="console-button-wrap ng-isolate-scope" theme="green" size="tiny"
+                                          icon="add">
+                                        <a class="console-button console-button-green console-button-tiny errParam">
+                                            <i class="icon-add"></i>
+                                            <span>
+                                                <span class="ng-scope ng-binding">增加一条</span>
+                                            </span>
+                                        </a>
+                                    </span>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- createAPI4 End -->
+
+
+                </div>
+
+
+                <div class="console-panel-body console-p4 console-mt4 ">
+                    <div class="console-form">
+                        <div class="console-form-row">
+                            <div class="console-form-body">
+                                    <span class="console-button-wrap ng-isolate-scope">
+                                        <a class="console-button console-button-default console-button-medium hide cp-lPage">
+                                            <span ng-transclude="">
+                                                <span class="ng-scope ng-binding">上一步</span>
+                                            </span>
+                                        </a>
+                                    </span>
+                                    <span class="console-ml2 console-button-wrap ng-isolate-scope" theme="blue">
+                                        <a class="console-button console-button-blue console-button-medium cp-nPage">
+                                            <span ng-transclude="">
+                                                <span class="ng-scope ng-binding">下一步</span>
+                                            </span>
+                                        </a>
+                                    </span>
+                                    <span class="console-ml2 console-button-wrap ng-isolate-scope " theme="blue"
+                                          onclick="saveAPI()">
+                                        <a class="console-button console-button-blue console-button-medium console-button-disabled hide cp-sPage">
+                                            <span>
+                                                <span class="ng-scope ng-binding">保存</span>
+                                            </span>
+                                        </a>
+                                    </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- apiListModal End -->
+    </div>
+    <!-- rightP End -->
+
+</div>
+
+<script src="js/main.js"></script>
+<script src="js/APISelectChange.js"></script>
+<script>
+//获得路径中的参数
+function getURLParam() {
+    var url=window.location.href;
+    var indexof=url.indexOf("&");
+    if(indexof>0){
+        url = url.substring(0,indexof);
+    }
+    var lastIndex=url.lastIndexOf("/");
+    var name=url.substring(lastIndex).replace("/","");
+    $("#appName").val(name)
+}
+getURLParam();
+</script>
+</body>
+
+</html>

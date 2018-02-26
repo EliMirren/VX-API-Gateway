@@ -1,0 +1,744 @@
+* {
+    margin: 0;
+    padding: 0;
+}
+.t-r{
+    text-align: right !important;
+}
+.label_crear{
+    margin: 0;
+    font-weight: normal;
+}
+
+.scope-test {
+    background-color: #999;
+    color: white;
+    padding: 6px 12px;
+    border: 1px solid transparent;
+    border-radius: 4px;
+}
+
+.scope-pre {
+    background-color: #337AB7;
+    color: white;
+    padding: 6px 12px;
+    border: 1px solid transparent;
+    border-radius: 4px;
+}
+
+.scope-formal {
+    background-color: #5CB85C;
+    color: white;
+    padding: 6px 12px;
+    border: 1px solid transparent;
+    border-radius: 4px;
+}
+
+.console-width-7 {
+    width: 58.33333333% !important;
+}
+
+.txt-left {
+    text-align: left !important;
+}
+
+li {
+    list-style-type: none;
+}
+
+li.current {
+    background: #eee;
+}
+
+.nav > li > a {
+    color: #333;
+}
+
+.clearfloat {
+    zoom: 1;
+}
+
+.clearfloat::after {
+    display: block;
+    clear: both;
+    content: "";
+    visibility: hidden;
+    height: 0;
+}
+
+a:hover {
+    text-decoration: none;
+}
+
+.nav {
+    padding: 0;
+}
+
+.hide {
+    display: none;
+}
+
+.login-out {
+    display: inline-block;
+    line-height: 50px;
+    font-size: 18px;
+    color: white;
+    float: right;
+    margin-right: 30px;
+    cursor: pointer;
+}
+
+.rightP {
+    padding-top: 12px;
+}
+
+.createBtn {
+    margin: 10px;
+}
+
+.rightP table thead th {
+    background: #F5F6FA;
+    text-align: left;
+    color: #999;
+    font-weight: normal;
+    padding: 8px;
+    line-height: 17px;
+    border-bottom: 1px solid #e1e6eb;
+    vertical-align: middle;
+}
+
+.rightP table tbody td {
+    background: #FFF;
+    padding: 12px 8px;
+    line-height: 17px;
+    border-bottom: 1px solid #e1e6eb;
+    text-align: left;
+    vertical-align: middle;
+}
+
+.rightP table thead th {
+    background: #F5F6FA;
+    text-align: left;
+    color: #999;
+    font-weight: normal;
+    padding: 8px;
+    line-height: 17px;
+    border-bottom: 1px solid #e1e6eb;
+    vertical-align: middle;
+}
+
+.rightP table > tbody > tr > th {
+    border: none;
+    border-bottom: 1px solid #ddd;
+    text-align: center;
+}
+
+.rightP .apiGroup {
+    border: 1px solid #ddd;
+    text-align: right;
+}
+
+.rightP .pagination {
+    margin: 10px;
+}
+
+#apiGroups,
+#trafficControl,
+#logManage,
+#apiList {
+    text-align: right;
+}
+
+.dropdown-menu {
+    min-width: 90px;
+}
+
+.red {
+    color: red;
+}
+.black-ip-btn{
+    margin:5px 0 0 5px !important;
+}
+.badge-box{
+    background-color: red !important;
+    display: none;
+}
+.hide {
+    display: none;
+}
+
+.console-clearfix:before,
+.console-clearfix:after {
+    content: " ";
+    display: table;
+}
+
+.console-clearfix {
+    margin-bottom: 50px;
+}
+
+.console-clearfix li {
+    width: 25%;
+    overflow: hidden;
+    text-align: center;
+    background: #CCC;
+    float: left;
+    height: 26px;
+    line-height: 26px;
+    padding: 0 30px 0 20px;
+    color: #FFF;
+}
+
+.console-clearfix li.console-guidebar-current {
+    background: #00a2ca;
+}
+
+.console-guidebar-arrow {
+    position: relative;
+    float: left;
+    display: inline;
+    width: 10px;
+    height: 26px;
+    overflow: hidden;
+    background: #ccc;
+    margin-left: -10px;
+}
+
+.console-guidebar-next {
+    position: absolute;
+    display: block;
+    left: 0;
+    top: -3px;
+    height: 0;
+    width: 0;
+    overflow: hidden;
+    border: solid 10px transparent;
+    border-width: 16px 10px;
+    border-left-color: #fff;
+}
+
+.console-guidebar-arrow-current .console-guidebar-prev {
+    border-left-color: #00a2ca;
+}
+
+.console-guidebar-prev {
+    position: absolute;
+    display: block;
+    left: 0;
+    top: 0;
+    height: 0;
+    width: 0;
+    overflow: hidden;
+    border: solid 10px transparent;
+    border-width: 13px 8px;
+    border-left-color: #ccc;
+}
+
+.console-panel-header {
+    position: relative;
+    background: #F4F5F9;
+    border: 1px solid #E1E6EB;
+    border-bottom: none;
+    padding: 0 12px 0 16px;
+    font-size: 14px;
+    height: 40px;
+    line-height: 38px;
+}
+
+.console-panel-header:before,
+.console-panel-header:after {
+    content: " ";
+    display: table;
+}
+
+.console-panel-header-line {
+    display: block;
+    position: absolute;
+    left: -1px;
+    top: -1px;
+    height: 41px;
+    width: 3px;
+    overflow: hidden;
+    background: #778;
+    font-size: 0;
+    line-height: 0;
+}
+
+.console-panel-header:after {
+    clear: both;
+}
+
+.console-panel-body {
+    border: 1px solid #E1E6EB;
+    background: #FFF;
+}
+
+.console-form-row {
+    display: block;
+    padding: 5px 0;
+}
+
+.console-form-header {
+    float: left;
+    padding: 5px 0;
+    text-align: right;
+    width: 23%;
+    padding: 9px 15px;
+    text-align: left;
+}
+
+.console-form-body {
+    float: none;
+    padding: 5px 15px;
+    margin: 0;
+    text-align: center;
+}
+
+.console-selectbox {
+    display: inline-block;
+    vertical-align: middle;
+    height: 32px;
+    border-radius: 0px;
+    padding: 6px;
+    font-size: 14px;
+    line-height: 145%;
+    outline: none;
+    border: 1px solid #CCC;
+    background: #FFF;
+}
+
+.console-form-tip-inline {
+    display: inline-block;
+    vertical-align: middle;
+    line-height: 30px;
+}
+
+.console-radio,
+.console-checkbox {
+    display: inline-block;
+    vertical-align: middle;
+    line-height: 28px;
+}
+
+.console-radio input,
+.console-checkbox input,
+.console-radio span,
+.console-checkbox span {
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.console-radio input,
+.console-checkbox input,
+.console-radio span,
+.console-checkbox span {
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.console-textarea {
+    display: inline-block;
+    vertical-align: middle;
+    padding: 6px;
+    font-size: 14px;
+    line-height: 145%;
+    outline: none;
+    border: 1px solid #CCC;
+    background: #FFF;
+    color: #555;
+    width: 400px;
+    resize: none;
+}
+
+.descriptionTable {
+    width: 100%;
+}
+
+.descriptionTable td {
+    padding: 10px 16px;
+}
+
+.console-textbox {
+    display: inline-block;
+    vertical-align: middle;
+    height: 32px;
+    padding: 6px;
+    transition: none;
+    font-size: 14px;
+    line-height: 145%;
+    outline: none;
+    border: 1px solid #CCC;
+    background: #FFF;
+    color: #555;
+    width: 400px;
+}
+
+.console-form-tip-block {
+    line-height: 16px;
+    display: block;
+    padding: 8px 0;
+}
+
+.console-messagebar {
+    position: relative;
+    padding: 6px 20px 6px 12px;
+    font-size: 14px;
+    border: 1px solid #DDD;
+    background: #F9F9F9;
+    color: #555;
+    line-height: 18px;
+    transition: all 0.3s ease;
+    min-height: 30px;
+}
+
+.console-messagebar-blue {
+    color: #666;
+    background-color: #f5f6fa;
+    border-color: #e1e6eb;
+}
+
+.console-blue {
+    color: #09C !important;
+}
+
+.console-text-size-14 {
+    font-size: 13px !important;
+}
+
+.console-button {
+    width: 100%;
+    text-align: center;
+    display: inline-block;
+    border: 1px solid #DDD;
+    background: #F7F7F7;
+    padding: 0px 16px;
+    cursor: pointer;
+    height: 32px;
+    line-height: 30px;
+    text-decoration: none;
+    color: #333;
+    font-size: 12px;
+}
+
+.console-button i,
+.console-button span {
+    line-height: 30px;
+    display: inline-block;
+    vertical-align: top;
+}
+
+.console-button-wrap {
+    display: inline-block;
+    cursor: pointer;
+}
+
+.request-param-setter table {
+    width: 100%;
+    border: 1px solid #E1E6EB;
+    border-collapse: collapse;
+    border-spacing: 0;
+}
+
+.request-param-setter table tr th {
+    background: #F4F5F9;
+    font-weight: normal;
+    padding: 10px 16px;
+    text-align: left;
+}
+
+.pagination-gird-container {
+    padding: 10px;
+    border: 1px solid #e1e6eb;
+    border-top: none;
+}
+
+.console-button-green,
+.console-button-green:visited,
+.console-button-green:link {
+    border-color: #4DB118;
+    background-color: #57A235;
+    color: #FFF;
+}
+
+.request-param-setter table tr td {
+    border-top: 1px solid #E1E6EB;
+    padding: 10px 16px;
+    text-align: left;
+}
+
+.console-width-12 {
+    width: 100% !important;
+}
+
+.console-text-align-center {
+    text-align: center !important;
+}
+
+.ng-cloak,
+.x-ng-cloak,
+.ng-hide {
+    display: none;
+}
+
+.console-form-tip-block {
+    line-height: 16px;
+    display: block;
+    padding: 8px 0;
+}
+
+.api-param-map-setter table tr th {
+    background: #F4F5F9;
+    font-weight: normal;
+    padding: 10px 16px;
+    text-align: left;
+}
+
+.console-mt4 {
+    margin-top: 16px;
+}
+
+.api-param-map-setter table {
+    width: 100%;
+    border: 1px solid #E1E6EB;
+}
+
+.ms2 table tbody td,
+.ms1 table tbody td,
+.ms3 table tbody td {
+    text-align: center;
+}
+
+input[type=checkbox],
+input[type=radio] {
+    margin-top: -2px;
+}
+
+.createAPI1 .console-form-body,
+.createAPI4 .console-form-body {
+    text-align: left;
+}
+
+.cp-sPage {
+    background: #00a2ca;
+    color: #fff;
+}
+
+.blue-btn {
+    background: #00a2ca;
+    color: #fff;
+}
+
+.guidebar-current {
+    background: #00a2ca !important;
+}
+
+.console-inline-block {
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.api-publisher-dialog .apis {
+    background: #f1f6f9;
+    padding: 10px;
+    line-height: 170%;
+}
+
+.api-publisher-dialog .apis .list {
+    max-width: 490px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.console-ml2 {
+    margin-left: 8px;
+}
+
+.console-button-tab {
+    clear: both;
+}
+
+.console-dialog-body-container {
+    padding: 15px;
+}
+
+.console-button-tab-button {
+    margin-right: 8px;
+    margin-bottom: 8px;
+}
+
+.console-button-wrap {
+    display: inline-block;
+    cursor: pointer;
+}
+
+.console-button-lightgrey,
+.console-button-lightgrey:visited,
+.console-button-lightgrey:link {
+    border-color: #D9DEE4;
+    background-color: #D9DEE4;
+    color: #333;
+}
+
+.console-button i,
+.console-button span {
+    line-height: 30px;
+    display: inline-block;
+    vertical-align: top;
+}
+
+.console-button i,
+.console-button span {
+    line-height: 30px;
+    display: inline-block;
+    vertical-align: top;
+}
+
+.console-dialog {
+    border: 1px solid #CCC;
+    box-shadow: 0px 0px 8px rgba(0, 0, 0, 0.3);
+    background: #FFF;
+    position: relative;
+}
+
+.console-dialog-fixedHeight .console-dialog-body {
+    position: absolute;
+    top: 42px;
+    left: 0px;
+    right: 0px;
+    bottom: 75px;
+}
+
+.console-dialog-body-container {
+    padding: 15px;
+}
+
+.policy-selector .apis {
+    background: #f1f6f9;
+    padding: 10px;
+    line-height: 170%;
+}
+
+.policy-selector .apis .list {
+    max-width: 690px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.console-float-left {
+    float: left !important;
+}
+
+.console-mt3 {
+    margin-top: 12px;
+}
+
+.console-width-8 {
+    width: 66.66666667% !important;
+}
+
+.policy-selector .search-result {
+    height: 224px;
+    position: relative;
+}
+
+.console-panel-body {
+    border: 1px solid #E1E6EB;
+    background: #FFF;
+}
+
+.console-clearfix:before,
+.console-clearfix:after {
+    content: " ";
+    display: table;
+}
+
+.console-clearfix:after {
+    clear: both;
+}
+
+.console-clearfix:before,
+.console-clearfix:after {
+    content: " ";
+    display: table;
+}
+
+.createApp {
+    font-size: 16px;
+}
+
+.createApp ul li {
+    margin-bottom: 5px;
+}
+
+.createApp .text {
+    width: 85%;
+    border: 1px solid #999;
+    padding-left: 5px;
+}
+
+.radius {
+    border-radius: 4px;
+}
+.sys-info-block {
+    width: 100%;
+    height: 100%;
+    box-shadow: 0px 1px 3px 2px #DDDDDD;
+    border: 1px solid #DDDDDD;
+    text-align: center;
+    margin-top:20px;
+}
+.sys-info-block h3{
+    line-height: 60px;
+    margin: 0;
+}
+.show-tips-model{
+    width: 100%;
+    height: 100%;
+    position: fixed;
+    z-index:999;
+    text-align: center;
+}
+.show-tips-model .tips-body{
+    text-align: center;
+    display: inline-block;
+    margin-top: 15%;
+    width: 300px;
+    height: 200px;
+    background-color: #fff;
+    border: 1px solid #DDDDDD;
+    box-shadow: 0 2px 2px 5px #DDDDDD;
+}
+@keyframes progress-width
+{
+    from {width: 0;}
+    to {width: 100%;}
+}
+.tips-info{
+    height: 180px;
+    font-size: 24px;
+    font-weight: bold;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.tips-progress{
+    animation : progress-width 5s infinite;
+    background-color: #4DB118;
+    margin:0;
+    padding:0;
+    height: 20px;
+}
+table.console-panel-body {
+    width: 100%;
+    border: none;
+}
+table.console-panel-body tr td {
+    background: #FFF;
+    border: 1px solid #E1E6EB;
+    padding: 16px;
+    vertical-align: middle;
+    line-height: 140%;
+}

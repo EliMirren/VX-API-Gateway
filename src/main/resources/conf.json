@@ -1,0 +1,27 @@
+{
+	"vertx": {
+		"preferNativeTransport": true
+	},
+	"cluster": {
+		"clusterType": "NONE",
+		"clusterConf": {
+			"zookeeperHosts": "127.0.0.1",
+			"sessionTimeout": 20000,
+			"connectTimeout": 3000,
+			"rootPath": "io.vertx",
+			"vxApiConfPath": "/io.vertx/vx.api.gateway/conf",
+			"retry": {
+				"initialSleepTime": 100,
+				"intervalTimes": 10000,
+				"maxTimes": 5
+			}
+		}
+	},
+	"dataConfig": {
+		"url": "jdbc:sqlite:configDB.db",
+		"driver_class": "org.sqlite.JDBC"
+	},
+	"clientConfig": {
+		"clientPort": 5256
+	}
+}

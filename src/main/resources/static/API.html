@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>VX-API-APIs</title>
+    <link rel="stylesheet" href="https://cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap.min.css"
+          integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u"
+          crossorigin="anonymous">
+    <script src="https://cdn.bootcss.com/jquery/1.12.4/jquery.min.js"></script>
+    <script src="https://cdn.bootcss.com/bootstrap/3.3.7/js/bootstrap.min.js"
+            integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
+            crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/page.css">
+</head>
+
+<body style="min-width: 1180px">
+<nav class="navbar navbar-inverse">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <a href="/static/Application.html" class="navbar-brand" style="font-family: 微软雅黑;color: white;font-size: 24px;">VX-API</a>
+        </div>
+        <span class="login-out">退出</span>
+    </div>
+</nav>
+<input type="hidden" id="appName" value="">
+<div class="container">
+    <ol class="breadcrumb" style="margin-bottom:0px;">
+        <li><a href="/static/Application.html">应用列表</a></li>
+        <li>API管理</li>
+    </ol>
+    <div class="rightP" style="padding-top:5px;">
+        <div id="apiList" class="cont ">
+            <a onclick="createAPI()" class="btn btn-primary createBtn">新建API</a>
+            <div class="apiGroup">
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <th width="20%">API名称</th>
+                        <th width="20%">描述</th>
+                        <th width="20%">Path</th>
+                        <th width="16%">创建时间</th>
+                        <th width="12%">运行环境</th>
+                        <th width="12%">查看详情</th>
+                    </tr>
+                    </thead>
+                    <tbody class="api-list-body">
+                    </tbody>
+                </table>
+                <div style="position:relative;">
+                    <div class="pages">
+                        <ul class="page" maxshowpageitem="8" pagelistcount="20" valueCount="0" curPage="1" id="page"></ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script src="js/main.js"></script>
+<script src="js/page.js"></script>
+<script>
+    //获得路径中的参数
+    function getURLParam() {
+        var url=window.location.href;
+        var indexof=url.indexOf("&");
+        if(indexof>0){
+            url = url.substring(0,indexof);
+        }
+        var lastIndex=url.lastIndexOf("/");
+        var name=url.substring(lastIndex).replace("/","");
+        $("#appName").val(name)
+    }
+    getURLParam();
+    function createAPI() {
+        window.location.href="/static/CreateAPI.html?/"+$("#appName").val();
+    }
+
+    //页面切换
+    function flip(curPage) {
+        findData(curPage);
+    }
+    //获得数据
+    function findData(curPage) {
+        var appName=$("#appName").val();
+        var limit=$("#page").attr("pagelistcount");
+        var offset = (curPage-1)*limit;
+        var data = {
+            'name':appName,
+            'limit':limit,
+            'offset':offset
+        };
+        $.ajax({
+            type: "get",
+            url: '/static/findAPI/'+appName,
+            async: true,
+            data: data,
+            dataType: "json",
+            success: function (result) {
+                if (result.status == 200) {
+                	$(".api-list-body").html('');
+                    var item = result.data.data;
+                    for(var i=0;i<item.length;i++){
+                        var txt="<tr><td><a href='/static/getAPI/"+item[i].apiName+"'>"+item[i].apiName+"</a></td>"
+                                +"<td>"+item[i].apiDescribe+"</td>"
+                                +"<td>"+item[i].path+"</td>"
+                                +"<td>"+item[i].apiCreateTime+"</td>";
+                        if(item[i].online == true){
+                            txt +="<td><a>(运行中)</a></td>";
+                        }else{
+                            txt +="<td>未运行</td>";
+                        }
+                        txt += "<td><a href='/static/getAPI/"+item[i].apiName+"'>查看详情</a></td></tr>";
+                        $(".api-list-body").append($(txt));
+                    }
+                    flipPage(result.data.dataCount,curPage);
+                } else {
+                    alert("获取失败");
+                    console.log("获取失败status:" + result.status + " ,msg:"
+                            + result.msg + " ,data:");
+                    console.log(result.data);
+                }
+            },
+            error: function () {
+                alert("获取应用失败");
+            }
+        });
+    }
+    //翻页
+    function flipPage(valueCount,curPage) {
+    	
+        $("#page").attr("valueCount", valueCount);//设置数据总行数
+        $("#page").attr("curPage",curPage);//设置数据为当前页
+       	if(valueCount < parseInt( $("#page").attr('pagelistcount'))){
+       		return;
+       	}
+        $("#page").initPage(valueCount,curPage);
+    }
+    flip(1);
+</script>
+</body>
+
+</html>

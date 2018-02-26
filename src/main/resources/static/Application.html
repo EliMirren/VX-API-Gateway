@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+<title>VX-API-Gateway</title>
+<link rel="stylesheet"
+	href="https://cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap.min.css"
+	integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u"
+	crossorigin="anonymous">
+<script src="https://cdn.bootcss.com/jquery/1.12.4/jquery.min.js"></script>
+<script
+	src="https://cdn.bootcss.com/bootstrap/3.3.7/js/bootstrap.min.js"
+	integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
+	crossorigin="anonymous"></script>
+<link rel="stylesheet" href="css/main.css">
+</head>
+
+<body style="min-width: 1310px;">
+	<nav class="navbar navbar-inverse">
+		<div class="container-fluid">
+			<div class="navbar-header">
+				<a href="/static/Application.html" class="navbar-brand"
+					style="font-family: 微软雅黑; color: white; font-size: 24px;">VX-API</a>
+			</div>
+			<span class="login-out"><a href="/loginOut" style="color: white">退出</a></span>
+		</div>
+	</nav>
+	<div class="container-fluid">
+		<ul class="nav nav-sidebar col-xs-2 col-md-2">
+			<li id='aGroup' class="nv current"><a href="#">应用列表</a></li>
+			<li id='aLog' class="nv"><a href="/static/SysInfos.html">运行状态</a></li>
+		</ul>
+
+
+		<div class="rightP col-xs-8 col-md-8">
+
+			<div id="apiGroups" class="cont">
+				<a href="CreateAPP.html" class="btn btn-primary createBtn">新建应用
+				</a>
+
+				<div class="apiGroup">
+					<table class="table">
+						<thead>
+							<tr>
+								<th width="15%">应用名称</th>
+								<th width="30%">应用描述</th>
+								<th width="15%">创建时间</th>
+								<th width="12%">应用环境</th>
+								<th width="10%">状态</th>
+								<th width="18%">操作</th>
+							</tr>
+						</thead>
+						<tbody>
+						</tbody>
+					</table>
+				</div>
+			</div>
+		</div>
+	</div>
+	<script src="js/main.js"></script>
+	<script>
+		$(function() {
+			$.ajax({
+				type : "get",
+				url : '/static/findAPP',
+				async : true,
+				dataType : "json",
+				success : function(result) {
+					console.log(result);
+					if (result.status == 200) {
+						var item =result.data;
+						$("tbody").html('');
+						for (var i = 0; i < item.length; i++) {
+							var text = "<tr>" + "<td><a href='/static/getAPP/" + item[i].appName + "'>" + item[i].appName + "</a></td> " + "<td>"
+									+ item[i].describe + "</td>" + "<td>" + item[i].time
+									+ "</td>";
+							if (item[i].scope == 2) {
+								text += "<td><span class='scope-formal'>正式版</span></td>";
+							} else if (item[i].scope == 1) {
+								text += "<td><span class='scope-pre'>预览版</span></td>";
+							} else {
+								text += "<td><span class='scope-test'>测试版</span></td>";
+							}
+							if(item[i].online == true){
+								text += "</td>";
+							}else{
+								text += "";
+							}
+							if(item[i].online == true){
+								text += "<td><a>(运行中)</a></td>";
+							}else{
+								text += "<td>未运行</td>";
+							}
+							text += "<td> <span> <a href='/static/API.html?/"+item[i].appName+"'>API管理 </a><span> | </span><a href='/static/getAPP/" + item[i].appName + "'> 查看详情</a></span></td> </tr>";
+							$("tbody").append($(text));
+						}
+						
+					} else {
+						alert("请求加载应用数据失败");
+						console.log("加载应用失败status:" + result.status + " ,msg:"
+								+ result.msg + " ,data:" );
+						console.log(result.data);
+					}
+				},
+				error : function() {
+					alert("请求加载应用数据失败");
+				}
+			});
+		})
+	</script>
+</body>
+
+</html>
