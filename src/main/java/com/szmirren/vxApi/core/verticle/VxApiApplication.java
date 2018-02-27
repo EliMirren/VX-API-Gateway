@@ -3,7 +3,6 @@ package com.szmirren.vxApi.core.verticle;
 import java.io.UnsupportedEncodingException;
 import java.net.ConnectException;
 import java.net.MalformedURLException;
-import java.net.URLEncoder;
 import java.text.MessageFormat;
 import java.time.Duration;
 import java.time.Instant;
@@ -879,9 +878,8 @@ public class VxApiApplication extends AbstractVerticle {
 		if (options == null) {
 			throw new NullPointerException("页面跳转服务类型的配置文件无法装换为服务类");
 		}
-		String url = URLEncoder.encode(options.getUrl(), "UTF-8");
 		route.handler(rct -> {
-			rct.response().putHeader("Location", url).setStatusCode(302);
+			rct.response().putHeader("Location", options.getUrl()).setStatusCode(302);
 			if (isNext) {
 				rct.put(VxApiAfterHandler.PREV_IS_SUCCESS_KEY, Future.<Boolean>succeededFuture(true));// 告诉后置处理器当前操作成功执行
 				rct.next();

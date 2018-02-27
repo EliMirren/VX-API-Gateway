@@ -31,7 +31,7 @@ public class VxApiClientJsonAuth {
 			String pwd = authInfo.getString(VxApiRolesConstant.USER_PWD_KEY);
 			String role = authInfo.getString(VxApiRolesConstant.USER_ROLE_KEY);
 			FileSystem file = vertx.fileSystem();
-			String path = PathUtil.getPath("user.json");
+			String path = PathUtil.getPathString("user.json");
 			file.readFile(path, res -> {
 				if (res.succeeded()) {
 					JsonObject users = res.result().toJsonObject();

@@ -70,7 +70,7 @@ public class VxApiMain extends AbstractVerticle {
 	public void getConfig(Handler<AsyncResult<JsonObject>> conf) {
 		if (config() == null || config().isEmpty()) {
 			// 获得系统配置文件
-			vertx.fileSystem().readFile(PathUtil.getPath("conf.json"), res -> {
+			vertx.fileSystem().readFile(PathUtil.getPathString("conf.json"), res -> {
 				if (res.succeeded()) {
 					try {
 						JsonObject config = res.result().toJsonObject();
@@ -96,6 +96,7 @@ public class VxApiMain extends AbstractVerticle {
 						nextConf.put("clientConfig", config.getJsonObject("clientConfig", getDefaultClientConfig()));
 						conf.handle(Future.<JsonObject>succeededFuture(nextConf));
 					} catch (Exception e) {
+						System.out.println("获取配置文件-->失败:" + e);
 						conf.handle(Future.<JsonObject>failedFuture(e));
 					}
 				} else {

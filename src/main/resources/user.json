@@ -1,13 +1,13 @@
 {
 	"VXAdmin": {
-		"pwd": "hiVX",
+		"pwd": "hivx",
 		"roles": [
 			"write",
 			"read"
 		]
 	},
 	"VXOps": {
-		"pwd": "hiVX",
+		"pwd": "hivx",
 		"roles": [
 			"read"
 		]

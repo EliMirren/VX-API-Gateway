@@ -1,5 +1,6 @@
 package com.szmirren.vxApi.core.verticle;
 
+import java.io.File;
 import java.text.MessageFormat;
 import java.time.Instant;
 
@@ -15,6 +16,7 @@ import com.szmirren.vxApi.core.common.VxApiEventBusAddressConstant;
 import com.szmirren.vxApi.core.common.VxApiGatewayAttribute;
 import com.szmirren.vxApi.core.enums.ContentTypeEnum;
 import com.szmirren.vxApi.core.enums.HTTPStatusCodeMsgEnum;
+import com.szmirren.vxApi.core.handler.freemarker.VxApiFreeMarkerTemplateEngine;
 import com.szmirren.vxApi.core.options.VxApiApplicationDTO;
 import com.szmirren.vxApi.core.options.VxApisDTO;
 
@@ -23,6 +25,7 @@ import io.vertx.core.Future;
 import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.eventbus.ReplyException;
 import io.vertx.core.http.HttpServerResponse;
+import io.vertx.core.impl.FileResolver;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.auth.User;
@@ -36,7 +39,6 @@ import io.vertx.ext.web.handler.StaticHandler;
 import io.vertx.ext.web.handler.TemplateHandler;
 import io.vertx.ext.web.sstore.ClusteredSessionStore;
 import io.vertx.ext.web.sstore.LocalSessionStore;
-import io.vertx.ext.web.templ.FreeMarkerTemplateEngine;
 import io.vertx.ext.web.templ.TemplateEngine;
 
 /**
@@ -64,12 +66,16 @@ public class ClientVerticle extends AbstractVerticle {
 	 * 没有权限返回
 	 */
 	private final String UNAUTHORIZED_RESULT = "<h2 style='text-align: center;line-height: 80px;'>对不起!你没有该操作行为的权限  <a href='javascript:history.go(-1);'>返回</a></h2>";
+	/**
+	 * 没有权限返回
+	 */
+	private final String _404 = "<h2 style='text-align: center;line-height: 80px;'>Resource not found  <a href='javascript:history.go(-1);'>返回</a></h2>";
 
 	@Override
 	public void start(Future<Void> fut) throws Exception {
 		Router router = Router.router(vertx);
-		router.route().handler(FaviconHandler.create(PathUtil.getPath("static/logo.png")));
-		router.route().handler(BodyHandler.create().setUploadsDirectory("../temp/file-uploads"));
+		router.route().handler(FaviconHandler.create(getFaviconPath()));
+		router.route().handler(BodyHandler.create().setUploadsDirectory(getUploadsDirectory()));
 		router.route().handler(CookieHandler.create());
 		if (vertx.isClustered()) {
 			router.route().handler(SessionHandler.create(ClusteredSessionStore.create(vertx))
@@ -79,8 +85,8 @@ public class ClientVerticle extends AbstractVerticle {
 					.setSessionCookieName(VxApiGatewayAttribute.SESSION_COOKIE_NAME));
 		}
 		// 通过html的方式管理应用网关
-		TemplateEngine engine = FreeMarkerTemplateEngine.create();
-		TemplateHandler tempHandler = TemplateHandler.create(engine);
+		TemplateEngine engine = VxApiFreeMarkerTemplateEngine.create(getTemplateRoot());
+		TemplateHandler tempHandler = TemplateHandler.create(engine, getTemplateRoot(), CONTENT_VALUE_HTML_UTF8);
 		router.getWithRegex(".+\\.ftl").handler(tempHandler);
 		// 权限相关
 		router.route("/static/*").handler(VxApiClientStaticAuth.create());
@@ -88,7 +94,8 @@ public class ClientVerticle extends AbstractVerticle {
 		router.route("/loginOut").handler(this::loginOut);
 		router.route("/static/CreateAPI.html").handler(this::staticAPI);
 		router.route("/static/CreateAPP.html").handler(this::staticAPP);
-		router.route("/static/*").handler(StaticHandler.create(PathUtil.getPath("static")));
+
+		router.route("/static/*").handler(StaticHandler.create(getStaticRoot()));
 		// 查看系统信息
 		router.route("/static/sysInfo").handler(this::sysInfo);
 		router.route("/static/sysReplaceIpList").handler(this::sysReplaceIpList);
@@ -301,6 +308,10 @@ public class ClientVerticle extends AbstractVerticle {
 			LOG.debug(MessageFormat.format("[user : {0}] 执行查看应用-->{1}", rct.session().get("userName"), name));
 			vertx.eventBus().<JsonObject>send(VxApiEventBusAddressConstant.GET_APP, name, res -> {
 				if (res.succeeded()) {
+					if (res.result().body() == null || res.result().body().isEmpty()) {
+						rct.response().putHeader(CONTENT_TYPE, CONTENT_VALUE_HTML_UTF8).setStatusCode(404).end(_404);
+						return;
+					}
 					vertx.eventBus().<Boolean>send(VxApiEventBusAddressConstant.DEPLOY_APP_IS_ONLINE, name, dep -> {
 						if (dep.succeeded()) {
 							JsonObject body = new JsonObject(res.result().body().getString("content"));
@@ -382,7 +393,7 @@ public class ClientVerticle extends AbstractVerticle {
 					JsonObject body = res.result().body();
 					JsonObject app = new JsonObject(body.getString("content"));
 					if (app.isEmpty()) {
-						rct.response().putHeader(CONTENT_TYPE, CONTENT_VALUE_HTML_UTF8).setStatusCode(404).end();
+						rct.response().putHeader(CONTENT_TYPE, CONTENT_VALUE_HTML_UTF8).setStatusCode(404).end(_404);
 					} else {
 						rct.put("app", app);
 						rct.reroute("/updateAPP.ftl");
@@ -635,6 +646,10 @@ public class ClientVerticle extends AbstractVerticle {
 			LOG.debug(MessageFormat.format("[user : {0}] 执行查看API-->{1}", rct.session().get("userName"), name));
 			vertx.eventBus().<JsonObject>send(VxApiEventBusAddressConstant.GET_API, name, res -> {
 				if (res.succeeded()) {
+					if (res.result().body() == null || res.result().body().isEmpty()) {
+						rct.response().putHeader(CONTENT_TYPE, CONTENT_VALUE_HTML_UTF8).setStatusCode(404).end(_404);
+						return;
+					}
 					JsonObject body = res.result().body();
 					String appName = body.getString(VxApiDATAStoreConstant.API_APP_ID_NAME);
 					JsonObject isOnLineConf = new JsonObject();
@@ -745,7 +760,7 @@ public class ClientVerticle extends AbstractVerticle {
 					JsonObject body = res.result().body();
 					JsonObject api = new JsonObject(body.getString(VxApiDATAStoreConstant.API_CONTENT_NAME));
 					if (api.isEmpty()) {
-						rct.response().putHeader(CONTENT_TYPE, CONTENT_VALUE_HTML_UTF8).setStatusCode(404).end();
+						rct.response().putHeader(CONTENT_TYPE, CONTENT_VALUE_HTML_UTF8).setStatusCode(404).end(_404);
 					} else {
 						// 添加认证配置文件为字符串
 						if (api.getValue("authOptions") != null) {
@@ -1028,4 +1043,60 @@ public class ClientVerticle extends AbstractVerticle {
 				.end("<h1 style='text-align: center;margin-top: 5%;'>Hello VX-API " + VxApiGatewayAttribute.VERSION
 						+ " <br><a href=\"http://szmirren.com/\"> 查看帮助文档</a> <br> <a href=\"static/Application.html\">进入首页</a></h1>");
 	}
+
+	/**
+	 * 获得客户端的 Favicon图标
+	 * 
+	 * @return
+	 */
+	public String getFaviconPath() {
+		if (PathUtil.isJarEnv()) {
+			return "../conf/static/logo.png";
+		} else {
+			return "static/logo.png";
+		}
+	}
+
+	/**
+	 * 获得静态文件的根目录
+	 * 
+	 * @return
+	 */
+	public String getStaticRoot() {
+		if (PathUtil.isJarEnv()) {
+			return "../conf/static";
+		} else {
+			return "static";
+		}
+	}
+
+	/**
+	 * 获得模板的路径
+	 * 
+	 * @return
+	 */
+	public String getTemplateRoot() {
+		if (PathUtil.isJarEnv()) {
+			FileResolver resolver = new FileResolver(vertx);
+			File file = resolver.resolveFile(new File(PathUtil.getPathString("templates")).getPath());
+			return "/" + file.getPath();
+		} else {
+			return "target/classes/templates";
+		}
+
+	}
+
+	/**
+	 * 获得文件上传的文件夹路径
+	 * 
+	 * @return
+	 */
+	public String getUploadsDirectory() {
+		if (PathUtil.isJarEnv()) {
+			return "../temp/file-uploads";
+		} else {
+			return "file-uploads";
+		}
+	}
+
 }

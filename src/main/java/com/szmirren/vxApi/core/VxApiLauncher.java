@@ -2,8 +2,6 @@ package com.szmirren.vxApi.core;
 
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 
 import com.szmirren.vxApi.core.common.PathUtil;
 
@@ -38,8 +36,7 @@ public class VxApiLauncher extends Launcher {
 	@Override
 	public void beforeStartingVertx(VertxOptions options) {
 		try {
-			Path target = Paths.get(PathUtil.getPath("conf.json"));
-			byte[] bytes = Files.readAllBytes(target);
+			byte[] bytes = Files.readAllBytes(PathUtil.getPath("conf.json"));
 			Buffer buff = Buffer.buffer(bytes);
 			// 总配置文件
 			JsonObject conf = buff.toJsonObject();

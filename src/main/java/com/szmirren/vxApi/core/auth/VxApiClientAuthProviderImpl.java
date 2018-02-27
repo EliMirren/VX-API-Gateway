@@ -31,7 +31,7 @@ public class VxApiClientAuthProviderImpl implements AuthProvider {
 			resultHandler.handle(Future.<User>succeededFuture(null));
 		} else {
 			String pwd = authInfo.getString("password");
-			String path = PathUtil.getPath("user.json");
+			String path = PathUtil.getPathString("user.json");
 			vertx.fileSystem().readFile(path, res -> {
 				if (res.succeeded()) {
 					JsonObject users = res.result().toJsonObject();

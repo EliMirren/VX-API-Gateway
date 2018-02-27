@@ -614,7 +614,7 @@
                                             <input type="text" id="redirect_url"
                                             	   value="<#if context.api.serverEntrance.serverType == "REDIRECT">${context.api.serverEntrance.body.url!}</#if>"
                                                    class="console-textbox console-width-1 ng-pristine ng-valid"
-                                                   style="border-radius: 0px;" placeholder="请输入跳转的页面">
+                                                   style="border-radius: 0px;" placeholder="请输入跳转的页面"> 特殊文字(例如中文)需要先URL编码
                                         </td>
                                     </tr>
                                     </tbody>

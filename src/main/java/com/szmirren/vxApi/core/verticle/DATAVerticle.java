@@ -35,15 +35,15 @@ public class DATAVerticle extends AbstractVerticle {
 		System.out.println("start DATA Verticle ...");
 		initShorthand();// 初始化简写后的常量数据
 		JsonObject dbConfig = config();
-		// 检查是否使用默认的sqlite数据库,如果是修改其连接为正确的连接
 		String url = dbConfig.getString("url");
 		if (dbConfig.getString("url").contains("jdbc:sqlite:")) {
 			String temp = url.replace("jdbc:sqlite:", "");
 			if (temp.indexOf("/") < 0) {
-				dbConfig.put("url", "jdbc:sqlite:" + PathUtil.getPath(temp));
+				dbConfig.put("url", "jdbc:sqlite:" + PathUtil.getPathString(temp));
 			}
 		}
 		jdbcClient = JDBCClient.createShared(vertx, dbConfig, VxApiGatewayAttribute.NAME);
+
 		// application operation address
 		vertx.eventBus().consumer(VxApiEventBusAddressConstant.FIND_APP, this::findApplication);
 		vertx.eventBus().consumer(VxApiEventBusAddressConstant.GET_APP, this::getApplication);
@@ -116,6 +116,7 @@ public class DATAVerticle extends AbstractVerticle {
 				LOG.error("执行查询所有应用程序-->失败:" + res.cause().toString());
 			}
 		});
+
 	}
 
 	/**
@@ -560,4 +561,5 @@ public class DATAVerticle extends AbstractVerticle {
 		this.BLCN = VxApiDATAStoreConstant.BLACKLIST_CONTENT_NAME;
 
 	}
+
 }
