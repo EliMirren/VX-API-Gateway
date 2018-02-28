@@ -466,7 +466,7 @@ public class VxApiApplication extends AbstractVerticle {
 			}
 			// 检查是否有后置处理器,有next给后置处理器,如果没有则response
 			boolean isAfterHandler = api.getAfterHandlerOptions() != null;
-			// 添加与后台交互的服务处理器
+			// 添加与后台交互的中心处理器
 			Route serverRoute = router.route();
 			try {
 				initServerHandler(isAfterHandler, api, serverRoute);
