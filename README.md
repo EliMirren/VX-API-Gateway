@@ -2,7 +2,7 @@
 ![flowchart](https://raw.githubusercontent.com/shenzhenMirren/MyGithubResources/master/image/VX-API-Gateway-Logo_small.png)<br/>
 VX-API-Gateway是基于Vert.x(java)开发的API网关,是一个全异步,高性能,可拓展,轻量级的API网关<br/>
 QQ交流群 : 440306757<br/>
-# 软件使用说明
+### 软件使用说明
 [VX-API-Gateway使用帮助文档](http://szmirren.com/)<br/>
 # VX-API 执行流程
 ![flowchart](https://raw.githubusercontent.com/shenzhenMirren/MyGithubResources/master/image/VX-API-Gateway-flowchart.png)
@@ -44,12 +44,12 @@ API的执行流程参考组件介绍
 mvn clean package appassembler:assemble
 打包完毕后进入target/VX-API-Gateway/bin执行相应bat/sh文件
 ```
-###软件目录说明:
+### 软件目录说明:
 bin 执行脚本<br/>
 conf 配置文件与客户端静态文件<br/>
 lib 项目依赖的架包<br/>
 logs 日志文件<br/>
 temp 缓存/临时文件<br/>
-##项目目录说明
+## 项目目录说明
 src/main/java中core包存放核心代码,spi包存放用户可以自定义插件的接口与工厂,自定义插件时实现相应的接口并在工场中添加获取该实现的名字与实现类,同时在客户端静态文件中添加相应的名字便可<br/>
 
