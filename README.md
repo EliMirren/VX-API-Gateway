@@ -2,7 +2,7 @@
 ![flowchart](https://raw.githubusercontent.com/shenzhenMirren/MyGithubResources/master/image/VX-API-Gateway-Logo_small.png)<br/>
 VX-API-Gateway是基于Vert.x(java)开发的API网关,是一个全异步,高性能,可拓展,轻量级的API网关<br/>
 QQ交流群 : 440306757<br/>
-# 软件使用说明
+## 软件使用说明
 [VX-API-Gateway使用帮助文档](http://szmirren.com/)<br/>
 # VX-API 执行流程
 ![flowchart](https://raw.githubusercontent.com/shenzhenMirren/MyGithubResources/master/image/VX-API-Gateway-flowchart.png)
