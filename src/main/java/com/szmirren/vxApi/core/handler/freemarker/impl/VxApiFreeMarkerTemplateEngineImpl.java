@@ -22,6 +22,12 @@ import io.vertx.ext.web.templ.FreeMarkerTemplateEngine;
 import io.vertx.ext.web.templ.impl.CachingTemplateEngine;
 import io.vertx.ext.web.templ.impl.VertxWebObjectWrapper;
 
+/**
+ * FreeMarker模板Engine的实现类
+ * 
+ * @author <a href="http://szmirren.com">Mirren</a>
+ *
+ */
 public class VxApiFreeMarkerTemplateEngineImpl extends CachingTemplateEngine<Template>
 		implements VxApiFreeMarkerTemplateEngine {
 	private final Configuration config;

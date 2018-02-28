@@ -5,7 +5,7 @@ import com.szmirren.vxApi.core.handler.freemarker.impl.VxApiFreeMarkerTemplateEn
 import io.vertx.ext.web.templ.FreeMarkerTemplateEngine;
 
 /**
- * FreeMarker模板的实现类
+ * FreeMarker模板Engine
  * 
  * @author <a href="http://szmirren.com">Mirren</a>
  *

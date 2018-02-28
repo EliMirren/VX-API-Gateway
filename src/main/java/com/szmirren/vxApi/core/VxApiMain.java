@@ -82,19 +82,26 @@ public class VxApiMain extends AbstractVerticle {
 						if (!CLUSTER_TYPE.equals(clusterType)) {
 							// 获取集群环境中的配置文件
 							VxApiClusterConfig clusterConfig = VxApiClusterConfigFactory.getClusterConfig(clusterType,
-									clusterc.getJsonObject("clusterConf", getDefaultClusterConfig()));
-							JsonObject result = clusterConfig.getConfig();
-							if (result != null && !result.isEmpty()) {
-								conf.handle(Future.<JsonObject>succeededFuture(result));
-								return;
-							}
+									clusterc.getJsonObject("clusterConf", getDefaultClusterConfig()), vertx);
+							clusterConfig.getConfig(handler -> {
+								if (handler.succeeded()) {
+									JsonObject result = handler.result();
+									if (result != null && !result.isEmpty()) {
+										conf.handle(Future.<JsonObject>succeededFuture(result));
+									}
+								} else {
+									conf.handle(Future.failedFuture(handler.cause()));
+								}
+							});
+						} else {
+							// 从配置中获取应用配置文件
+							JsonObject nextConf = new JsonObject();
+							nextConf.put("verticleConfig", config.getJsonObject("verticleConfig", new JsonObject()));
+							nextConf.put("dataConfig", config.getJsonObject("dataConfig", getDefaultDataConfig()));
+							nextConf.put("clientConfig",
+									config.getJsonObject("clientConfig", getDefaultClientConfig()));
+							conf.handle(Future.<JsonObject>succeededFuture(nextConf));
 						}
-						// 从配置中获取应用配置文件
-						JsonObject nextConf = new JsonObject();
-						nextConf.put("verticleConfig", config.getJsonObject("verticleConfig", new JsonObject()));
-						nextConf.put("dataConfig", config.getJsonObject("dataConfig", getDefaultDataConfig()));
-						nextConf.put("clientConfig", config.getJsonObject("clientConfig", getDefaultClientConfig()));
-						conf.handle(Future.<JsonObject>succeededFuture(nextConf));
 					} catch (Exception e) {
 						System.out.println("获取配置文件-->失败:" + e);
 						conf.handle(Future.<JsonObject>failedFuture(e));

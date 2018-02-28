@@ -1,5 +1,7 @@
 package com.szmirren.vxApi.core.cluster;
 
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Handler;
 import io.vertx.core.json.JsonObject;
 
 /**
@@ -14,5 +16,5 @@ public interface VxApiClusterConfig {
 	 * 
 	 * @return
 	 */
-	JsonObject getConfig() throws Exception;
+	void getConfig(Handler<AsyncResult<JsonObject>> event);
 }
