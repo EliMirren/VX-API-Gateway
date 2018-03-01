@@ -5,6 +5,7 @@ import java.net.MalformedURLException;
 import java.time.Instant;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.TimeoutException;
 
 import com.szmirren.vxApi.core.common.VxApiEventBusAddressConstant;
 import com.szmirren.vxApi.core.common.VxApiGatewayAttribute;
@@ -182,7 +183,7 @@ public class SessionTokenGrantAuthHandler implements VxApiCustomHandler {
 								.putHeader(HttpHeaderConstant.SERVER, VxApiGatewayAttribute.FULL_NAME)
 								.putHeader(HttpHeaderConstant.CONTENT_TYPE, api.getContentType());
 						// 如果是连接异常返回无法连接的错误信息,其他异常返回相应的异常
-						if (res.cause() instanceof ConnectException) {
+						if (res.cause() instanceof ConnectException || res.cause() instanceof TimeoutException) {
 							response.setStatusCode(api.getResult().getCantConnServerStatus())
 									.end(api.getResult().getCantConnServerExample());
 						} else {

@@ -461,6 +461,9 @@ public class ClientVerticle extends AbstractVerticle {
 			User user = rct.user();
 			user.isAuthorized(VxApiRolesConstant.WRITE, res -> {
 				if (res.succeeded()) {
+					JsonObject config = new JsonObject().put("appName", name);
+					// 将应用暂停
+					vertx.eventBus().send(VxApiEventBusAddressConstant.DEPLOY_APP_UNDEPLOY, config);
 					if (res.result()) {
 						LOG.info(MessageFormat.format("[user : {0}] 执行删除应用{1}...",
 								rct.session().<String>get("userName"), name));
@@ -1041,7 +1044,7 @@ public class ClientVerticle extends AbstractVerticle {
 	public void welcome(RoutingContext rct) {
 		rct.response().putHeader(CONTENT_TYPE, CONTENT_VALUE_HTML_UTF8)
 				.end("<h1 style='text-align: center;margin-top: 5%;'>Hello VX-API " + VxApiGatewayAttribute.VERSION
-						+ " <br><a href=\"http://szmirren.com/\"> 查看帮助文档</a> <br> <a href=\"static/Application.html\">进入首页</a></h1>");
+						+ " <br><a href=\"http://duhua.gitee.io/vx-api-gateway-doc/\"> 查看帮助文档</a> <br> <a href=\"static/Application.html\">进入首页</a></h1>");
 	}
 
 	/**

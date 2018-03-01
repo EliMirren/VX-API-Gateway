@@ -3,9 +3,12 @@
 VX-API-Gateway是基于Vert.x(java)开发的API网关,是一个全异步,高性能,可拓展,轻量级的API网关<br/>
 QQ交流群 : 440306757<br/>
 ### 软件使用说明
-[VX-API-Gateway使用帮助文档](http://szmirren.com/)<br/>
+[VX-API-Gateway使用帮助文档](http://duhua.gitee.io/vx-api-gateway-doc/)<br/>
 # VX-API 执行流程
 ![flowchart](https://raw.githubusercontent.com/shenzhenMirren/MyGithubResources/master/image/VX-API-Gateway-flowchart.png)
+<br>
+绿线代表一定会执行,黑线代表当存在时执行,当用户请求的时候,完整的流程按组件顺序由1开始执行到7,如果不满足任意一个组件时请求结束并响应(fail-end-response),当任意组件出现异常时统一进入异常组件(Exception Handler)请求结束并响应错误信息
+<br>
 API的执行流程参考组件介绍
 ## 组件介绍
 ### 1.黑名单检查 
@@ -37,12 +40,19 @@ API的执行流程参考组件介绍
 
 # 执行方式与环境要求
 该项目基于vert.x 3.5.1开发,开发环境jdk1.8_121,理论上只要带有JDK/JRE 1.8以上都可以运行该项目<br/>
-如果机器上没有JDK8环境,可以自己下载一个JRE/JDK环境并在脚本中指定软件使用哪哪个JRE/JDK启动<br/>
 可以在发行版中下载已经打包好的或者自己编译打包该项目,方法如下:<br/>
 执行mvn clean package appassembler:assemble 对项目进行编译打包<br/>
 ```html
 mvn clean package appassembler:assemble
 打包完毕后进入target/VX-API-Gateway/bin执行相应bat/sh文件
+```
+如果机器上没有JDK8环境,可以自己下载一个JRE/JDK环境并在脚本中指定软件使用哪个JRE/JDK启动<br/>
+ 修改示例(Windows环境):<br/>
+假设jre在D盘/java目录下,可以在start.bat找到%JAVACMD% %JAVA_OPTS% -Dfile....<br/>
+在以上语句前cd到jre的所在bin目录,也就是在执行java之前切换到D:/java/jreXXX/bin目录在执行java,相当于设置了一个运行环境<br/>
+```html
+cd D:/java/jreXXX/bin
+%JAVACMD% %JAVA_OPTS% -Dfile.encoding=UTF-8 ...
 ```
 ### 软件目录说明:
 bin 执行脚本<br/>

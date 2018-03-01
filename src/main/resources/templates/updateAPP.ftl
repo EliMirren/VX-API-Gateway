@@ -59,7 +59,7 @@
                                 <tr>
                                     <td width="22%" class="ng-binding t-r"><span class="red">* </span>应用名称:</td>
                                     <td>
-                                        <input type="text" id="app-name"
+                                        <input type="text" id="app-name"  disabled="disabled" 
                                                class="console-textbox console-width-4 ng-pristine ng-valid"
                                                value="${context.app.appName}" 
                                                placeholder="请输入应用的名称">
@@ -324,8 +324,8 @@
 									</td>
                                 </tr>
                                 <tr>
-									<td class="t-r" title="HTTP对象解码器的缓冲区大小单位byte">HTTP对象解码器的缓冲区大小(byte):</td>
-									<td><input type="text" id="decoderInitialBufferSize" class="console-textbox console-width-4 ng-pristine ng-valid" placeholder="HTTP对象解码器的缓冲区大小单位byte" value="${context.app.decoderInitialBufferSize?c}"></td>
+									<td class="t-r" title="HTTP对象解码器的缓冲区大小单位byte, 默认128byte">HTTP对象解码器的缓冲区大小(byte):</td>
+									<td><input type="text" id="decoderInitialBufferSize" class="console-textbox console-width-4 ng-pristine ng-valid" placeholder="HTTP对象解码器的缓冲区大小单位byte, 默认128byte" value="${context.app.decoderInitialBufferSize?c}"></td>
 								</tr>
                                 <tr>
                                     <td class="t-r" title="API与后台服务器 既你自己的服务器 交互的连接池数量 maxPoolSize">API与后台服务器交互的连接池数量:
@@ -337,18 +337,18 @@
                                                ></td>
                                 </tr>
                                 <tr>
-                                    <td class="t-r" title="maxInitialLineLength">参数值最大长度:</td>
+                                    <td class="t-r" title="maxInitialLineLength">参数值最大总长度:</td>
                                     <td><input type="text" id="maxInitialLineLength"
                                                class="console-textbox console-width-4 ng-pristine ng-valid"
-                                               placeholder="参数值最大长度 默认:4096"
+                                               placeholder="参数值最大总长度 默认:4096"
                                                value="${context.app.maxInitialLineLength?c}"
                                                ></td>
                                 </tr>
                                 <tr>
-                                    <td class="t-r" title="maxHeaderSize">header参数值最大长度:</td>
+                                    <td class="t-r" title="maxHeaderSize">header参数值最大总长度:</td>
                                     <td><input type="text" id="maxHeaderSize"
                                                class="console-textbox console-width-4 ng-pristine ng-valid"
-                                               placeholder="header参数值最大长度 默认:4096"
+                                               placeholder="header参数值最大总长度 默认:4096"
                                                value="${context.app.maxHeaderSize?c}"
                                                ></td>
                                 </tr>
