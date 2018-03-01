@@ -201,23 +201,14 @@ function systemParam() {
 }
 // 添加透传的header
 function addResultHeader() {
-    var html = ` <div>
-                                        <div class="console-form-header ng-binding"></div>
-                                        <div class="console-form-body">
-                                            <div style="margin-top: 3px">
-                                                <input type="text"
-                                                       class="console-textbox console-width-4 ng-pristine ng-valid input-result-header-name"
-                                                       placeholder="请输入header名字">
-                                                <a style="white-space:nowrap" onclick='delResultHeader(this)'><span
-                                                        style='cursor:pointer;'>移除</span></a>
-                                            </div>
-                                        </div>
-                                    </div>`;
-
-    $(".result-header-body").append(html);
+	var html = `  <div style="margin-top: 3px;"> 
+					<input type="text" class="console-textbox console-width-4 ng-pristine ng-valid input-result-header-name"  placeholder="请输入header名字">
+                    <a style="white-space:nowrap" onclick='delResultHeader(this)'><span style='cursor:pointer;'>移除</span></a>
+                  </div>`;
+    $(".result-tran-header-body").append(html);
 }
 function delResultHeader(ev) {
-    $(ev).parent().parent().parent().remove();
+    $(ev).parent().remove();
 }
 
 // 错误状态码
@@ -892,11 +883,16 @@ function apiResultInfo() {
     if (tranHeaders.length > 0) {
         data.tranHeaders = tranHeaders;
     }
-    data.apiEnterCheckFailureExample = $("#apiEnterCheckFailureExample").val() == '' ? "" : $("#apiEnterCheckFailureExample").val();
-    data.limitExample = $("#limitExample").val() == '' ? "" : $("#limitExample").val();
     data.successExample = $("#successExample").val() == '' ? "" : $("#successExample").val();
+    data.apiEnterCheckFailureExample = $("#apiEnterCheckFailureExample").val() == '' ? "" : $("#apiEnterCheckFailureExample").val();
+    data.apiEnterCheckFailureStatus = parseInt($("#apiEnterCheckFailureStatus").val());
+    data.limitExample = $("#limitExample").val() == '' ? "" : $("#limitExample").val();
+    data.limitStatus = parseInt($("#limitStatus").val());
     data.failureExample = $("#failureExample").val() == '' ? "" : $("#failureExample").val();
+    data.failureStatus = parseInt($("#failureStatus").val());
     data.cantConnServerExample = $("#cantConnServerExample").val() == '' ? "" : $("#cantConnServerExample").val();
+    data.cantConnServerStatus = parseInt($("#cantConnServerStatus").val());
+    
     let $type0 = $('.ms3 table tr');
     var checkIsTrue = true;
     if ($type0.length > 1) {
@@ -962,7 +958,7 @@ function saveAPI() {
     });
 }
 
-//更新API
+// 更新API
 function updateAPI(){
     if (!apiResultInfo()) {
         return;

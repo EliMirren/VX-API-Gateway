@@ -1,13 +1,8 @@
 package com.szmirren.vxApi.core.verticle;
 
-import java.io.UnsupportedEncodingException;
-import java.net.ConnectException;
 import java.net.MalformedURLException;
 import java.text.MessageFormat;
-import java.time.Duration;
-import java.time.Instant;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -19,26 +14,18 @@ import org.apache.log4j.Logger;
 import com.szmirren.vxApi.core.common.StrUtil;
 import com.szmirren.vxApi.core.common.VxApiEventBusAddressConstant;
 import com.szmirren.vxApi.core.common.VxApiGatewayAttribute;
-import com.szmirren.vxApi.core.entity.VxApiAPILimit;
-import com.szmirren.vxApi.core.entity.VxApiEntranceParam;
-import com.szmirren.vxApi.core.entity.VxApiServerURL;
-import com.szmirren.vxApi.core.entity.VxApiServerURLInfo;
-import com.szmirren.vxApi.core.entity.VxApiServerURLPollingPolicy;
 import com.szmirren.vxApi.core.entity.VxApiTrackInfos;
 import com.szmirren.vxApi.core.entity.VxApis;
 import com.szmirren.vxApi.core.enums.ApiServerTypeEnum;
 import com.szmirren.vxApi.core.enums.HttpMethodEnum;
-import com.szmirren.vxApi.core.enums.LoadBalanceEnum;
-import com.szmirren.vxApi.core.enums.ParamPositionEnum;
-import com.szmirren.vxApi.core.enums.ParamSystemVarTypeEnum;
+import com.szmirren.vxApi.core.handler.route.VxApiRouteHandlerApiLimit;
+import com.szmirren.vxApi.core.handler.route.VxApiRouteHandlerHttpType;
+import com.szmirren.vxApi.core.handler.route.VxApiRouteHandlerParamCheck;
+import com.szmirren.vxApi.core.handler.route.VxApiRouteHandlerRedirectType;
 import com.szmirren.vxApi.core.options.VxApiApplicationDTO;
 import com.szmirren.vxApi.core.options.VxApiApplicationOptions;
 import com.szmirren.vxApi.core.options.VxApiCertOptions;
 import com.szmirren.vxApi.core.options.VxApiCorsOptions;
-import com.szmirren.vxApi.core.options.VxApiParamCheckOptions;
-import com.szmirren.vxApi.core.options.VxApiParamOptions;
-import com.szmirren.vxApi.core.options.VxApiServerEntranceHttpOptions;
-import com.szmirren.vxApi.core.options.VxApiServerEntranceRedirectOptions;
 import com.szmirren.vxApi.core.options.VxApiServerOptions;
 import com.szmirren.vxApi.core.options.VxApisDTO;
 import com.szmirren.vxApi.spi.auth.VxApiAuth;
@@ -58,13 +45,9 @@ import io.vertx.core.AbstractVerticle;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import io.vertx.core.MultiMap;
-import io.vertx.core.buffer.Buffer;
 import io.vertx.core.eventbus.Message;
-import io.vertx.core.http.CaseInsensitiveHeaders;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpMethod;
-import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.net.PemKeyCertOptions;
@@ -72,8 +55,6 @@ import io.vertx.core.net.PfxOptions;
 import io.vertx.ext.web.Route;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
-import io.vertx.ext.web.client.HttpRequest;
-import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.handler.BodyHandler;
 import io.vertx.ext.web.handler.CookieHandler;
@@ -100,14 +81,6 @@ public class VxApiApplication extends AbstractVerticle {
 	 */
 	private Map<String, List<Route>> httpsRouteMaps = new LinkedHashMap<>();
 	/**
-	 * API后端服务连接策略集
-	 */
-	private Map<String, VxApiServerURLPollingPolicy> serverUrlPolicyMap = new LinkedHashMap<>();
-	/**
-	 * API访问限制
-	 */
-	private Map<String, VxApiAPILimit> apiLimitMap = new HashMap<>();
-	/**
 	 * 全局IP黑名单
 	 */
 	private Set<String> blackIpSet = new LinkedHashSet<>();
@@ -124,7 +97,6 @@ public class VxApiApplication extends AbstractVerticle {
 	 */
 	private HttpClient httpClient = null;
 	/**
-	 * web客户端
 	 */
 	private WebClient webClient = null;
 	/**
@@ -134,7 +106,7 @@ public class VxApiApplication extends AbstractVerticle {
 	/**
 	 * 应用的名字
 	 */
-	private String APP_NAME = null;
+	private String appName = null;
 	/**
 	 * 应用的服务器与端口配置信息
 	 */
@@ -150,7 +122,7 @@ public class VxApiApplication extends AbstractVerticle {
 			LOG.debug("加载应用配置信息");
 			VxApiApplicationDTO app = VxApiApplicationDTO.fromJson(config().getJsonObject("appConfig"));
 			this.appOption = new VxApiApplicationOptions(app);
-			APP_NAME = appOption.getAppName();
+			appName = appOption.getAppName();
 			this.serverOptions = appOption.getServerOptions();
 			LOG.debug("加载全局黑名单");
 			config().getJsonArray("blackIpSet").forEach(ip -> {
@@ -498,7 +470,7 @@ public class VxApiApplication extends AbstractVerticle {
 			routes.add(exRoute);
 			routeMaps.put(api.getApiName(), routes);
 			fut.complete();
-			LOG.debug(APP_NAME + ": 服务器创建API成功");
+			LOG.debug(appName + ": 服务器创建API成功");
 		}, result);
 
 	}
@@ -611,80 +583,8 @@ public class VxApiApplication extends AbstractVerticle {
 			}
 		}
 		// 流量限制处理处理器
-		route.handler(rct -> {
-			if (api.getLimitUnit() == null) {
-				rct.next();
-			} else {
-				if (apiLimitMap.get(api.getApiName()) != null) {
-					VxApiAPILimit limit = apiLimitMap.get(api.getApiName());
-					if (limit.getIpTop() > -1) {
-						Map<String, Long> ipPoints = limit.getUserIpCurPoints();
-						String host = rct.request().remoteAddress().host();
-						if (ipPoints.get(host) == null) {
-							ipPoints.put(host, 1L);
-						}
-						if (ipPoints.get(host) >= limit.getIpTop()) {
-							Instant oldTime = limit.getTimePoints().plusSeconds(api.getLimitUnit().getVal());
-							Duration between = Duration.between(Instant.now(), oldTime);
-							if (between.getSeconds() > 0) {
-								rct.response().putHeader(SERVER, VxApiGatewayAttribute.FULL_NAME)
-										.putHeader(CONTENT_TYPE, api.getContentType())
-										.end(api.getResult().getLimitExample());
-								return;
-							} else {
-								VxApiAPILimit newLimit = new VxApiAPILimit(api.getIpLimit(), api.getApiLimit());
-								newLimit.setCurPoint(1);
-								newLimit.addUserIpCurPotints(host, 1L);
-								apiLimitMap.put(api.getApiName(), newLimit);
-								rct.next();
-								return;
-							}
-						} else {
-							ipPoints.put(host, ipPoints.get(host) + 1);
-							limit.setCurPoint(limit.getCurPoint() + 1);
-							rct.next();
-							return;
-						}
-					}
-					if (limit.getApiTop() > -1) {
-						if (limit.getCurPoint() >= limit.getApiTop()) {
-							Instant oldTime = limit.getTimePoints().plusSeconds(api.getLimitUnit().getVal());
-							Duration between = Duration.between(Instant.now(), oldTime);
-							if (between.getSeconds() > 0) {
-								rct.response().putHeader(SERVER, VxApiGatewayAttribute.FULL_NAME)
-										.putHeader(CONTENT_TYPE, api.getContentType())
-										.end(api.getResult().getLimitExample());
-								return;
-							} else {
-								VxApiAPILimit newLimit = new VxApiAPILimit(api.getIpLimit(), api.getApiLimit());
-								newLimit.setCurPoint(1);
-								if (api.getIpLimit() != -1) {
-									String host = rct.request().remoteAddress().host();
-									newLimit.addUserIpCurPotints(host, 1L);
-								}
-								apiLimitMap.put(api.getApiName(), newLimit);
-								rct.next();
-								return;
-							}
-						} else {
-							limit.setCurPoint(limit.getCurPoint() + 1);
-							rct.next();
-							return;
-						}
-					}
-					rct.next();
-				} else {
-					VxApiAPILimit limit = new VxApiAPILimit(api.getIpLimit(), api.getApiLimit());
-					limit.setCurPoint(1);
-					if (api.getIpLimit() != -1) {
-						String host = rct.request().remoteAddress().host();
-						limit.addUserIpCurPotints(host, 1L);
-					}
-					apiLimitMap.put(api.getApiName(), limit);
-					rct.next();
-				}
-			}
-		});
+		VxApiRouteHandlerApiLimit apiLimitHandler = VxApiRouteHandlerApiLimit.create(api);
+		route.handler(apiLimitHandler);
 	}
 
 	/**
@@ -702,80 +602,8 @@ public class VxApiApplication extends AbstractVerticle {
 		if (api.getConsumes() != null) {
 			api.getConsumes().forEach(va -> route.consumes(va));
 		}
-		route.handler(rct -> {
-			if (api.getEnterParam() == null) {
-				rct.next();
-			} else {
-				boolean flag = true;// 标记参数是否符合要求,符合true,不符合false
-				for (VxApiEntranceParam p : api.getEnterParam()) {
-					String param = null;
-					if (p.getPosition() == ParamPositionEnum.HEADER) {
-						param = rct.request().getHeader(p.getParamName());
-					} else {
-						param = rct.request().getParam(p.getParamName());
-					}
-					if (param != null) {
-						param = param.trim();
-					}
-					if (param == null || "".equals(param)) {
-						if (p.getDef() != null) {
-							param = p.getDef().toString();
-							if (p.getPosition() == ParamPositionEnum.HEADER) {
-								rct.request().headers().add(p.getParamName(), param);
-							} else {
-								rct.request().params().add(p.getParamName(), param);
-							}
-						}
-					}
-					if (p.isNotNull()) {
-						if (param == null || "".equals(param) || !StrUtil.isType(param, p.getParamType())) {
-							flag = false;
-							break;
-						}
-					}
-					if (p.getCheckOptions() != null) {
-						VxApiParamCheckOptions check = p.getCheckOptions();
-						if (check.getMaxLength() != null) {
-							if (param.length() > check.getMaxLength()) {
-								flag = false;
-								break;
-							}
-						}
-						if (check.getMaxValue() != null) {
-							if (StrUtil.numberGtNumber(p.getParamType(), param, check.getMaxValue())) {
-								flag = false;
-								break;
-							}
-						}
-						if (check.getMinValue() != null) {
-							if (StrUtil.numberLtNumber(p.getParamType(), param, check.getMinValue())) {
-								flag = false;
-								break;
-							}
-						}
-						if (check.getRegex() != null) {
-							if (!param.matches(check.getRegex())) {
-								flag = false;
-								break;
-							}
-						}
-						if (check.getEnums() != null) {
-							if (!check.getEnums().contains(param)) {
-								flag = false;
-								break;
-							}
-						}
-					}
-				}
-				if (flag) {
-					rct.next();
-				} else {
-					rct.response().putHeader(SERVER, VxApiGatewayAttribute.FULL_NAME)
-							.putHeader(CONTENT_TYPE, api.getContentType())
-							.end(api.getResult().getApiEnterCheckFailureExample());
-				}
-			}
-		});
+		VxApiRouteHandlerParamCheck paramCheckHandler = VxApiRouteHandlerParamCheck.create(api);
+		route.handler(paramCheckHandler);
 
 	}
 
@@ -831,8 +659,9 @@ public class VxApiApplication extends AbstractVerticle {
 		}
 		route.failureHandler(rct -> {
 			rct.response().putHeader(SERVER, VxApiGatewayAttribute.FULL_NAME)
-					.putHeader(CONTENT_TYPE, api.getContentType()).end(api.getResult().getFailureExample());
-			VxApiTrackInfos infos = new VxApiTrackInfos(APP_NAME, api.getApiName());
+					.putHeader(CONTENT_TYPE, api.getContentType()).setStatusCode(api.getResult().getFailureStatus())
+					.end(api.getResult().getFailureExample());
+			VxApiTrackInfos infos = new VxApiTrackInfos(appName, api.getApiName());
 			infos.setErrMsg(rct.failure().getMessage());
 			infos.setErrStackTrace(rct.failure().getStackTrace());
 			vertx.eventBus().send(VxApiEventBusAddressConstant.SYSTEM_PLUS_ERROR, infos.toJson());
@@ -869,24 +698,10 @@ public class VxApiApplication extends AbstractVerticle {
 	 * @param api
 	 * @param route
 	 * @throws NullPointerException
-	 * @throws UnsupportedEncodingException
 	 */
-	public void serverRedirectTypeHandler(boolean isNext, VxApis api, Route route)
-			throws NullPointerException, UnsupportedEncodingException {
-		JsonObject body = api.getServerEntrance().getBody();
-		VxApiServerEntranceRedirectOptions options = VxApiServerEntranceRedirectOptions.fromJson(body);
-		if (options == null) {
-			throw new NullPointerException("页面跳转服务类型的配置文件无法装换为服务类");
-		}
-		route.handler(rct -> {
-			rct.response().putHeader("Location", options.getUrl()).setStatusCode(302);
-			if (isNext) {
-				rct.put(VxApiAfterHandler.PREV_IS_SUCCESS_KEY, Future.<Boolean>succeededFuture(true));// 告诉后置处理器当前操作成功执行
-				rct.next();
-			} else {
-				rct.response().end();
-			}
-		});
+	public void serverRedirectTypeHandler(boolean isNext, VxApis api, Route route) throws NullPointerException {
+		VxApiRouteHandlerRedirectType redirectTypehandler = VxApiRouteHandlerRedirectType.create(isNext, api);
+		route.handler(redirectTypehandler);
 	}
 
 	/**
@@ -900,211 +715,8 @@ public class VxApiApplication extends AbstractVerticle {
 	 */
 	public void serverHttpTypeHandler(boolean isNext, VxApis api, Route route)
 			throws NullPointerException, MalformedURLException {
-		JsonObject body = api.getServerEntrance().getBody();
-		VxApiServerEntranceHttpOptions serOptions = VxApiServerEntranceHttpOptions.fromJson(body);
-		if (serOptions == null) {
-			throw new NullPointerException("HTTP/HTTPS服务类型的配置文件无法装换为服务类");
-		}
-		List<VxApiServerURL> urls = serOptions.getServerUrls();
-		if (urls == null || urls.size() < 1) {
-			throw new NullPointerException("服务端地址不存在");
-		}
-		if (serOptions.getBalanceType() == null) {
-			serOptions.setBalanceType(LoadBalanceEnum.POLLING_AVAILABLE);
-		}
-		// 将地址策略添加到map中
-		VxApiServerURLPollingPolicy pollingPolicy = new VxApiServerURLPollingPolicy(urls);
-		serverUrlPolicyMap.put(api.getApiName(), pollingPolicy);
-
-		route.handler(rct -> {
-			VxApiServerURLPollingPolicy policy = serverUrlPolicyMap.get(api.getApiName());
-			// 看有没有可用的服务连接
-			if (policy.isHaveService()) {// 有可用连接
-				// 后台服务连接信息
-				VxApiServerURLInfo urlInfo;
-				if (serOptions.getBalanceType() == LoadBalanceEnum.IP_HASH) {
-					String ip = rct.request().remoteAddress().host();
-					urlInfo = policy.getUrl(ip);
-				} else {
-					urlInfo = policy.getUrl();
-				}
-				// 执行监控
-				VxApiTrackInfos trackInfo = new VxApiTrackInfos(APP_NAME, api.getApiName());
-				trackInfo.setRequestBufferLen(rct.getBody() == null ? 0 : rct.getBody().length());
-				String requestPath = urlInfo.getUrl();
-				MultiMap headers = new CaseInsensitiveHeaders();
-				MultiMap queryParams = new CaseInsensitiveHeaders();
-				if (serOptions.getParams() != null) {
-					for (VxApiParamOptions p : serOptions.getParams()) {
-						String param = "";
-						if (p.getType() == 0 || p.getType() == 2) {
-							if (p.getApiParamPosition() == ParamPositionEnum.HEADER) {
-								param = rct.request().getHeader(p.getApiParamName());
-							} else {
-								param = rct.request().getParam(p.getApiParamName());
-							}
-						} else if (p.getType() == 1) {
-							if (p.getSysParamType() == ParamSystemVarTypeEnum.CLIENT_HOST) {
-								param = rct.request().remoteAddress().host();
-							} else if (p.getSysParamType() == ParamSystemVarTypeEnum.CLIENT_PORT) {
-								param = Integer.toString(rct.request().remoteAddress().port());
-							} else if (p.getSysParamType() == ParamSystemVarTypeEnum.CLIENT_PATH) {
-								param = rct.request().path() == null ? "" : rct.request().path();
-							} else if (p.getSysParamType() == ParamSystemVarTypeEnum.CLIENT_SESSION_ID) {
-								param = rct.session().id();
-							} else if (p.getSysParamType() == ParamSystemVarTypeEnum.CLIENT_ABSOLUTE_URI) {
-								param = rct.request().absoluteURI();
-							} else if (p.getSysParamType() == ParamSystemVarTypeEnum.CLIENT_REQUEST_SCHEMA) {
-								param = rct.request().scheme();
-							} else if (p.getSysParamType() == ParamSystemVarTypeEnum.SERVER_API_NAME) {
-								param = api.getApiName();
-							} else if (p.getSysParamType() == ParamSystemVarTypeEnum.SERVER_UNIX_TIME) {
-								param = Long.toString(System.currentTimeMillis());
-							} else if (p.getSysParamType() == ParamSystemVarTypeEnum.SERVER_USER_AGENT) {
-								param = VxApiGatewayAttribute.VX_API_USER_AGENT;
-							}
-						} else if (p.getType() == 9) {
-							param = p.getParamValue().toString();
-						} else {
-							continue;
-						}
-						if (p.getSerParamPosition() == ParamPositionEnum.HEADER) {
-							headers.add(p.getSerParamName(), param);
-						} else if (p.getSerParamPosition() == ParamPositionEnum.PATH) {
-							requestPath.replace(":" + p.getSerParamName(), param);
-						} else {
-							queryParams.add(p.getSerParamName(), param);
-						}
-					}
-				}
-				HttpRequest<Buffer> request = webClient.requestAbs(serOptions.getMethod(), requestPath)
-						.timeout(serOptions.getTimeOut());
-				headers.forEach(va -> request.putHeader(va.getKey(), va.getValue()));
-				queryParams.forEach(va -> request.addQueryParam(va.getKey(), va.getValue()));
-				trackInfo.setRequestTime(Instant.now());
-				request.send(res -> {
-					trackInfo.setResponseTime(Instant.now());
-					if (res.succeeded()) {
-						HttpResponse<Buffer> result = res.result();
-						if (api.getResult().getTranHeaders() != null && api.getResult().getTranHeaders().size() > 0) {
-							api.getResult().getTranHeaders().forEach(h -> {
-								rct.response().putHeader(h, result.getHeader(h) == null ? "" : result.getHeader(h));
-							});
-						}
-						rct.response().putHeader(SERVER, VxApiGatewayAttribute.FULL_NAME)
-								.putHeader(CONTENT_TYPE, api.getContentType()).setChunked(true).write(result.body());
-						if (isNext) {
-							rct.put(VxApiAfterHandler.PREV_IS_SUCCESS_KEY, Future.<Boolean>succeededFuture(true));// 告诉后置处理器当前操作成功执行
-							rct.next();
-						} else {
-							rct.response().end();
-						}
-						trackInfo.setResponseBufferLen(result.body() == null ? 0 : result.body().length());
-						trackInfo.setEndTime(Instant.now());
-					} else {
-						if (isNext) {
-							rct.put(VxApiAfterHandler.PREV_IS_SUCCESS_KEY, Future.<Boolean>failedFuture(res.cause()));// 告诉后置处理器当前操作成功执行
-							rct.next();
-						} else {
-							HttpServerResponse response = rct.response()
-									.putHeader(SERVER, VxApiGatewayAttribute.FULL_NAME)
-									.putHeader(CONTENT_TYPE, api.getContentType());
-							// 如果是连接异常返回无法连接的错误信息,其他异常返回相应的异常
-							if (res.cause() instanceof ConnectException) {
-								response.end(api.getResult().getCantConnServerExample());
-							} else {
-								response.end(api.getResult().getFailureExample());
-							}
-						}
-						// 提交连接请求失败
-						policy.reportBadService(urlInfo.getIndex());
-						trackInfo.setEndTime(Instant.now());
-						// 记录与后台交互发生错误
-						trackInfo.setSuccessful(false);
-						trackInfo.setErrMsg(res.cause().getMessage());
-						trackInfo.setErrStackTrace(res.cause().getStackTrace());
-					}
-					vertx.eventBus().send(VxApiEventBusAddressConstant.SYSTEM_PLUS_TRACK_INFO, trackInfo.toJson());
-				});
-
-				// 判断是否有坏的连接
-				if (policy.isHaveBadService()) {
-					if (!policy.isCheckWaiting()) {
-						policy.setCheckWaiting(true);
-						vertx.setTimer(serOptions.getRetryTime(), testConn -> {
-							List<VxApiServerURLInfo> service = policy.getBadService();
-							for (VxApiServerURLInfo urlinfo : service) {
-								webClient.requestAbs(serOptions.getMethod(), urlinfo.getUrl())
-										.timeout(serOptions.getTimeOut()).send(res -> {
-											if (res.succeeded()) {
-												policy.reportGreatService(urlinfo.getIndex());
-											}
-										});
-							}
-							policy.setCheckWaiting(false);
-						});
-					}
-				}
-			} else {
-				// 无可用连接时,结束当前处理器并尝试重新尝试连接是否可用
-				if (isNext) {
-					// 告诉后置处理器当前操作执行结果
-					rct.put(VxApiAfterHandler.PREV_IS_SUCCESS_KEY,
-							Future.<Boolean>failedFuture(new ConnectException("无法连接上后台交互的服务器")));
-					rct.next();
-				} else {
-					rct.response().putHeader(SERVER, VxApiGatewayAttribute.FULL_NAME)
-							.putHeader(CONTENT_TYPE, api.getContentType())
-							.end(api.getResult().getCantConnServerExample());
-				}
-				if (!policy.isCheckWaiting()) {
-					policy.setCheckWaiting(true);
-					vertx.setTimer(serOptions.getRetryTime(), testConn -> {
-						List<VxApiServerURLInfo> service = policy.getBadService();
-						for (VxApiServerURLInfo urlinfo : service) {
-							webClient.requestAbs(serOptions.getMethod(), urlinfo.getUrl())
-									.timeout(serOptions.getTimeOut()).send(res -> {
-										if (res.succeeded()) {
-											policy.reportGreatService(urlinfo.getIndex());
-										}
-									});
-						}
-						policy.setCheckWaiting(false);
-					});
-				}
-			}
-		});
-	}
-
-	/**
-	 * 服务入口的参数检查与路径初始化
-	 * 
-	 * @param path
-	 * @param ser
-	 */
-	public void chackVxApiParamOptions(String absoluteURI, VxApiServerEntranceHttpOptions ser) {
-		if (ser.getParams() != null) {
-			for (VxApiParamOptions p : ser.getParams()) {
-				if (p.getType() == 0 && (p.getApiParamName() == null || p.getApiParamPosition() == null
-						|| p.getSerParamName() == null || p.getSerParamPosition() == null)) {
-					throw new NullPointerException("参数映射名字与位置不能为null");
-				} else if (p.getType() == 1 && (p.getSysParamType() == null || p.getSerParamName() == null
-						|| p.getSerParamPosition() == null)) {
-					throw new NullPointerException("系统参数的名字,请求名字与位置不能为null");
-				} else if (p.getType() == 2 && (p.getApiParamName() == null || p.getApiParamPosition() == null
-						|| p.getSerParamName() == null || p.getSerParamPosition() == null)) {
-					throw new NullPointerException("透传参数名字与位置不能为null");
-				} else if (p.getType() == 9 && (p.getParamValue() == null || p.getSerParamName() == null
-						|| p.getSerParamPosition() == null)) {
-					throw new NullPointerException("自定义常量参数值,请求名字与位置不能为null");
-				}
-				if (p.getSerParamPosition() == ParamPositionEnum.PATH) {
-					if (absoluteURI.indexOf(":" + p.getSerParamName()) < 0) {
-						throw new NullPointerException("后台服务请求path中不存在名为:" + p.getSerParamName() + "的参数占位");
-					}
-				}
-			}
-		}
+		VxApiRouteHandlerHttpType httpTypeHandler = VxApiRouteHandlerHttpType.create(isNext, api, appName, webClient);
+		route.handler(httpTypeHandler);
 	}
 
 	/**
@@ -1150,15 +762,6 @@ public class VxApiApplication extends AbstractVerticle {
 			httpsRouteMaps.get(apiName).forEach(r -> r.disable().remove());
 		}
 		msg.reply(1);
-	}
-
-	/**
-	 * 查看是否有API在运行
-	 * 
-	 * @param msg
-	 */
-	public void findAPIStatus(Message<JsonObject> msg) {
-
 	}
 
 	/**

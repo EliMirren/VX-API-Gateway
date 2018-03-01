@@ -848,109 +848,112 @@
                             <div class="console-float-left ng-binding">返回结果基础定义</div>
                         </div>
                         <div class="console-panel-body console-p4 console-pt6 console-pb6">
-                            <div class="console-form">
-                                <div class="console-form-row">
-                                    <div class="console-form-header ng-binding">返回ContentType</div>
-                                    <div class="console-form-body">
-                                        <select id="content-type"
+                        	<table style="width: 100%">
+                                <tbody>
+                                	<tr>
+	                                	<td class="createApiResultTableTd1">返回ContentType</td>
+	                                	<td class="createApiResultTableTd2" colspan="2">
+		                                	<select id="content-type"
                                                 class="console-selectbox console-width-4 ng-pristine ng-valid">
-                                            <option value="application/json;charset=UTF-8" class="ng-binding">JSON
-                                                (application/json;charset=UTF-8)
-                                            </option>
-                                            <option value="text/plain;charset=UTF-8" class="ng-binding">文本
-                                                (text/plain;charset=UTF-8)
-                                            </option>
-                                            <option value="application/octet-stream;charset=UTF-8" class="ng-binding">二进制
-                                                (application/octet-stream;charset=UTF-8)
-                                            </option>
-                                            <option value="application/xml;charset=UTF-8" class="ng-binding">XML
-                                                (application/xml;charset=UTF-8)
-                                            </option>
-                                            <option value="text/html;charset=UTF-8"class="ng-binding">HTML
-                                                (text/html;charset=UTF-8)
-                                            </option>
-                                            <option value="custom" selected="selected" class="ng-binding">自定义</option>
-                                        </select>
-                                    </div>
-                                </div>
-
-                                <div class="console-form-row" id="custom-content-type-hide-show" style="display: none;">
-                                    <div class="console-form-header ng-binding">自定义Content-Type</div>
-                                    <div class="console-form-body">
-                                        <input value="${context.api.contentType!'application/json;charset=UTF-8'}" class="console-textbox ng-pristine ng-valid ng-valid-pattern"
+	                                            <option value="application/json;charset=UTF-8" class="ng-binding">JSON
+	                                                (application/json;charset=UTF-8)
+	                                            </option>
+	                                            <option value="text/plain;charset=UTF-8" class="ng-binding">文本
+	                                                (text/plain;charset=UTF-8)
+	                                            </option>
+	                                            <option value="application/octet-stream;charset=UTF-8" class="ng-binding">
+	                                             	   二进制
+	                                                (application/octet-stream;charset=UTF-8)
+	                                            </option>
+	                                            <option value="application/xml;charset=UTF-8" class="ng-binding">XML
+	                                                (application/xml;charset=UTF-8)
+	                                            </option>
+	                                            <option value="text/html;charset=UTF-8" class="ng-binding">HTML
+	                                                (text/html;charset=UTF-8)
+	                                            </option>
+	                                            <option value="custom"  selected="selected"  class="ng-binding">自定义</option>
+	                                        </select>	
+                                        </td>
+                                	</tr>
+                                	
+                                	<tr id="custom-content-type-hide-show" style="display: none;">
+	                                	<td class="createApiResultTableTd1">自定义Content-Type</td>
+	                                	<td class="createApiResultTableTd2" colspan="2">
+		                                	   <input value="${context.api.contentType!'application/json;charset=UTF-8'}" class="console-textbox ng-pristine ng-valid ng-valid-pattern"
                                                id="custom-content-type" type="text" placeholder="请输入自定义返回类型值">
-                                    </div>
-                                </div>
-
-                                <div class="console-form-row  result-header-body">
-                                    <div class="console-form-header ng-binding">透传header值</div>
-                                    <div class="console-form-body">
-                                        <div>
-                                            <input type="text" class="console-textbox console-width-4 ng-pristine ng-valid input-result-header-name"
-                                                   placeholder="请输入header名字">
-                                            <a style="white-space:nowrap"><span style='cursor:pointer;' class="" onclick='addResultHeader()'>添加</span></a>
-                                        </div>
-                                    </div>
-                                    <#if context.api.result.tranHeaders?exists>
-                                    <#list context.api.result.tranHeaders as item>
-	                                    <div>
-	                                        <div class="console-form-header ng-binding"></div>
-	                                        <div class="console-form-body">
-	                                            <div style="margin-top: 3px">
-	                                                <input type="text"
-	                                                	   value="${item}"
-	                                                       class="console-textbox console-width-4 ng-pristine ng-valid input-result-header-name"
-	                                                       placeholder="请输入header名字">
-	                                                <a style="white-space:nowrap" onclick='delResultHeader(this)'><span
-	                                                        style='cursor:pointer;'>移除</span></a>
-	                                            </div>
+                                        </td>
+                                	</tr>
+                                	
+                                	<tr>
+	                                	<td class="createApiResultTableTd1">透传header值</td>
+	                                	<td class="createApiResultTableTd2 result-tran-header-body" colspan="2">
+		                                	 <div>
+	                                            <input type="text"
+	                                                   class="console-textbox console-width-4 ng-pristine ng-valid input-result-header-name"
+	                                                   placeholder="请输入header名字">
+	                                            <a style="white-space:nowrap"><span style='cursor:pointer;' class=""
+	                                                                                onclick='addResultHeader()'>添加</span></a>
 	                                        </div>
-	                                    </div>
-                                    </#list>
-                                    </#if>
-                                </div>
-                                <div class="console-form-row">
-                                    <div class="console-form-header ng-binding">访问限制返回</div>
-                                    <div class="console-form-body">
-                                        <textarea placeholder="请输入当访问受限制时要返回的结果"
-                                                  class="console-textarea console-width-7 ng-pristine ng-valid"
-                                                  id="limitExample"><#t>${context.api.result.limitExample!}<#t></textarea>
-                                    </div>
-                                </div>
-                                <div class="console-form-row">
-                                    <div class="console-form-header ng-binding">发生异常/失败返回</div>
-                                    <div class="console-form-body">
-                                        <textarea placeholder="请输入当发生了异常要返回的结果"
-                                                  class="console-textarea console-width-7 ng-pristine ng-valid"
-                                                  id="failureExample"><#t>${context.api.result.failureExample!}<#t></textarea>
-                                    </div>
-                                </div>
-                                <div class="console-form-row">
-                                    <div class="console-form-header ng-binding">网关入口参数检查失败返回</div>
-                                    <div class="console-form-body">
-                                        <textarea placeholder="请输入网关入口参数检查失败要返回的结果"
-                                                  class="console-textarea console-width-7 ng-pristine ng-valid"
-                                                  id="apiEnterCheckFailureExample"><#t>${context.api.result.apiEnterCheckFailureExample!}<#t></textarea>
-                                    </div>
-                                </div>
-
-                                <div class="console-form-row">
-                                    <div class="console-form-header ng-binding">无法连接上后台服务器返回</div>
-                                    <div class="console-form-body">
-                                        <textarea placeholder="请输入VX-API无法连接上后台服务器时的返回结果"
-                                                  class="console-textarea console-width-7 ng-pristine ng-valid"
-                                                  id="cantConnServerExample"><#t>${context.api.result.cantConnServerExample!}<#t></textarea>
-                                    </div>
-                                </div>
-                                <div class="console-form-row">
-                                    <div class="console-form-header ng-binding">返回结果示例</div>
-                                    <div class="console-form-body">
-                                        <textarea placeholder="该值只作为展示如果操作成功返回值的例子,没有实际作用"
-                                                  class="console-textarea console-width-7 ng-pristine ng-valid" rows="5"
-                                                  id="successExample"><#t>${context.api.result.successExample!}<#t></textarea>
-                                    </div>
-                                </div>
-                            </div>
+	                                        <#if context.api.result.tranHeaders?exists>
+			                                    <#list context.api.result.tranHeaders as item>
+			                                    	<div style="margin-top: 3px;"> 
+														<input type="text" value="${item}" class="console-textbox console-width-4 ng-pristine ng-valid input-result-header-name"  placeholder="请输入header名字">
+								                   		<a style="white-space:nowrap" onclick='delResultHeader(this)'><span style='cursor:pointer;'>移除</span></a>
+								                 	</div>
+			                                    </#list>
+		                                    </#if>
+                                        </td>
+                                	</tr>
+                                	<tr>
+	                                	<td class="createApiResultTableTd1">访问限制返回</td>
+	                                	<td class="createApiResultTableTd2">
+		                                	<textarea placeholder="请输入当访问受限制时要返回的结果"
+		                                                  class="console-textarea" rows="3"
+		                                                  id="limitExample"><#t>${context.api.result.limitExample!}<#t></textarea>
+                                        </td>
+	                                	<td>状态码 <input style="width:160px;" value="${context.api.result.limitStatus?c}" class="console-textbox"
+                                               id="limitStatus" type="text" placeholder="请输入状态码,默认202"></td>
+                                	</tr>
+                                	<tr>
+	                                	<td class="createApiResultTableTd1">发生异常/失败返回</td>
+	                                	<td class="createApiResultTableTd2">
+		                                	<textarea placeholder="请输入当发生了异常要返回的结果"
+		                                                  class="console-textarea" rows="3"
+		                                                  id="failureExample"><#t>${context.api.result.failureExample!}<#t></textarea>
+                                        </td>
+	                                	<td>状态码 <input style="width:160px;" value="${context.api.result.failureStatus?c}" class="console-textbox"
+                                               id="failureStatus" type="text" placeholder="请输入状态码,默认500"></td>
+                                	</tr>
+                                	<tr>
+	                                	<td class="createApiResultTableTd1">网关入口参数检查失败返回</td>
+	                                	<td class="createApiResultTableTd2">
+		                                	<textarea placeholder="请输入网关入口参数检查失败要返回的结果"
+		                                                  class="console-textarea" rows="3"
+		                                                  id="apiEnterCheckFailureExample"><#t>${context.api.result.apiEnterCheckFailureExample!}<#t></textarea>
+                                        </td>
+	                                	<td>状态码 <input style="width:160px;" value="${context.api.result.apiEnterCheckFailureStatus?c}" class="console-textbox"
+                                               id="apiEnterCheckFailureStatus" type="text" placeholder="请输入状态码,默认400"></td>
+                                	</tr>
+                                	<tr>
+	                                	<td class="createApiResultTableTd1">无法连接上后台服务器返回</td>
+	                                	<td class="createApiResultTableTd2">
+		                                	<textarea placeholder="请输入网关无法连接上后台服务器时的返回结果"
+		                                                  class="console-textarea" rows="3"
+		                                                  id="cantConnServerExample"><#t>${context.api.result.cantConnServerExample!}<#t></textarea>
+                                        </td>
+	                                	<td>状态码 <input style="width:160px;" value="${context.api.result.cantConnServerStatus?c}" class="console-textbox"
+                                               id="cantConnServerStatus" type="text" placeholder="请输入状态码,默认504"></td>
+                                	</tr>
+                                	<tr>
+	                                	<td class="createApiResultTableTd1">返回结果示例</td>
+	                                	<td class="createApiResultTableTd2">
+		                                	<textarea placeholder="该值只作为展示如果操作成功返回值的例子,没有实际作用"
+		                                                  class="console-textarea" rows="3"
+		                                                  id="successExample"><#t>${context.api.result.successExample!}<#t></textarea>
+                                        </td>
+                                	</tr>
+                                </tbody>
+                            </table>
                         </div>
 
                         <div class="console-panel console-mt4">

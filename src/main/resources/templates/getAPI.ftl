@@ -405,7 +405,7 @@
                         <span class="console-grey console-mr3 ">访问限制返回 : </span>
                         <br>
                         <div>
-                            <pre class="">${context.api.result.limitExample!}</pre>
+                            <pre class="">状态码: ${context.api.result.limitStatus?c} </br>内容:  ${context.api.result.limitExample!}</pre>
                         </div>
                     </td>
                 </tr>
@@ -414,7 +414,7 @@
                         <span class="console-grey console-mr3 ">发生异常/失败返回 : </span>
                         <br>
                         <div>
-                            <pre class="">${context.api.result.failureExample!}</pre>
+                            <pre class="">状态码: ${context.api.result.failureExample!} </br>内容: ${context.api.result.failureExample!}</pre>
                         </div>
                     </td>
                 </tr>
@@ -423,7 +423,7 @@
                         <span class="console-grey console-mr3 ">网关入口参数检查失败返回 : </span>
                         <br>
                         <div>
-                            <pre class="">${context.api.result.apiEnterCheckFailureExample!}</pre>
+                            <pre class="">状态码: ${context.api.result.apiEnterCheckFailureStatus?c} </br>内容: ${context.api.result.apiEnterCheckFailureExample!}</pre>
                         </div>
                     </td>
                 </tr>
@@ -432,7 +432,7 @@
                         <span class="console-grey console-mr3 ">无法连接上后台服务器返回 : </span>
                         <br>
                         <div>
-                            <pre class="">${context.api.result.cantConnServerExample!}</pre>
+                            <pre class="">状态码: ${context.api.result.cantConnServerStatus?c} </br>内容: ${context.api.result.cantConnServerExample!}</pre>
                         </div>
                     </td>
                 </tr>
@@ -482,7 +482,7 @@
         <div class="console-panel-header">
             <span class="console-panel-header-line"></span>
             <div class="console-float-left ">API请求信息追踪</div>
-            <button class="btn btn-primary" style="float: right;margin-top: 2px" onclick="reloadTrack('${context.api.appName}','${context.api.apiName}')">刷新</button>
+            <button class="btn btn-primary" style="float: right;margin-top: 2px" onclick="reloadTrack('${context.api.appName}','${context.api.apiName}')">获取数据</button>
         </div>
         <table class="console-panel-body">
             <tbody>

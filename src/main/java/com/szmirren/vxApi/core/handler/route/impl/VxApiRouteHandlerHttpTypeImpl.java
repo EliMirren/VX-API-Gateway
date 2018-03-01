@@ -1,4 +1,4 @@
-package com.szmirren.vxApi.spi.customHandler.impl;
+package com.szmirren.vxApi.core.handler.route.impl;
 
 import java.net.ConnectException;
 import java.net.MalformedURLException;
@@ -8,6 +8,7 @@ import java.util.Set;
 
 import com.szmirren.vxApi.core.common.VxApiEventBusAddressConstant;
 import com.szmirren.vxApi.core.common.VxApiGatewayAttribute;
+import com.szmirren.vxApi.core.entity.VxApiServerURL;
 import com.szmirren.vxApi.core.entity.VxApiServerURLInfo;
 import com.szmirren.vxApi.core.entity.VxApiServerURLPollingPolicy;
 import com.szmirren.vxApi.core.entity.VxApiTrackInfos;
@@ -15,17 +16,16 @@ import com.szmirren.vxApi.core.entity.VxApis;
 import com.szmirren.vxApi.core.enums.LoadBalanceEnum;
 import com.szmirren.vxApi.core.enums.ParamPositionEnum;
 import com.szmirren.vxApi.core.enums.ParamSystemVarTypeEnum;
+import com.szmirren.vxApi.core.handler.route.VxApiRouteConstant;
+import com.szmirren.vxApi.core.handler.route.VxApiRouteHandlerHttpType;
 import com.szmirren.vxApi.core.options.VxApiParamOptions;
 import com.szmirren.vxApi.core.options.VxApiServerEntranceHttpOptions;
-import com.szmirren.vxApi.spi.common.HttpHeaderConstant;
-import com.szmirren.vxApi.spi.customHandler.VxApiCustomHandler;
 import com.szmirren.vxApi.spi.handler.VxApiAfterHandler;
 
 import io.vertx.core.Future;
 import io.vertx.core.MultiMap;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.CaseInsensitiveHeaders;
-import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
@@ -33,50 +33,38 @@ import io.vertx.ext.web.client.HttpRequest;
 import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
 
-/**
- * session token权限认证的认证授权
- * 
- * @author <a href="http://szmirren.com">Mirren</a>
- *
- */
-public class SessionTokenGrantAuthHandler implements VxApiCustomHandler {
-	/**
-	 * 存放Session中token值key的名字
-	 */
-	private final static String VX_API_SESSION_TOKEN_NAME = "vxApiSessionToken";
-	/**
-	 * 存放请求参数中token值key的名字
-	 */
-	private final static String VX_API_USER_TOKEN_NAME = "vxApiUserToken";
-	/**
-	 * 存在API网关token值的key名字
-	 */
-	private String saveTokenName = VX_API_SESSION_TOKEN_NAME;
-	/**
-	 * 服务器返回来的Token名字
-	 */
-	private String getTokenName = VX_API_USER_TOKEN_NAME;
-	/**
-	 * 路由器要结束了还是讲任务传到下一个处理器,默认为结束
-	 */
-	private boolean isNext = false;
-	/**
-	 * 后台服务的轮询策略
-	 */
-	private VxApiServerURLPollingPolicy policy;
-
-	/**
-	 * 请求的客户端
-	 */
-	private WebClient webClient;
-	/**
-	 * api
-	 */
+public class VxApiRouteHandlerHttpTypeImpl implements VxApiRouteHandlerHttpType {
+	private String appName;
+	private boolean isNext;
 	private VxApis api;
-	/**
-	 * 服务端配置文件
-	 */
+	private VxApiServerURLPollingPolicy policy;
 	private VxApiServerEntranceHttpOptions serOptions;
+	private WebClient webClient;
+
+	public VxApiRouteHandlerHttpTypeImpl(boolean isNext, VxApis api, String appName, WebClient webClient)
+			throws NullPointerException, MalformedURLException {
+		super();
+		this.isNext = isNext;
+		this.api = api;
+		this.appName = appName;
+		this.webClient = webClient;
+		JsonObject body = api.getServerEntrance().getBody();
+		serOptions = VxApiServerEntranceHttpOptions.fromJson(body);
+		if (serOptions == null) {
+			throw new NullPointerException("HTTP/HTTPS服务类型的配置文件无法装换为服务类");
+		}
+		List<VxApiServerURL> urls = serOptions.getServerUrls();
+		if (urls == null || urls.size() < 1) {
+			throw new NullPointerException("服务端地址不存在");
+		}
+		// 检查参数是否符合要求
+		chackVxApiParamOptions(serOptions);
+
+		if (serOptions.getBalanceType() == null) {
+			serOptions.setBalanceType(LoadBalanceEnum.POLLING_AVAILABLE);
+		}
+		policy = new VxApiServerURLPollingPolicy(urls);
+	}
 
 	@Override
 	public void handle(RoutingContext rct) {
@@ -91,9 +79,8 @@ public class SessionTokenGrantAuthHandler implements VxApiCustomHandler {
 				urlInfo = policy.getUrl();
 			}
 			// 执行监控
-			VxApiTrackInfos trackInfo = new VxApiTrackInfos(api.getAppName(), api.getApiName());
+			VxApiTrackInfos trackInfo = new VxApiTrackInfos(appName, api.getApiName());
 			trackInfo.setRequestBufferLen(rct.getBody() == null ? 0 : rct.getBody().length());
-
 			String requestPath = urlInfo.getUrl();
 			MultiMap headers = new CaseInsensitiveHeaders();
 			MultiMap queryParams = new CaseInsensitiveHeaders();
@@ -155,21 +142,14 @@ public class SessionTokenGrantAuthHandler implements VxApiCustomHandler {
 							rct.response().putHeader(h, result.getHeader(h) == null ? "" : result.getHeader(h));
 						});
 					}
-
-					HttpServerResponse response = rct.response();
-					// 得到后台服务传过来的token
-					String token = res.result().getHeader(getTokenName);
-					if (token != null && !"".equals(token)) {
-						rct.session().put(saveTokenName, token);
-					}
-					response.putHeader(HttpHeaderConstant.SERVER, VxApiGatewayAttribute.FULL_NAME)
-							.putHeader(HttpHeaderConstant.CONTENT_TYPE, api.getContentType()).setChunked(true)
+					rct.response().putHeader(VxApiRouteConstant.SERVER, VxApiGatewayAttribute.FULL_NAME)
+							.putHeader(VxApiRouteConstant.CONTENT_TYPE, api.getContentType()).setChunked(true)
 							.write(result.body());
 					if (isNext) {
 						rct.put(VxApiAfterHandler.PREV_IS_SUCCESS_KEY, Future.<Boolean>succeededFuture(true));// 告诉后置处理器当前操作成功执行
 						rct.next();
 					} else {
-						response.end();
+						rct.response().end();
 					}
 					trackInfo.setResponseBufferLen(result.body() == null ? 0 : result.body().length());
 					trackInfo.setEndTime(Instant.now());
@@ -179,8 +159,8 @@ public class SessionTokenGrantAuthHandler implements VxApiCustomHandler {
 						rct.next();
 					} else {
 						HttpServerResponse response = rct.response()
-								.putHeader(HttpHeaderConstant.SERVER, VxApiGatewayAttribute.FULL_NAME)
-								.putHeader(HttpHeaderConstant.CONTENT_TYPE, api.getContentType());
+								.putHeader(VxApiRouteConstant.SERVER, VxApiGatewayAttribute.FULL_NAME)
+								.putHeader(VxApiRouteConstant.CONTENT_TYPE, api.getContentType());
 						// 如果是连接异常返回无法连接的错误信息,其他异常返回相应的异常
 						if (res.cause() instanceof ConnectException) {
 							response.setStatusCode(api.getResult().getCantConnServerStatus())
@@ -227,8 +207,8 @@ public class SessionTokenGrantAuthHandler implements VxApiCustomHandler {
 						Future.<Boolean>failedFuture(new ConnectException("无法连接上后台交互的服务器")));
 				rct.next();
 			} else {
-				rct.response().putHeader(HttpHeaderConstant.SERVER, VxApiGatewayAttribute.FULL_NAME)
-						.putHeader(HttpHeaderConstant.CONTENT_TYPE, api.getContentType())
+				rct.response().putHeader(VxApiRouteConstant.SERVER, VxApiGatewayAttribute.FULL_NAME)
+						.putHeader(VxApiRouteConstant.CONTENT_TYPE, api.getContentType())
 						.setStatusCode(api.getResult().getCantConnServerStatus())
 						.end(api.getResult().getCantConnServerExample());
 			}
@@ -249,33 +229,6 @@ public class SessionTokenGrantAuthHandler implements VxApiCustomHandler {
 			}
 		}
 
-	}
-
-	/**
-	 * 实例化一个session_token的授权处理器
-	 * 
-	 * @param option
-	 * @param apis
-	 * @param httpClient
-	 * @throws NullPointerException
-	 * @throws MalformedURLException
-	 */
-	public SessionTokenGrantAuthHandler(JsonObject option, VxApis apis, HttpClient httpClient)
-			throws NullPointerException, MalformedURLException {
-		if (option.getValue("saveTokenName") instanceof String) {
-			this.saveTokenName = option.getString("saveTokenName");
-		}
-		if (option.getValue("getTokenName") instanceof String) {
-			this.getTokenName = option.getString("getTokenName");
-		}
-		if (option.getValue("isNext") instanceof Boolean) {
-			this.isNext = option.getBoolean("isNext");
-		}
-		webClient = WebClient.wrap(httpClient);
-		this.api = apis;
-		this.serOptions = VxApiServerEntranceHttpOptions.fromJson(apis.getServerEntrance().getBody());
-		chackVxApiParamOptions(serOptions);
-		this.policy = new VxApiServerURLPollingPolicy(serOptions.getServerUrls());
 	}
 
 	/**
