@@ -36,7 +36,7 @@ clusterConf = 集群的配置文件JSON格式,默认:
 更多zookeeper配置请参考: http://vertxchina.github.io/vertx-translation-chinese/clustering/ApacheZookeeper.html
 
 =========================================================
-========verticleConfig: Verticle应用的配置==================
+========verticleConfig: Verticle应用的配置=================
 =========================================================
 worker = 是否设置为worker verticle, 默认false
 multiThreaded = 是否设置为多线程worker verticle, 默认false
@@ -50,7 +50,7 @@ extraClasspath = 额外的classPath, JsonArray格式
 isolatedClasses = 设置隔离组, JsonArray格式
 
 =============================================
-=============dataConfig: 数据库配置 =========
+=============dataConfig: 数据库配置 ============
 =============================================
 url = 数据库 JDBC 连接地址
 driver_clas = JDBC 驱动

@@ -561,7 +561,7 @@ public class ClientVerticle extends AbstractVerticle {
 						if (vertx.isClustered()) {
 							vertx.eventBus().publish(VxApiEventBusAddressConstant.DEPLOY_APP_DEPLOY,
 									config.copy().put("thisVertxName", thisVertxName));
-							LOG.debug("广播告诉集群环境中启动应用:" + name);
+							LOG.info("广播告诉集群环境中启动应用:" + name);
 						}
 					}
 				} else {
@@ -602,7 +602,7 @@ public class ClientVerticle extends AbstractVerticle {
 			if (vertx.isClustered()) {
 				vertx.eventBus().publish(VxApiEventBusAddressConstant.DEPLOY_APP_UNDEPLOY,
 						config.copy().put("thisVertxName", thisVertxName));
-				LOG.debug("广播集群环境中启动应用:" + name);
+				LOG.info("广播集群环境中启动应用:" + name);
 			}
 		}
 	}
@@ -915,7 +915,7 @@ public class ClientVerticle extends AbstractVerticle {
 						if (vertx.isClustered()) {
 							vertx.eventBus().publish(VxApiEventBusAddressConstant.DEPLOY_API_STOP,
 									body.copy().put("thisVertxName", thisVertxName));
-							LOG.debug("广播告诉集群环境中暂停应用:" + appName + "的" + apiName + "API");
+							LOG.info("广播告诉集群环境中暂停应用:" + appName + "的" + apiName + "API");
 						}
 						vertx.eventBus().send(thisVertxName + VxApiEventBusAddressConstant.DEL_API, body);
 						vertx.eventBus().<Integer>send(thisVertxName + VxApiEventBusAddressConstant.DEL_API, apiName,
@@ -994,7 +994,7 @@ public class ClientVerticle extends AbstractVerticle {
 							if (vertx.isClustered()) {
 								vertx.eventBus().publish(VxApiEventBusAddressConstant.DEPLOY_API_START_ALL,
 										config.copy().put("thisVertxName", thisVertxName));
-								LOG.debug("广播通知集群环境中 应用:" + appName + ",启动所有API");
+								LOG.info("广播通知集群环境中 应用:" + appName + ",启动所有API");
 							}
 						} else {
 							LOG.error(MessageFormat.format("[user : {0}] 执行启动所有API-->查看API:{1}-->失败:{2}",
@@ -1045,7 +1045,7 @@ public class ClientVerticle extends AbstractVerticle {
 					if (vertx.isClustered()) {
 						vertx.eventBus().publish(VxApiEventBusAddressConstant.DEPLOY_API_START,
 								data.copy().put("thisVertxName", thisVertxName));
-						LOG.debug("广播告诉集群环境中启动应用:" + appName + "的" + apiName + "API");
+						LOG.info("广播告诉集群环境中启动应用:" + appName + "的" + apiName + "API");
 					}
 
 				} else {
@@ -1088,7 +1088,7 @@ public class ClientVerticle extends AbstractVerticle {
 		if (vertx.isClustered()) {
 			vertx.eventBus().publish(VxApiEventBusAddressConstant.DEPLOY_API_STOP,
 					body.copy().put("thisVertxName", thisVertxName));
-			LOG.debug("广播告诉集群环境中暂停应用:" + appName + "的" + apiName + "API");
+			LOG.info("广播告诉集群环境中暂停应用:" + appName + "的" + apiName + "API");
 		}
 	}
 

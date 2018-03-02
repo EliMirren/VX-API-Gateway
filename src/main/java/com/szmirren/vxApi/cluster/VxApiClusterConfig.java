@@ -1,4 +1,4 @@
-package com.szmirren.vxApi.core.cluster;
+package com.szmirren.vxApi.cluster;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;

@@ -1,7 +1,4 @@
 {
-	"vertx": {
-		"preferNativeTransport": true
-	},
 	"cluster": {
 		"clusterType": "NONE",
 		"clusterConf": {

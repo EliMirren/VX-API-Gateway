@@ -1,10 +1,10 @@
-package com.szmirren.vxApi.core.cluster.impl;
+package com.szmirren.vxApi.cluster.impl;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.retry.ExponentialBackoffRetry;
 
-import com.szmirren.vxApi.core.cluster.VxApiClusterConfig;
+import com.szmirren.vxApi.cluster.VxApiClusterConfig;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
