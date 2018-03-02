@@ -58,7 +58,7 @@
                         	<td width="10%"><button type="button" class="btn btn-success right" onclick="startAPI('${context.api.apiName}')" style="margin-top: 2px;">启动</button></td>
                         </#if>
                         <td width="10%"><a href="/static/updtAPI/${context.api.apiName}"><button type="button" class="btn btn-primary right"  style="margin-top: 2px;">修改</button></a></td>
-                        <td width="10%"><button type="button" class="btn btn-danger right" style="margin-top: 2px;" onclick="del('${context.api.apiName}')">删除</button></td>
+                        <td width="10%"><button type="button" class="btn btn-danger right" style="margin-top: 2px;" onclick="del('${context.api.appName}','${context.api.apiName}')">删除</button></td>
                     </tr>
                 </table>
             </div>
@@ -531,11 +531,11 @@
 <script src="/static/js/main.js"></script>
 <script >
 //删除API
-function del(id) {
+function del(appName,id) {
     if (window.confirm('删除API可能会影响你的业务,确定删除' + id + "吗?")) {
         $.ajax({
             type : "post",
-            url : '/static/delAPI/' + id,
+            url : '/static/delAPI/'+appName+'/'+ id,
             async : true,
             dataType : "json",
             success : function(result) {
@@ -665,11 +665,7 @@ function reloadTrack(appName,apiName) {
             alert("获取失败");
         }
     });
-    
-    
 }
-
-
 </script>
 </body>
 

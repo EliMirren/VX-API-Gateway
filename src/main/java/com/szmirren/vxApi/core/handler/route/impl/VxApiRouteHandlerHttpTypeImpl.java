@@ -41,10 +41,15 @@ public class VxApiRouteHandlerHttpTypeImpl implements VxApiRouteHandlerHttpType 
 	private VxApiServerURLPollingPolicy policy;
 	private VxApiServerEntranceHttpOptions serOptions;
 	private WebClient webClient;
+	/**
+	 * 当前Vertx的唯一标识
+	 */
+	private String thisVertxName;
 
 	public VxApiRouteHandlerHttpTypeImpl(boolean isNext, VxApis api, String appName, WebClient webClient)
 			throws NullPointerException, MalformedURLException {
 		super();
+		this.thisVertxName = System.getProperty("thisVertxName", "VX-API");
 		this.isNext = isNext;
 		this.api = api;
 		this.appName = appName;
@@ -179,7 +184,8 @@ public class VxApiRouteHandlerHttpTypeImpl implements VxApiRouteHandlerHttpType 
 					trackInfo.setErrMsg(res.cause().getMessage());
 					trackInfo.setErrStackTrace(res.cause().getStackTrace());
 				}
-				rct.vertx().eventBus().send(VxApiEventBusAddressConstant.SYSTEM_PLUS_TRACK_INFO, trackInfo.toJson());
+				rct.vertx().eventBus().send(thisVertxName + VxApiEventBusAddressConstant.SYSTEM_PLUS_TRACK_INFO,
+						trackInfo.toJson());
 			});
 
 			// 判断是否有坏的连接

@@ -115,11 +115,16 @@ public class VxApiApplication extends AbstractVerticle {
 	 * 跨域设置
 	 */
 	VxApiCorsOptions corsOptions = null;
+	/**
+	 * 当前Vertx的唯一标识
+	 */
+	private String thisVertxName;
 
 	@Override
 	public void start(Future<Void> fut) throws Exception {
 		try {
 			LOG.debug("加载应用配置信息");
+			thisVertxName = System.getProperty("thisVertxName", "VX-API");
 			VxApiApplicationDTO app = VxApiApplicationDTO.fromJson(config().getJsonObject("appConfig"));
 			this.appOption = new VxApiApplicationOptions(app);
 			appName = appOption.getAppName();
@@ -155,15 +160,10 @@ public class VxApiApplication extends AbstractVerticle {
 				})).setHandler(res -> {
 					if (res.succeeded()) {
 						// 注册操作地址
-						vertx.eventBus().consumer(
-								appOption.getAppName() + VxApiEventBusAddressConstant.APPLICATION_ADD_API_SUFFIX,
-								this::addRoute);
-						vertx.eventBus().consumer(
-								appOption.getAppName() + VxApiEventBusAddressConstant.APPLICATION_UPDT_API_SUFFIX,
-								this::updtRoute);
-						vertx.eventBus().consumer(
-								appOption.getAppName() + VxApiEventBusAddressConstant.APPLICATION_DEL_API_SUFFIX,
-								this::delRoute);
+						vertx.eventBus().consumer(thisVertxName + appOption.getAppName()
+								+ VxApiEventBusAddressConstant.APPLICATION_ADD_API_SUFFIX, this::addRoute);
+						vertx.eventBus().consumer(thisVertxName + appOption.getAppName()
+								+ VxApiEventBusAddressConstant.APPLICATION_DEL_API_SUFFIX, this::delRoute);
 						vertx.eventBus().consumer(VxApiEventBusAddressConstant.SYSTEM_PUBLISH_BLACK_IP_LIST,
 								this::updateIpBlackList);
 						fut.complete();
@@ -664,7 +664,7 @@ public class VxApiApplication extends AbstractVerticle {
 			VxApiTrackInfos infos = new VxApiTrackInfos(appName, api.getApiName());
 			infos.setErrMsg(rct.failure().getMessage());
 			infos.setErrStackTrace(rct.failure().getStackTrace());
-			vertx.eventBus().send(VxApiEventBusAddressConstant.SYSTEM_PLUS_ERROR, infos.toJson());
+			vertx.eventBus().send(thisVertxName + VxApiEventBusAddressConstant.SYSTEM_PLUS_ERROR, infos.toJson());
 		});
 	}
 
