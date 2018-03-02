@@ -1,7 +1,7 @@
 package com.szmirren.vxApi.core;
 
-import com.szmirren.vxApi.core.cluster.VxApiClusterConfig;
-import com.szmirren.vxApi.core.cluster.VxApiClusterConfigFactory;
+import com.szmirren.vxApi.cluster.VxApiClusterConfig;
+import com.szmirren.vxApi.cluster.VxApiClusterConfigFactory;
 import com.szmirren.vxApi.core.common.PathUtil;
 import com.szmirren.vxApi.core.verticle.ClientVerticle;
 import com.szmirren.vxApi.core.verticle.DATAVerticle;

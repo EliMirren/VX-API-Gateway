@@ -1,9 +1,9 @@
-package com.szmirren.vxApi.core.cluster;
+package com.szmirren.vxApi.cluster;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import com.szmirren.vxApi.core.cluster.impl.VxApiClusterConfigZookeeperImpl;
+import com.szmirren.vxApi.cluster.impl.VxApiClusterConfigZookeeperImpl;
 import com.szmirren.vxApi.core.common.StrUtil;
 
 import io.vertx.core.Vertx;
