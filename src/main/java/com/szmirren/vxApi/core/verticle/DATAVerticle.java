@@ -29,10 +29,15 @@ public class DATAVerticle extends AbstractVerticle {
 	 * JDBC客户端
 	 */
 	private JDBCClient jdbcClient = null;
+	/**
+	 * 当前Vertx的唯一标识
+	 */
+	private String thisVertxName;
 
 	@Override
 	public void start(Future<Void> fut) throws Exception {
 		System.out.println("start DATA Verticle ...");
+		thisVertxName = System.getProperty("thisVertxName", "VX-API");
 		initShorthand();// 初始化简写后的常量数据
 		JsonObject dbConfig = config();
 		String url = dbConfig.getString("url");
@@ -45,21 +50,22 @@ public class DATAVerticle extends AbstractVerticle {
 		jdbcClient = JDBCClient.createShared(vertx, dbConfig, VxApiGatewayAttribute.NAME);
 
 		// application operation address
-		vertx.eventBus().consumer(VxApiEventBusAddressConstant.FIND_APP, this::findApplication);
-		vertx.eventBus().consumer(VxApiEventBusAddressConstant.GET_APP, this::getApplication);
-		vertx.eventBus().consumer(VxApiEventBusAddressConstant.ADD_APP, this::addApplication);
-		vertx.eventBus().consumer(VxApiEventBusAddressConstant.DEL_APP, this::delApplication);
-		vertx.eventBus().consumer(VxApiEventBusAddressConstant.UPDT_APP, this::updtApplication);
+		vertx.eventBus().consumer(thisVertxName + VxApiEventBusAddressConstant.FIND_APP, this::findApplication);
+		vertx.eventBus().consumer(thisVertxName + VxApiEventBusAddressConstant.GET_APP, this::getApplication);
+		vertx.eventBus().consumer(thisVertxName + VxApiEventBusAddressConstant.ADD_APP, this::addApplication);
+		vertx.eventBus().consumer(thisVertxName + VxApiEventBusAddressConstant.DEL_APP, this::delApplication);
+		vertx.eventBus().consumer(thisVertxName + VxApiEventBusAddressConstant.UPDT_APP, this::updtApplication);
 		// api operation address
-		vertx.eventBus().consumer(VxApiEventBusAddressConstant.FIND_API_ALL, this::findAPI);
-		vertx.eventBus().consumer(VxApiEventBusAddressConstant.FIND_API_BY_PAGE, this::findAPIByPage);
-		vertx.eventBus().consumer(VxApiEventBusAddressConstant.GET_API, this::getAPI);
-		vertx.eventBus().consumer(VxApiEventBusAddressConstant.ADD_API, this::addAPI);
-		vertx.eventBus().consumer(VxApiEventBusAddressConstant.DEL_API, this::delAPI);
-		vertx.eventBus().consumer(VxApiEventBusAddressConstant.UPDT_API, this::updtAPI);
+		vertx.eventBus().consumer(thisVertxName + VxApiEventBusAddressConstant.FIND_API_ALL, this::findAPI);
+		vertx.eventBus().consumer(thisVertxName + VxApiEventBusAddressConstant.FIND_API_BY_PAGE, this::findAPIByPage);
+		vertx.eventBus().consumer(thisVertxName + VxApiEventBusAddressConstant.GET_API, this::getAPI);
+		vertx.eventBus().consumer(thisVertxName + VxApiEventBusAddressConstant.ADD_API, this::addAPI);
+		vertx.eventBus().consumer(thisVertxName + VxApiEventBusAddressConstant.DEL_API, this::delAPI);
+		vertx.eventBus().consumer(thisVertxName + VxApiEventBusAddressConstant.UPDT_API, this::updtAPI);
 		// blacklist
-		vertx.eventBus().consumer(VxApiEventBusAddressConstant.FIND_BLACKLIST, this::findBlacklist);
-		vertx.eventBus().consumer(VxApiEventBusAddressConstant.REPLACE_BLACKLIST, this::replaceBlacklist);
+		vertx.eventBus().consumer(thisVertxName + VxApiEventBusAddressConstant.FIND_BLACKLIST, this::findBlacklist);
+		vertx.eventBus().consumer(thisVertxName + VxApiEventBusAddressConstant.REPLACE_BLACKLIST,
+				this::replaceBlacklist);
 		System.out.println("start DATA Verticle successful");
 		fut.complete();
 	}

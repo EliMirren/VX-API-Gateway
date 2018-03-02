@@ -28,7 +28,9 @@ public class VxApiMain extends AbstractVerticle {
 			if (conf.succeeded()) {
 				try {
 					JsonObject option = conf.result().getJsonObject("verticleConfig", new JsonObject());
+					// 数据的配置文件
 					JsonObject datac = conf.result().getJsonObject("dataConfig", getDefaultDataConfig());
+					// 客户端的配置文件
 					JsonObject clinetc = conf.result().getJsonObject("clientConfig", getDefaultClientConfig());
 					Future.<String>future(sysInfo -> vertx.deployVerticle(SysVerticle.class.getName(),
 							new DeploymentOptions(option), sysInfo))

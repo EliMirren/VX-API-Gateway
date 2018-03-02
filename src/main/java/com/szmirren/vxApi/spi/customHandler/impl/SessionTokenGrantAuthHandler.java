@@ -78,6 +78,10 @@ public class SessionTokenGrantAuthHandler implements VxApiCustomHandler {
 	 * 服务端配置文件
 	 */
 	private VxApiServerEntranceHttpOptions serOptions;
+	/**
+	 * 当前Vertx的唯一标识
+	 */
+	private String thisVertxName;
 
 	@Override
 	public void handle(RoutingContext rct) {
@@ -199,7 +203,8 @@ public class SessionTokenGrantAuthHandler implements VxApiCustomHandler {
 					trackInfo.setErrMsg(res.cause().getMessage());
 					trackInfo.setErrStackTrace(res.cause().getStackTrace());
 				}
-				rct.vertx().eventBus().send(VxApiEventBusAddressConstant.SYSTEM_PLUS_TRACK_INFO, trackInfo.toJson());
+				rct.vertx().eventBus().send(thisVertxName + VxApiEventBusAddressConstant.SYSTEM_PLUS_TRACK_INFO,
+						trackInfo.toJson());
 			});
 
 			// 判断是否有坏的连接
@@ -272,6 +277,8 @@ public class SessionTokenGrantAuthHandler implements VxApiCustomHandler {
 		if (option.getValue("isNext") instanceof Boolean) {
 			this.isNext = option.getBoolean("isNext");
 		}
+		this.thisVertxName = System.getProperty("thisVertxName", "VX-API");
+
 		webClient = WebClient.wrap(httpClient);
 		this.api = apis;
 		this.serOptions = VxApiServerEntranceHttpOptions.fromJson(apis.getServerEntrance().getBody());

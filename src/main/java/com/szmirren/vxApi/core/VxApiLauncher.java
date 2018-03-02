@@ -2,6 +2,8 @@ package com.szmirren.vxApi.core;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.time.LocalTime;
+import java.util.UUID;
 
 import com.szmirren.vxApi.core.common.PathUtil;
 
@@ -23,6 +25,10 @@ public class VxApiLauncher extends Launcher {
 	private final String CLUSTER_TYPE = "NONE";
 
 	public static void main(String[] args) {
+		String thisVertxName = UUID.randomUUID().toString() + LocalTime.now().getNano();
+		// 设置当前系统Vertx的唯一标识
+		System.setProperty("thisVertxName", thisVertxName);
+
 		new VxApiLauncher().dispatch(args);
 	}
 

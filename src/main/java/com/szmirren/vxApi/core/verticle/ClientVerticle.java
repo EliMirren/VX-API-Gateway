@@ -70,9 +70,15 @@ public class ClientVerticle extends AbstractVerticle {
 	 * 没有权限返回
 	 */
 	private final String _404 = "<h2 style='text-align: center;line-height: 80px;'>Resource not found  <a href='javascript:history.go(-1);'>返回</a></h2>";
+	/**
+	 * 当前Vertx的唯一标识
+	 */
+	private String thisVertxName;
 
 	@Override
 	public void start(Future<Void> fut) throws Exception {
+		System.out.println("start Client ...");
+		thisVertxName = config().getString("thisVertxName", "VX-API");
 		Router router = Router.router(vertx);
 		router.route().handler(FaviconHandler.create(getFaviconPath()));
 		router.route().handler(BodyHandler.create().setUploadsDirectory(getUploadsDirectory()));
@@ -115,7 +121,7 @@ public class ClientVerticle extends AbstractVerticle {
 		router.route("/static/addAPI").handler(this::addAPI);
 		router.route("/static/updtAPI/:name").handler(this::loadUpdtAPI);
 		router.route("/static/updtAPI").handler(this::updtAPI);
-		router.route("/static/delAPI/:name").handler(this::delAPI);
+		router.route("/static/delAPI/:appName/:apiName").handler(this::delAPI);
 
 		router.route("/static/startAllAPI/:appName").handler(this::startAllAPI);
 		router.route("/static/startAPI/:apiName").handler(this::startAPI);
@@ -126,7 +132,8 @@ public class ClientVerticle extends AbstractVerticle {
 		router.route("/").handler(this::welcome);
 		vertx.createHttpServer().requestHandler(router::accept).listen(config().getInteger("clientPort", 5256), res -> {
 			if (res.succeeded()) {
-				System.out.println("The VX-API console running on port " + config().getInteger("clientPort", 5256));
+				System.out.println("start Clinet successful");
+				System.out.println("The Clinet running on port " + config().getInteger("clientPort", 5256));
 				fut.complete();
 			} else {
 				fut.fail(res.cause());
@@ -205,7 +212,7 @@ public class ClientVerticle extends AbstractVerticle {
 	 */
 	public void sysInfo(RoutingContext rct) {
 		LOG.debug(MessageFormat.format("[user : {0}] 执行查看运行状态...", rct.session().<String>get("userName")));
-		vertx.eventBus().<JsonObject>send(VxApiEventBusAddressConstant.SYSTEM_GET_INFO, null, reply -> {
+		vertx.eventBus().<JsonObject>send(thisVertxName + VxApiEventBusAddressConstant.SYSTEM_GET_INFO, null, reply -> {
 			if (reply.succeeded()) {
 				rct.response().putHeader(CONTENT_TYPE, CONTENT_VALUE_JSON_UTF8)
 						.end(ResultFormat.format(HTTPStatusCodeMsgEnum.C200, reply.result().body()));
@@ -231,19 +238,20 @@ public class ClientVerticle extends AbstractVerticle {
 			array = new JsonArray(rct.getBodyAsString());
 		}
 		JsonObject param = new JsonObject().put(VxApiDATAStoreConstant.BLACKLIST_CONTENT_NAME, array);
-		vertx.eventBus().<Integer>send(VxApiEventBusAddressConstant.SYSTEM_BLACK_IP_REPLACE, param, reply -> {
-			if (reply.succeeded()) {
-				rct.response().putHeader(CONTENT_TYPE, CONTENT_VALUE_JSON_UTF8)
-						.end(ResultFormat.format(HTTPStatusCodeMsgEnum.C200, reply.result().body()));
-				LOG.info(MessageFormat.format("[user : {0}] 执行添加IP黑名单-->结果:", rct.session().<String>get("userName"),
-						reply.result().body()));
-			} else {
-				rct.response().putHeader(CONTENT_TYPE, CONTENT_VALUE_JSON_UTF8)
-						.end(ResultFormat.format(HTTPStatusCodeMsgEnum.C500, reply.cause().toString()));
-				LOG.error(MessageFormat.format("[user : {0}] 执行添加IP黑名单-->失败:", rct.session().<String>get("userName"),
-						reply.cause().toString()));
-			}
-		});
+		vertx.eventBus().<Integer>send(thisVertxName + VxApiEventBusAddressConstant.SYSTEM_BLACK_IP_REPLACE, param,
+				reply -> {
+					if (reply.succeeded()) {
+						rct.response().putHeader(CONTENT_TYPE, CONTENT_VALUE_JSON_UTF8)
+								.end(ResultFormat.format(HTTPStatusCodeMsgEnum.C200, reply.result().body()));
+						LOG.info(MessageFormat.format("[user : {0}] 执行添加IP黑名单-->结果:",
+								rct.session().<String>get("userName"), reply.result().body()));
+					} else {
+						rct.response().putHeader(CONTENT_TYPE, CONTENT_VALUE_JSON_UTF8)
+								.end(ResultFormat.format(HTTPStatusCodeMsgEnum.C500, reply.cause().toString()));
+						LOG.error(MessageFormat.format("[user : {0}] 执行添加IP黑名单-->失败:",
+								rct.session().<String>get("userName"), reply.cause().toString()));
+					}
+				});
 	}
 
 	/**
@@ -253,13 +261,13 @@ public class ClientVerticle extends AbstractVerticle {
 	 */
 	public void findAPP(RoutingContext rct) {
 		LOG.debug(MessageFormat.format("[user : {0}] 执行查询应用...", rct.session().<String>get("userName")));
-		vertx.eventBus().<JsonArray>send(VxApiEventBusAddressConstant.FIND_APP, null, res -> {
+		vertx.eventBus().<JsonArray>send(thisVertxName + VxApiEventBusAddressConstant.FIND_APP, null, res -> {
 			if (res.succeeded()) {
 				JsonArray body = res.result().body();
 				if (body.size() > 0) {
 					// 拓展原来没有显示是否正在运行的属性,如果后期需要优化,可以加多一层业务层,查看应用是否正在运行在业务层处理
-					vertx.eventBus().<JsonObject>send(VxApiEventBusAddressConstant.DEPLOY_FIND_ONLINE_APP, null,
-							dep -> {
+					vertx.eventBus().<JsonObject>send(
+							thisVertxName + VxApiEventBusAddressConstant.DEPLOY_FIND_ONLINE_APP, null, dep -> {
 								if (dep.succeeded()) {
 									JsonArray array = new JsonArray();
 									JsonObject online = dep.result().body();
@@ -306,22 +314,24 @@ public class ClientVerticle extends AbstractVerticle {
 					.end(ResultFormat.formatAsZero(HTTPStatusCodeMsgEnum.C1404));
 		} else {
 			LOG.debug(MessageFormat.format("[user : {0}] 执行查看应用-->{1}", rct.session().get("userName"), name));
-			vertx.eventBus().<JsonObject>send(VxApiEventBusAddressConstant.GET_APP, name, res -> {
+			vertx.eventBus().<JsonObject>send(thisVertxName + VxApiEventBusAddressConstant.GET_APP, name, res -> {
 				if (res.succeeded()) {
 					if (res.result().body() == null || res.result().body().isEmpty()) {
 						rct.response().putHeader(CONTENT_TYPE, CONTENT_VALUE_HTML_UTF8).setStatusCode(404).end(_404);
 						return;
 					}
-					vertx.eventBus().<Boolean>send(VxApiEventBusAddressConstant.DEPLOY_APP_IS_ONLINE, name, dep -> {
-						if (dep.succeeded()) {
-							JsonObject body = new JsonObject(res.result().body().getString("content"));
-							body.put("online", dep.result().body());
-							rct.put("app", body);
-							rct.reroute("/getAPP.ftl");
-						} else {
-							rct.response().putHeader(CONTENT_TYPE, CONTENT_VALUE_HTML_UTF8).end(dep.cause().toString());
-						}
-					});
+					vertx.eventBus().<Boolean>send(thisVertxName + VxApiEventBusAddressConstant.DEPLOY_APP_IS_ONLINE,
+							name, dep -> {
+								if (dep.succeeded()) {
+									JsonObject body = new JsonObject(res.result().body().getString("content"));
+									body.put("online", dep.result().body());
+									rct.put("app", body);
+									rct.reroute("/getAPP.ftl");
+								} else {
+									rct.response().putHeader(CONTENT_TYPE, CONTENT_VALUE_HTML_UTF8)
+											.end(dep.cause().toString());
+								}
+							});
 				} else {
 					rct.response().putHeader(CONTENT_TYPE, CONTENT_VALUE_HTML_UTF8).end(res.cause().toString());
 				}
@@ -344,24 +354,27 @@ public class ClientVerticle extends AbstractVerticle {
 					JsonObject param = new JsonObject();
 					param.put(VxApiDATAStoreConstant.APPLICATION_ID_NAME, dto.getAppName());
 					param.put(VxApiDATAStoreConstant.APPLICATION_CONTENT_NAME, dto.toJson().put("time", Instant.now()));
-					vertx.eventBus().<Integer>send(VxApiEventBusAddressConstant.ADD_APP, param, cres -> {
-						if (cres.succeeded()) {
-							rct.response().putHeader(CONTENT_TYPE, CONTENT_VALUE_JSON_UTF8)
-									.end(ResultFormat.format(HTTPStatusCodeMsgEnum.C200, cres.result().body()));
-							LOG.info(MessageFormat.format("[user : {0}] 执行添加应用-->结果: {1}",
-									rct.session().<String>get("userName"), cres.result().body()));
-						} else {
-							LOG.error(MessageFormat.format("[user : {0}] 执行添加应用-->失败:{1}",
-									rct.session().get("userName"), cres.cause()));
-							HttpServerResponse response = rct.response().putHeader(CONTENT_TYPE,
-									CONTENT_VALUE_JSON_UTF8);
-							if (cres.cause().toString().contains("UNIQUE")) {
-								response.end(ResultFormat.format(HTTPStatusCodeMsgEnum.C1444, cres.cause().toString()));
-							} else {
-								response.end(ResultFormat.format(HTTPStatusCodeMsgEnum.C500, cres.cause().toString()));
-							}
-						}
-					});
+					vertx.eventBus().<Integer>send(thisVertxName + VxApiEventBusAddressConstant.ADD_APP, param,
+							cres -> {
+								if (cres.succeeded()) {
+									rct.response().putHeader(CONTENT_TYPE, CONTENT_VALUE_JSON_UTF8)
+											.end(ResultFormat.format(HTTPStatusCodeMsgEnum.C200, cres.result().body()));
+									LOG.info(MessageFormat.format("[user : {0}] 执行添加应用-->结果: {1}",
+											rct.session().<String>get("userName"), cres.result().body()));
+								} else {
+									LOG.error(MessageFormat.format("[user : {0}] 执行添加应用-->失败:{1}",
+											rct.session().get("userName"), cres.cause()));
+									HttpServerResponse response = rct.response().putHeader(CONTENT_TYPE,
+											CONTENT_VALUE_JSON_UTF8);
+									if (cres.cause().toString().contains("UNIQUE")) {
+										response.end(ResultFormat.format(HTTPStatusCodeMsgEnum.C1444,
+												cres.cause().toString()));
+									} else {
+										response.end(ResultFormat.format(HTTPStatusCodeMsgEnum.C500,
+												cres.cause().toString()));
+									}
+								}
+							});
 				} else {
 					LOG.error(MessageFormat.format("[user : {0}] 执行添加应用-->失败:未授权或者无权利", rct.session().get("userName")));
 					rct.response().putHeader(CONTENT_TYPE, CONTENT_VALUE_JSON_UTF8)
@@ -388,7 +401,7 @@ public class ClientVerticle extends AbstractVerticle {
 					.end(ResultFormat.formatAsZero(HTTPStatusCodeMsgEnum.C1404));
 		} else {
 			LOG.info(MessageFormat.format("[user : {0}] 执行查看应用-->{1}", rct.session().get("userName"), name));
-			vertx.eventBus().<JsonObject>send(VxApiEventBusAddressConstant.GET_APP, name, res -> {
+			vertx.eventBus().<JsonObject>send(thisVertxName + VxApiEventBusAddressConstant.GET_APP, name, res -> {
 				if (res.succeeded()) {
 					JsonObject body = res.result().body();
 					JsonObject app = new JsonObject(body.getString("content"));
@@ -420,19 +433,21 @@ public class ClientVerticle extends AbstractVerticle {
 					JsonObject param = new JsonObject();
 					param.put(VxApiDATAStoreConstant.APPLICATION_ID_NAME, dto.getAppName());
 					param.put(VxApiDATAStoreConstant.APPLICATION_CONTENT_NAME, dto.toJson());
-					vertx.eventBus().<Integer>send(VxApiEventBusAddressConstant.UPDT_APP, param, cres -> {
-						if (cres.succeeded()) {
-							rct.response().putHeader(CONTENT_TYPE, CONTENT_VALUE_JSON_UTF8)
-									.end(ResultFormat.format(HTTPStatusCodeMsgEnum.C200, cres.result().body()));
-							LOG.info(MessageFormat.format("[user : {0}] 执行修改应用:{2}-->结果: {1}",
-									rct.session().<String>get("userName"), cres.result().body(), dto.getAppName()));
-						} else {
-							LOG.error(MessageFormat.format("[user : {0}] 执行修改应用-->失败:{1}",
-									rct.session().get("userName"), cres.cause()));
-							rct.response().putHeader(CONTENT_TYPE, CONTENT_VALUE_JSON_UTF8)
-									.end(ResultFormat.format(HTTPStatusCodeMsgEnum.C500, cres.cause().toString()));
-						}
-					});
+					vertx.eventBus().<Integer>send(thisVertxName + VxApiEventBusAddressConstant.UPDT_APP, param,
+							cres -> {
+								if (cres.succeeded()) {
+									rct.response().putHeader(CONTENT_TYPE, CONTENT_VALUE_JSON_UTF8)
+											.end(ResultFormat.format(HTTPStatusCodeMsgEnum.C200, cres.result().body()));
+									LOG.info(MessageFormat.format("[user : {0}] 执行修改应用:{2}-->结果: {1}",
+											rct.session().<String>get("userName"), cres.result().body(),
+											dto.getAppName()));
+								} else {
+									LOG.error(MessageFormat.format("[user : {0}] 执行修改应用-->失败:{1}",
+											rct.session().get("userName"), cres.cause()));
+									rct.response().putHeader(CONTENT_TYPE, CONTENT_VALUE_JSON_UTF8).end(
+											ResultFormat.format(HTTPStatusCodeMsgEnum.C500, cres.cause().toString()));
+								}
+							});
 				} else {
 					LOG.error(MessageFormat.format("[user : {0}] 执行修改应用-->失败:未授权或者无权利", rct.session().get("userName")));
 					rct.response().putHeader(CONTENT_TYPE, CONTENT_VALUE_JSON_UTF8)
@@ -463,23 +478,29 @@ public class ClientVerticle extends AbstractVerticle {
 				if (res.succeeded()) {
 					JsonObject config = new JsonObject().put("appName", name);
 					// 将应用暂停
-					vertx.eventBus().send(VxApiEventBusAddressConstant.DEPLOY_APP_UNDEPLOY, config);
+					if (vertx.isClustered()) {
+						vertx.eventBus().publish(VxApiEventBusAddressConstant.DEPLOY_APP_UNDEPLOY,
+								config.copy().put("thisVertxName", thisVertxName));
+						LOG.debug("执行删除应用-->广播告诉集群环境中暂停应用:" + name);
+					}
+					vertx.eventBus().send(thisVertxName + VxApiEventBusAddressConstant.DEPLOY_APP_UNDEPLOY, config);
 					if (res.result()) {
 						LOG.info(MessageFormat.format("[user : {0}] 执行删除应用{1}...",
 								rct.session().<String>get("userName"), name));
-						vertx.eventBus().<Integer>send(VxApiEventBusAddressConstant.DEL_APP, name, cres -> {
-							if (cres.succeeded()) {
-								rct.response().putHeader(CONTENT_TYPE, CONTENT_VALUE_JSON_UTF8)
-										.end(ResultFormat.format(HTTPStatusCodeMsgEnum.C200, cres.result().body()));
-								LOG.info(MessageFormat.format("[user : {0}] 执行删除应用:{2}-->结果: {1}",
-										rct.session().<String>get("userName"), cres.result().body(), name));
-							} else {
-								LOG.error(MessageFormat.format("[user : {0}] 执行删除应用:{2}-->失败:{1}",
-										rct.session().get("userName"), cres.cause(), name));
-								rct.response().putHeader(CONTENT_TYPE, CONTENT_VALUE_JSON_UTF8)
-										.end(ResultFormat.format(HTTPStatusCodeMsgEnum.C500, cres.cause().toString()));
-							}
-						});
+						vertx.eventBus().<Integer>send(thisVertxName + VxApiEventBusAddressConstant.DEL_APP, name,
+								cres -> {
+									if (cres.succeeded()) {
+										rct.response().putHeader(CONTENT_TYPE, CONTENT_VALUE_JSON_UTF8).end(
+												ResultFormat.format(HTTPStatusCodeMsgEnum.C200, cres.result().body()));
+										LOG.info(MessageFormat.format("[user : {0}] 执行删除应用:{2}-->结果: {1}",
+												rct.session().<String>get("userName"), cres.result().body(), name));
+									} else {
+										LOG.error(MessageFormat.format("[user : {0}] 执行删除应用:{2}-->失败:{1}",
+												rct.session().get("userName"), cres.cause(), name));
+										rct.response().putHeader(CONTENT_TYPE, CONTENT_VALUE_JSON_UTF8).end(ResultFormat
+												.format(HTTPStatusCodeMsgEnum.C500, cres.cause().toString()));
+									}
+								});
 					} else {
 						LOG.error(MessageFormat.format("[user : {0}] 执行删除应用:{1}-->失败:未授权或者无权限",
 								rct.session().get("userName"), name));
@@ -503,12 +524,12 @@ public class ClientVerticle extends AbstractVerticle {
 	 */
 	public void deployAPP(RoutingContext rct) {
 		String name = rct.request().getParam("name");
-		LOG.debug("执行部署应用-->" + name + "...");
+		LOG.debug("执行启动应用-->" + name + "...");
 		if (StrUtil.isNullOrEmpty(name)) {
 			rct.response().putHeader(CONTENT_TYPE, CONTENT_VALUE_JSON_UTF8)
 					.end(ResultFormat.formatAsZero(HTTPStatusCodeMsgEnum.C1404));
 		} else {
-			vertx.eventBus().<JsonObject>send(VxApiEventBusAddressConstant.GET_APP, name, body -> {
+			vertx.eventBus().<JsonObject>send(thisVertxName + VxApiEventBusAddressConstant.GET_APP, name, body -> {
 				if (body.succeeded()) {
 					if (body.result().body().isEmpty()) {
 						rct.response().putHeader(CONTENT_TYPE, CONTENT_VALUE_JSON_UTF8)
@@ -518,14 +539,14 @@ public class ClientVerticle extends AbstractVerticle {
 						JsonObject config = new JsonObject();
 						config.put("app", app);
 						config.put("appName", name);
-						vertx.eventBus().<String>send(VxApiEventBusAddressConstant.DEPLOY_APP_DEPLOY, config,
-								deploy -> {
+						vertx.eventBus().<String>send(thisVertxName + VxApiEventBusAddressConstant.DEPLOY_APP_DEPLOY,
+								config, deploy -> {
 									if (deploy.succeeded()) {
-										LOG.debug("部署应用-->" + name + ":成功!");
+										LOG.debug("启动应用-->" + name + ":成功!");
 										rct.response().putHeader(CONTENT_TYPE, CONTENT_VALUE_JSON_UTF8)
 												.end(ResultFormat.formatAsOne(HTTPStatusCodeMsgEnum.C200));
 									} else {
-										LOG.error("部署应用-->" + name + " 失败:" + deploy.cause());
+										LOG.error("启动应用-->" + name + " 失败:" + deploy.cause());
 										HTTPStatusCodeMsgEnum msgCode = HTTPStatusCodeMsgEnum.C500;
 										if (deploy.cause() != null && deploy.cause() instanceof ReplyException) {
 											ReplyException cause = (ReplyException) deploy.cause();
@@ -537,10 +558,15 @@ public class ClientVerticle extends AbstractVerticle {
 												.end(ResultFormat.formatAsZero(msgCode));
 									}
 								});
+						if (vertx.isClustered()) {
+							vertx.eventBus().publish(VxApiEventBusAddressConstant.DEPLOY_APP_DEPLOY,
+									config.copy().put("thisVertxName", thisVertxName));
+							LOG.debug("广播告诉集群环境中启动应用:" + name);
+						}
 					}
 				} else {
-					LOG.error("部署应用-->" + name + " 失败:" + body.cause());
-					System.out.println("部署应用-->" + name + " 失败:" + body.cause());
+					LOG.error("启动应用-->" + name + " 失败:" + body.cause());
+					System.out.println("启动应用-->" + name + " 失败:" + body.cause());
 					rct.response().putHeader(CONTENT_TYPE, CONTENT_VALUE_JSON_UTF8)
 							.end(ResultFormat.formatAsZero(HTTPStatusCodeMsgEnum.C500));
 				}
@@ -555,23 +581,29 @@ public class ClientVerticle extends AbstractVerticle {
 	 */
 	public void unDeployAPP(RoutingContext rct) {
 		String name = rct.request().getParam("name");
-		LOG.debug("执行卸载应用-->" + name + "...");
+		LOG.debug("执行暂停应用-->" + name + "...");
 		if (StrUtil.isNullOrEmpty(name)) {
 			rct.response().putHeader(CONTENT_TYPE, CONTENT_VALUE_JSON_UTF8)
 					.end(ResultFormat.formatAsZero(HTTPStatusCodeMsgEnum.C1404));
 		} else {
 			JsonObject config = new JsonObject().put("appName", name);
-			vertx.eventBus().<String>send(VxApiEventBusAddressConstant.DEPLOY_APP_UNDEPLOY, config, deploy -> {
-				if (deploy.succeeded()) {
-					LOG.debug("执行卸载应用-->" + name + " 成功!");
-					rct.response().putHeader(CONTENT_TYPE, CONTENT_VALUE_JSON_UTF8)
-							.end(ResultFormat.formatAsOne(HTTPStatusCodeMsgEnum.C200));
-				} else {
-					rct.response().putHeader(CONTENT_TYPE, CONTENT_VALUE_JSON_UTF8)
-							.end(ResultFormat.formatAsZero(HTTPStatusCodeMsgEnum.C500));
-					LOG.debug("执行卸载应用-->" + name + " 失败:" + deploy.cause());
-				}
-			});
+			vertx.eventBus().<String>send(thisVertxName + VxApiEventBusAddressConstant.DEPLOY_APP_UNDEPLOY, config,
+					deploy -> {
+						if (deploy.succeeded()) {
+							LOG.debug("执行暂停应用-->" + name + " 成功!");
+							rct.response().putHeader(CONTENT_TYPE, CONTENT_VALUE_JSON_UTF8)
+									.end(ResultFormat.formatAsOne(HTTPStatusCodeMsgEnum.C200));
+						} else {
+							rct.response().putHeader(CONTENT_TYPE, CONTENT_VALUE_JSON_UTF8)
+									.end(ResultFormat.formatAsZero(HTTPStatusCodeMsgEnum.C500));
+							LOG.debug("执行暂停应用-->" + name + " 失败:" + deploy.cause());
+						}
+					});
+			if (vertx.isClustered()) {
+				vertx.eventBus().publish(VxApiEventBusAddressConstant.DEPLOY_APP_UNDEPLOY,
+						config.copy().put("thisVertxName", thisVertxName));
+				LOG.debug("广播集群环境中启动应用:" + name);
+			}
 		}
 	}
 
@@ -605,33 +637,36 @@ public class ClientVerticle extends AbstractVerticle {
 			} else {
 				body.put("offset", 0);
 			}
-			vertx.eventBus().<JsonObject>send(VxApiEventBusAddressConstant.FIND_API_BY_PAGE, body, res -> {
-				if (res.succeeded()) {
-					vertx.eventBus().<JsonArray>send(VxApiEventBusAddressConstant.DEPLOY_FIND_ONLINE_API,
-							new JsonObject().put("appName", name), reply -> {
-								if (reply.succeeded()) {
-									JsonArray online = reply.result().body();
-									JsonObject result = res.result().body();
-									result.getJsonArray("data").forEach(data -> {
-										String apiName = ((JsonObject) data).getString("apiName");
-										((JsonObject) data).put("online", online.contains(apiName));
+			vertx.eventBus().<JsonObject>send(thisVertxName + VxApiEventBusAddressConstant.FIND_API_BY_PAGE, body,
+					res -> {
+						if (res.succeeded()) {
+							vertx.eventBus().<JsonArray>send(
+									thisVertxName + VxApiEventBusAddressConstant.DEPLOY_FIND_ONLINE_API,
+									new JsonObject().put("appName", name), reply -> {
+										if (reply.succeeded()) {
+											JsonArray online = reply.result().body();
+											JsonObject result = res.result().body();
+											result.getJsonArray("data").forEach(data -> {
+												String apiName = ((JsonObject) data).getString("apiName");
+												((JsonObject) data).put("online", online.contains(apiName));
+											});
+											rct.response().putHeader(CONTENT_TYPE, CONTENT_VALUE_JSON_UTF8)
+													.end(ResultFormat.format(HTTPStatusCodeMsgEnum.C200, result));
+										} else {
+											LOG.error(MessageFormat.format("[user : {0}] 执行查询在线API-->失败:{1}",
+													res.cause().getMessage(), rct.session().<String>get("userName")));
+											rct.response().putHeader(CONTENT_TYPE, CONTENT_VALUE_JSON_UTF8)
+													.end(ResultFormat.format(HTTPStatusCodeMsgEnum.C500,
+															res.cause().getMessage()));
+										}
 									});
-									rct.response().putHeader(CONTENT_TYPE, CONTENT_VALUE_JSON_UTF8)
-											.end(ResultFormat.format(HTTPStatusCodeMsgEnum.C200, result));
-								} else {
-									LOG.error(MessageFormat.format("[user : {0}] 执行查询在线API-->失败:{1}",
-											res.cause().getMessage(), rct.session().<String>get("userName")));
-									rct.response().putHeader(CONTENT_TYPE, CONTENT_VALUE_JSON_UTF8).end(
-											ResultFormat.format(HTTPStatusCodeMsgEnum.C500, res.cause().getMessage()));
-								}
-							});
-				} else {
-					LOG.error(MessageFormat.format("[user : {0}] 执行查询API-->失败:{1}", res.cause().getMessage(),
-							rct.session().<String>get("userName")));
-					rct.response().putHeader(CONTENT_TYPE, CONTENT_VALUE_JSON_UTF8)
-							.end(ResultFormat.format(HTTPStatusCodeMsgEnum.C500, res.cause().getMessage()));
-				}
-			});
+						} else {
+							LOG.error(MessageFormat.format("[user : {0}] 执行查询API-->失败:{1}", res.cause().getMessage(),
+									rct.session().<String>get("userName")));
+							rct.response().putHeader(CONTENT_TYPE, CONTENT_VALUE_JSON_UTF8)
+									.end(ResultFormat.format(HTTPStatusCodeMsgEnum.C500, res.cause().getMessage()));
+						}
+					});
 		}
 	}
 
@@ -647,7 +682,7 @@ public class ClientVerticle extends AbstractVerticle {
 					.end(ResultFormat.formatAsZero(HTTPStatusCodeMsgEnum.C1404));
 		} else {
 			LOG.debug(MessageFormat.format("[user : {0}] 执行查看API-->{1}", rct.session().get("userName"), name));
-			vertx.eventBus().<JsonObject>send(VxApiEventBusAddressConstant.GET_API, name, res -> {
+			vertx.eventBus().<JsonObject>send(thisVertxName + VxApiEventBusAddressConstant.GET_API, name, res -> {
 				if (res.succeeded()) {
 					if (res.result().body() == null || res.result().body().isEmpty()) {
 						rct.response().putHeader(CONTENT_TYPE, CONTENT_VALUE_HTML_UTF8).setStatusCode(404).end(_404);
@@ -658,8 +693,8 @@ public class ClientVerticle extends AbstractVerticle {
 					JsonObject isOnLineConf = new JsonObject();
 					isOnLineConf.put("appName", appName);
 					isOnLineConf.put("apiName", name);
-					vertx.eventBus().<Boolean>send(VxApiEventBusAddressConstant.DEPLOY_API_IS_ONLINE, isOnLineConf,
-							dep -> {
+					vertx.eventBus().<Boolean>send(thisVertxName + VxApiEventBusAddressConstant.DEPLOY_API_IS_ONLINE,
+							isOnLineConf, dep -> {
 								if (dep.succeeded()) {
 									JsonObject api = new JsonObject(
 											body.getString(VxApiDATAStoreConstant.API_CONTENT_NAME));
@@ -713,24 +748,27 @@ public class ClientVerticle extends AbstractVerticle {
 					param.put(VxApiDATAStoreConstant.API_ID_NAME, dto.getApiName());
 					param.put(VxApiDATAStoreConstant.API_APP_ID_NAME, dto.getAppName());
 					param.put(VxApiDATAStoreConstant.API_CONTENT_NAME, dto.toJson());
-					vertx.eventBus().<Integer>send(VxApiEventBusAddressConstant.ADD_API, param, cres -> {
-						if (cres.succeeded()) {
-							rct.response().putHeader(CONTENT_TYPE, CONTENT_VALUE_JSON_UTF8)
-									.end(ResultFormat.format(HTTPStatusCodeMsgEnum.C200, cres.result().body()));
-							LOG.info(MessageFormat.format("[user : {0}] 执行添加API-->结果: {1}",
-									rct.session().<String>get("userName"), cres.result().body()));
-						} else {
-							LOG.error(MessageFormat.format("[user : {0}] 执行添加API-->失败:{1}",
-									rct.session().get("userName"), cres.cause()));
-							HttpServerResponse response = rct.response().putHeader(CONTENT_TYPE,
-									CONTENT_VALUE_JSON_UTF8);
-							if (cres.cause().toString().contains("UNIQUE")) {
-								response.end(ResultFormat.format(HTTPStatusCodeMsgEnum.C1444, cres.cause().toString()));
-							} else {
-								response.end(ResultFormat.format(HTTPStatusCodeMsgEnum.C500, cres.cause().toString()));
-							}
-						}
-					});
+					vertx.eventBus().<Integer>send(thisVertxName + VxApiEventBusAddressConstant.ADD_API, param,
+							cres -> {
+								if (cres.succeeded()) {
+									rct.response().putHeader(CONTENT_TYPE, CONTENT_VALUE_JSON_UTF8)
+											.end(ResultFormat.format(HTTPStatusCodeMsgEnum.C200, cres.result().body()));
+									LOG.info(MessageFormat.format("[user : {0}] 执行添加API-->结果: {1}",
+											rct.session().<String>get("userName"), cres.result().body()));
+								} else {
+									LOG.error(MessageFormat.format("[user : {0}] 执行添加API-->失败:{1}",
+											rct.session().get("userName"), cres.cause()));
+									HttpServerResponse response = rct.response().putHeader(CONTENT_TYPE,
+											CONTENT_VALUE_JSON_UTF8);
+									if (cres.cause().toString().contains("UNIQUE")) {
+										response.end(ResultFormat.format(HTTPStatusCodeMsgEnum.C1444,
+												cres.cause().toString()));
+									} else {
+										response.end(ResultFormat.format(HTTPStatusCodeMsgEnum.C500,
+												cres.cause().toString()));
+									}
+								}
+							});
 				} else {
 					LOG.error(
 							MessageFormat.format("[user : {0}] 执行添加API-->失败:未授权或者无权利", rct.session().get("userName")));
@@ -758,7 +796,7 @@ public class ClientVerticle extends AbstractVerticle {
 					.end(ResultFormat.formatAsZero(HTTPStatusCodeMsgEnum.C1404));
 		} else {
 			LOG.debug(MessageFormat.format("[user : {0}] 执行查看API-->{1}", rct.session().get("userName"), name));
-			vertx.eventBus().<JsonObject>send(VxApiEventBusAddressConstant.GET_API, name, res -> {
+			vertx.eventBus().<JsonObject>send(thisVertxName + VxApiEventBusAddressConstant.GET_API, name, res -> {
 				if (res.succeeded()) {
 					JsonObject body = res.result().body();
 					JsonObject api = new JsonObject(body.getString(VxApiDATAStoreConstant.API_CONTENT_NAME));
@@ -821,19 +859,21 @@ public class ClientVerticle extends AbstractVerticle {
 					JsonObject param = new JsonObject();
 					param.put(VxApiDATAStoreConstant.API_ID_NAME, dto.getApiName());
 					param.put(VxApiDATAStoreConstant.API_CONTENT_NAME, dto.toJson());
-					vertx.eventBus().<Integer>send(VxApiEventBusAddressConstant.UPDT_API, param, cres -> {
-						if (cres.succeeded()) {
-							rct.response().putHeader(CONTENT_TYPE, CONTENT_VALUE_JSON_UTF8)
-									.end(ResultFormat.format(HTTPStatusCodeMsgEnum.C200, cres.result().body()));
-							LOG.info(MessageFormat.format("[user : {0}] 执行修改API:{2}-->结果: {1}",
-									rct.session().<String>get("userName"), cres.result().body(), dto.getApiName()));
-						} else {
-							LOG.error(MessageFormat.format("[user : {0}] 执行修改API-->失败:{1}",
-									rct.session().get("userName"), cres.cause()));
-							rct.response().putHeader(CONTENT_TYPE, CONTENT_VALUE_JSON_UTF8)
-									.end(ResultFormat.format(HTTPStatusCodeMsgEnum.C500, cres.cause().toString()));
-						}
-					});
+					vertx.eventBus().<Integer>send(thisVertxName + VxApiEventBusAddressConstant.UPDT_API, param,
+							cres -> {
+								if (cres.succeeded()) {
+									rct.response().putHeader(CONTENT_TYPE, CONTENT_VALUE_JSON_UTF8)
+											.end(ResultFormat.format(HTTPStatusCodeMsgEnum.C200, cres.result().body()));
+									LOG.info(MessageFormat.format("[user : {0}] 执行修改API:{2}-->结果: {1}",
+											rct.session().<String>get("userName"), cres.result().body(),
+											dto.getApiName()));
+								} else {
+									LOG.error(MessageFormat.format("[user : {0}] 执行修改API-->失败:{1}",
+											rct.session().get("userName"), cres.cause()));
+									rct.response().putHeader(CONTENT_TYPE, CONTENT_VALUE_JSON_UTF8).end(
+											ResultFormat.format(HTTPStatusCodeMsgEnum.C500, cres.cause().toString()));
+								}
+							});
 				} else {
 					LOG.error(
 							MessageFormat.format("[user : {0}] 执行修改API-->失败:未授权或者无权利", rct.session().get("userName")));
@@ -855,39 +895,52 @@ public class ClientVerticle extends AbstractVerticle {
 	 * @param rct
 	 */
 	public void delAPI(RoutingContext rct) {
-		String name = rct.request().getParam("name");
-		if (StrUtil.isNullOrEmpty(name)) {
+		String apiName = rct.request().getParam("apiName");
+		String appName = rct.request().getParam("appName");
+		if (StrUtil.isNullOrEmpty(appName, apiName)) {
 			rct.response().putHeader(CONTENT_TYPE, CONTENT_VALUE_JSON_UTF8)
 					.end(ResultFormat.formatAsZero(HTTPStatusCodeMsgEnum.C1400));
 		} else {
+
 			User user = rct.user();
 			user.isAuthorized(VxApiRolesConstant.WRITE, res -> {
+
 				if (res.succeeded()) {
+					JsonObject body = new JsonObject();
+					body.put("apiName", apiName);
+					body.put("appName", appName);
 					if (res.result()) {
 						LOG.info(MessageFormat.format("[user : {0}] 执行删除API:{1}...",
-								rct.session().<String>get("userName"), name));
-						vertx.eventBus().<Integer>send(VxApiEventBusAddressConstant.DEL_API, name, cres -> {
-							if (cres.succeeded()) {
-								rct.response().putHeader(CONTENT_TYPE, CONTENT_VALUE_JSON_UTF8)
-										.end(ResultFormat.format(HTTPStatusCodeMsgEnum.C200, cres.result().body()));
-								LOG.info(MessageFormat.format("[user : {0}] 执行删除API:{2}-->结果: {1}",
-										rct.session().<String>get("userName"), cres.result().body(), name));
-							} else {
-								LOG.error(MessageFormat.format("[user : {0}] 执行删除API:{2}-->失败:{1}",
-										rct.session().get("userName"), cres.cause(), name));
-								rct.response().putHeader(CONTENT_TYPE, CONTENT_VALUE_JSON_UTF8)
-										.end(ResultFormat.format(HTTPStatusCodeMsgEnum.C500, cres.cause().toString()));
-							}
-						});
+								rct.session().<String>get("userName"), apiName));
+						if (vertx.isClustered()) {
+							vertx.eventBus().publish(VxApiEventBusAddressConstant.DEPLOY_API_STOP,
+									body.copy().put("thisVertxName", thisVertxName));
+							LOG.debug("广播告诉集群环境中暂停应用:" + appName + "的" + apiName + "API");
+						}
+						vertx.eventBus().send(thisVertxName + VxApiEventBusAddressConstant.DEL_API, body);
+						vertx.eventBus().<Integer>send(thisVertxName + VxApiEventBusAddressConstant.DEL_API, apiName,
+								cres -> {
+									if (cres.succeeded()) {
+										rct.response().putHeader(CONTENT_TYPE, CONTENT_VALUE_JSON_UTF8).end(
+												ResultFormat.format(HTTPStatusCodeMsgEnum.C200, cres.result().body()));
+										LOG.info(MessageFormat.format("[user : {0}] 执行删除API:{2}-->结果: {1}",
+												rct.session().<String>get("userName"), cres.result().body(), apiName));
+									} else {
+										LOG.error(MessageFormat.format("[user : {0}] 执行删除API:{2}-->失败:{1}",
+												rct.session().get("userName"), cres.cause(), apiName));
+										rct.response().putHeader(CONTENT_TYPE, CONTENT_VALUE_JSON_UTF8).end(ResultFormat
+												.format(HTTPStatusCodeMsgEnum.C500, cres.cause().toString()));
+									}
+								});
 					} else {
 						LOG.error(MessageFormat.format("[user : {0}] 执行删除API:{1}-->失败:未授权或者无权限",
-								rct.session().get("userName"), name));
+								rct.session().get("userName"), apiName));
 						rct.response().putHeader(CONTENT_TYPE, CONTENT_VALUE_JSON_UTF8)
 								.end(ResultFormat.formatAsZero(HTTPStatusCodeMsgEnum.C401));
 					}
 				} else {
 					LOG.error(MessageFormat.format("[user : {0}] 执行删除API:{2}-->失败:{1}", rct.session().get("userName"),
-							res.cause(), name));
+							res.cause(), apiName));
 					rct.response().putHeader(CONTENT_TYPE, CONTENT_VALUE_JSON_UTF8)
 							.end(ResultFormat.format(HTTPStatusCodeMsgEnum.C500, res.cause().getMessage()));
 				}
@@ -908,21 +961,48 @@ public class ClientVerticle extends AbstractVerticle {
 					.end(ResultFormat.formatAsZero(HTTPStatusCodeMsgEnum.C1400));
 		} else {
 			LOG.debug(MessageFormat.format("[user : {0}] 执行启动应用{1}:所有API..", rct.session().get("userName"), appName));
-			DeliveryOptions option = new DeliveryOptions();
-			option.setSendTimeout(200 * 301);
-			vertx.eventBus().<String>send(VxApiEventBusAddressConstant.DEPLOY_API_START_ALL, appName, option, reply -> {
-				if (reply.succeeded()) {
-					LOG.debug(MessageFormat.format("[user : {0}] 执行启动应用{1}:所有API-->成功", rct.session().get("userName"),
-							appName));
-					rct.response().putHeader(CONTENT_TYPE, CONTENT_VALUE_JSON_UTF8)
-							.end(ResultFormat.format(HTTPStatusCodeMsgEnum.C200, reply.result().body()));
-				} else {
-					LOG.error(MessageFormat.format("[user : {0}] 执行启动所有API-->查看API:{1}-->失败:{2}",
-							rct.session().get("userName"), appName, reply.cause().toString()));
-					rct.response().putHeader(CONTENT_TYPE, CONTENT_VALUE_JSON_UTF8)
-							.end(ResultFormat.format(HTTPStatusCodeMsgEnum.C500, reply.cause().toString()));
-				}
-			});
+			// 用于获取所有API的参数
+			JsonObject message = new JsonObject().put(VxApiDATAStoreConstant.API_APP_ID_NAME, appName);
+			// 获取所有API
+			vertx.eventBus().<JsonArray>send(thisVertxName + VxApiEventBusAddressConstant.FIND_API_ALL, message,
+					data -> {
+						if (data.succeeded()) {
+							JsonArray body = data.result().body();
+							DeliveryOptions option = new DeliveryOptions();
+							option.setSendTimeout(200 * 301);
+							JsonObject config = new JsonObject();
+							config.put("appName", appName);
+							config.put("apis", body);
+							vertx.eventBus().<String>send(
+									thisVertxName + VxApiEventBusAddressConstant.DEPLOY_API_START_ALL, config, option,
+									reply -> {
+										if (reply.succeeded()) {
+											LOG.debug(MessageFormat.format("[user : {0}] 执行启动应用{1}:所有API-->成功",
+													rct.session().get("userName"), appName));
+											rct.response().putHeader(CONTENT_TYPE, CONTENT_VALUE_JSON_UTF8)
+													.end(ResultFormat.format(HTTPStatusCodeMsgEnum.C200,
+															reply.result().body()));
+										} else {
+											LOG.error(MessageFormat.format(
+													"[user : {0}] 执行启动所有API-->查看API:{1}-->失败:{2}",
+													rct.session().get("userName"), appName, reply.cause().toString()));
+											rct.response().putHeader(CONTENT_TYPE, CONTENT_VALUE_JSON_UTF8)
+													.end(ResultFormat.format(HTTPStatusCodeMsgEnum.C500,
+															reply.cause().toString()));
+										}
+									});
+							if (vertx.isClustered()) {
+								vertx.eventBus().publish(VxApiEventBusAddressConstant.DEPLOY_API_START_ALL,
+										config.copy().put("thisVertxName", thisVertxName));
+								LOG.debug("广播通知集群环境中 应用:" + appName + ",启动所有API");
+							}
+						} else {
+							LOG.error(MessageFormat.format("[user : {0}] 执行启动所有API-->查看API:{1}-->失败:{2}",
+									rct.session().get("userName"), appName, data.cause().toString()));
+							rct.response().putHeader(CONTENT_TYPE, CONTENT_VALUE_JSON_UTF8)
+									.end(ResultFormat.format(HTTPStatusCodeMsgEnum.C500, data.cause().toString()));
+						}
+					});
 		}
 	}
 
@@ -938,7 +1018,7 @@ public class ClientVerticle extends AbstractVerticle {
 					.end(ResultFormat.formatAsZero(HTTPStatusCodeMsgEnum.C1400));
 		} else {
 			LOG.debug(MessageFormat.format("[user : {0}] 执行启动API-->{1}", rct.session().get("userName"), apiName));
-			vertx.eventBus().<JsonObject>send(VxApiEventBusAddressConstant.GET_API, apiName, res -> {
+			vertx.eventBus().<JsonObject>send(thisVertxName + VxApiEventBusAddressConstant.GET_API, apiName, res -> {
 				if (res.succeeded()) {
 					JsonObject body = res.result().body();
 					String appName = body.getString(VxApiDATAStoreConstant.API_APP_ID_NAME);
@@ -947,20 +1027,27 @@ public class ClientVerticle extends AbstractVerticle {
 					data.put("appName", appName);
 					data.put("apiName", apiName);
 					data.put("api", api);
-					vertx.eventBus().<Integer>send(VxApiEventBusAddressConstant.DEPLOY_API_START, data, reply -> {
-						if (reply.succeeded()) {
-							Integer result = reply.result().body();
-							LOG.debug(MessageFormat.format("[user : {0}] 执行启动API-->{1},结果:{2}",
-									rct.session().get("userName"), apiName, result));
-							rct.response().putHeader(CONTENT_TYPE, CONTENT_VALUE_JSON_UTF8)
-									.end(ResultFormat.format(HTTPStatusCodeMsgEnum.C200, result));
-						} else {
-							LOG.error(MessageFormat.format("[user : {0}] 执行启动API:{1}-->失败:{2}",
-									rct.session().get("userName"), apiName, reply.cause().toString()));
-							rct.response().putHeader(CONTENT_TYPE, CONTENT_VALUE_JSON_UTF8)
-									.end(ResultFormat.format(HTTPStatusCodeMsgEnum.C500, reply.cause().toString()));
-						}
-					});
+					vertx.eventBus().<Integer>send(thisVertxName + VxApiEventBusAddressConstant.DEPLOY_API_START, data,
+							reply -> {
+								if (reply.succeeded()) {
+									Integer result = reply.result().body();
+									LOG.debug(MessageFormat.format("[user : {0}] 执行启动API-->{1},结果:{2}",
+											rct.session().get("userName"), apiName, result));
+									rct.response().putHeader(CONTENT_TYPE, CONTENT_VALUE_JSON_UTF8)
+											.end(ResultFormat.format(HTTPStatusCodeMsgEnum.C200, result));
+								} else {
+									LOG.error(MessageFormat.format("[user : {0}] 执行启动API:{1}-->失败:{2}",
+											rct.session().get("userName"), apiName, reply.cause().toString()));
+									rct.response().putHeader(CONTENT_TYPE, CONTENT_VALUE_JSON_UTF8).end(
+											ResultFormat.format(HTTPStatusCodeMsgEnum.C500, reply.cause().toString()));
+								}
+							});
+					if (vertx.isClustered()) {
+						vertx.eventBus().publish(VxApiEventBusAddressConstant.DEPLOY_API_START,
+								data.copy().put("thisVertxName", thisVertxName));
+						LOG.debug("广播告诉集群环境中启动应用:" + appName + "的" + apiName + "API");
+					}
+
 				} else {
 					LOG.error(MessageFormat.format("[user : {0}] 执行启动API-->查看API:{1}-->失败:{2}",
 							rct.session().get("userName"), apiName, res.cause().toString()));
@@ -984,7 +1071,7 @@ public class ClientVerticle extends AbstractVerticle {
 		body.put("appName", appName);
 		body.put("apiName", apiName);
 		LOG.debug(MessageFormat.format("[user : {0}] 执行暂停API-->{1}", rct.session().get("userName"), apiName));
-		vertx.eventBus().<Integer>send(VxApiEventBusAddressConstant.DEPLOY_API_STOP, body, reply -> {
+		vertx.eventBus().<Integer>send(thisVertxName + VxApiEventBusAddressConstant.DEPLOY_API_STOP, body, reply -> {
 			if (reply.succeeded()) {
 				Integer result = reply.result().body();
 				LOG.debug(MessageFormat.format("[user : {0}] 执行暂停API:{1}-->结果:{2}", rct.session().get("userName"),
@@ -992,12 +1079,17 @@ public class ClientVerticle extends AbstractVerticle {
 				rct.response().putHeader(CONTENT_TYPE, CONTENT_VALUE_JSON_UTF8)
 						.end(ResultFormat.format(HTTPStatusCodeMsgEnum.C200, result));
 			} else {
-				LOG.error(MessageFormat.format("[user : {0}] 执行停止API:{1}-->失败:{2}", rct.session().get("userName"),
+				LOG.error(MessageFormat.format("[user : {0}] 执行暂停API:{1}-->失败:{2}", rct.session().get("userName"),
 						apiName, reply.cause().toString()));
 				rct.response().putHeader(CONTENT_TYPE, CONTENT_VALUE_JSON_UTF8)
 						.end(ResultFormat.format(HTTPStatusCodeMsgEnum.C500, reply.cause().toString()));
 			}
 		});
+		if (vertx.isClustered()) {
+			vertx.eventBus().publish(VxApiEventBusAddressConstant.DEPLOY_API_STOP,
+					body.copy().put("thisVertxName", thisVertxName));
+			LOG.debug("广播告诉集群环境中暂停应用:" + appName + "的" + apiName + "API");
+		}
 	}
 
 	/**
@@ -1011,15 +1103,16 @@ public class ClientVerticle extends AbstractVerticle {
 		JsonObject msg = new JsonObject();
 		msg.put("appName", appName);
 		msg.put("apiName", apiName);
-		vertx.eventBus().<JsonObject>send(VxApiEventBusAddressConstant.SYSTEM_GET_TRACK_INFO, msg, reply -> {
-			if (reply.succeeded()) {
-				rct.response().putHeader(CONTENT_TYPE, CONTENT_VALUE_JSON_UTF8)
-						.end(ResultFormat.format(HTTPStatusCodeMsgEnum.C200, reply.result().body()));
-			} else {
-				rct.response().putHeader(CONTENT_TYPE, CONTENT_VALUE_JSON_UTF8)
-						.end(ResultFormat.format(HTTPStatusCodeMsgEnum.C500, reply.cause()));
-			}
-		});
+		vertx.eventBus().<JsonObject>send(thisVertxName + VxApiEventBusAddressConstant.SYSTEM_GET_TRACK_INFO, msg,
+				reply -> {
+					if (reply.succeeded()) {
+						rct.response().putHeader(CONTENT_TYPE, CONTENT_VALUE_JSON_UTF8)
+								.end(ResultFormat.format(HTTPStatusCodeMsgEnum.C200, reply.result().body()));
+					} else {
+						rct.response().putHeader(CONTENT_TYPE, CONTENT_VALUE_JSON_UTF8)
+								.end(ResultFormat.format(HTTPStatusCodeMsgEnum.C500, reply.cause()));
+					}
+				});
 	}
 
 	/**

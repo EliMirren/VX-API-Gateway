@@ -35,9 +35,14 @@ public class CURLClientVerticle extends AbstractVerticle {
 	 * 返回的CONTENT_TYPE值JSON
 	 */
 	private final String CONTENT_VALUE_JSON_UTF8 = ContentTypeEnum.JSON_UTF8.val();
+	/**
+	 * 当前Vertx的唯一标识
+	 */
+	private String thisVertxName;
 
 	@Override
 	public void start(Future<Void> fut) throws Exception {
+		thisVertxName = config().getString("thisVertxName", "VX-API");
 		Router router = Router.router(vertx);
 		router.route().handler(BodyHandler.create());
 		router.route().handler(ResponseContentTypeHandler.create());
@@ -74,13 +79,14 @@ public class CURLClientVerticle extends AbstractVerticle {
 				LOG.info("[user: " + user + "] 访问curl模式->查看所有应用网关-->鉴权结果: " + auth);
 				// 检查用户权限并查询所有应用网关
 				if (auth) {
-					vertx.eventBus().<JsonArray>send(VxApiEventBusAddressConstant.FIND_APP, null, reply -> {
-						if (reply.succeeded()) {
-							findApp.complete(reply.result().body());
-						} else {
-							findApp.fail(reply.cause());
-						}
-					});
+					vertx.eventBus().<JsonArray>send(thisVertxName + VxApiEventBusAddressConstant.FIND_APP, null,
+							reply -> {
+								if (reply.succeeded()) {
+									findApp.complete(reply.result().body());
+								} else {
+									findApp.fail(reply.cause());
+								}
+							});
 				} else {
 					rct.response().end(ResultFormat.formatAsZero(HTTPStatusCodeMsgEnum.C401));
 					findApp.fail("VX-API Manual response");

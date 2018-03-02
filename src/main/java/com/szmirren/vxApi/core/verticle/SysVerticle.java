@@ -69,17 +69,25 @@ public class SysVerticle extends AbstractVerticle {
 	 * 存储API请求的数量
 	 */
 	private Map<String, Long> requstCount = new HashMap<>();
+	/**
+	 * 当前Vertx的唯一标识
+	 */
+	private String thisVertxName;
 
 	@Override
 	public void start(Future<Void> startFuture) throws Exception {
-		vertx.eventBus().consumer(VxApiEventBusAddressConstant.SYSTEM_GET_INFO, this::getSysInfo);
-		vertx.eventBus().consumer(VxApiEventBusAddressConstant.SYSTEM_PLUS_APP, this::plusAPP);
-		vertx.eventBus().consumer(VxApiEventBusAddressConstant.SYSTEM_MINUS_APP, this::minusAPP);
-		vertx.eventBus().consumer(VxApiEventBusAddressConstant.SYSTEM_MINUS_APP, this::PlusError);
-		vertx.eventBus().consumer(VxApiEventBusAddressConstant.SYSTEM_PLUS_TRACK_INFO, this::plusTrackInfos);
-		vertx.eventBus().consumer(VxApiEventBusAddressConstant.SYSTEM_GET_TRACK_INFO, this::getTrackInfo);
-		vertx.eventBus().consumer(VxApiEventBusAddressConstant.SYSTEM_BLACK_IP_FIND, this::findIpList);
-		vertx.eventBus().consumer(VxApiEventBusAddressConstant.SYSTEM_BLACK_IP_REPLACE, this::replaceIpList);
+		thisVertxName = System.getProperty("thisVertxName", "VX-API");
+		vertx.eventBus().consumer(thisVertxName + VxApiEventBusAddressConstant.SYSTEM_GET_INFO, this::getSysInfo);
+		vertx.eventBus().consumer(thisVertxName + VxApiEventBusAddressConstant.SYSTEM_PLUS_APP, this::plusAPP);
+		vertx.eventBus().consumer(thisVertxName + VxApiEventBusAddressConstant.SYSTEM_MINUS_APP, this::minusAPP);
+		vertx.eventBus().consumer(thisVertxName + VxApiEventBusAddressConstant.SYSTEM_PLUS_ERROR, this::PlusError);
+		vertx.eventBus().consumer(thisVertxName + VxApiEventBusAddressConstant.SYSTEM_PLUS_TRACK_INFO,
+				this::plusTrackInfos);
+		vertx.eventBus().consumer(thisVertxName + VxApiEventBusAddressConstant.SYSTEM_GET_TRACK_INFO,
+				this::getTrackInfo);
+		vertx.eventBus().consumer(thisVertxName + VxApiEventBusAddressConstant.SYSTEM_BLACK_IP_FIND, this::findIpList);
+		vertx.eventBus().consumer(thisVertxName + VxApiEventBusAddressConstant.SYSTEM_BLACK_IP_REPLACE,
+				this::replaceIpList);
 		startFuture.complete();
 	}
 
@@ -102,7 +110,7 @@ public class SysVerticle extends AbstractVerticle {
 		result.put("vxApiRunTime", StrUtil.millisToDateTime(duration.toMillis(), "$dD $hH $mMin $sS"));
 		result.put("appCount", appCount);
 		result.put("errorCount", errorCount);
-		vertx.eventBus().<JsonObject>send(VxApiEventBusAddressConstant.FIND_BLACKLIST, null, res -> {
+		vertx.eventBus().<JsonObject>send(thisVertxName + VxApiEventBusAddressConstant.FIND_BLACKLIST, null, res -> {
 			if (res.succeeded()) {
 				JsonObject body = res.result().body();
 				if (body.getValue(VxApiDATAStoreConstant.BLACKLIST_CONTENT_NAME) instanceof JsonArray) {
@@ -221,7 +229,7 @@ public class SysVerticle extends AbstractVerticle {
 	 * @param msg
 	 */
 	public void findIpList(Message<JsonObject> msg) {
-		vertx.eventBus().<JsonObject>send(VxApiEventBusAddressConstant.FIND_BLACKLIST, null, res -> {
+		vertx.eventBus().<JsonObject>send(thisVertxName + VxApiEventBusAddressConstant.FIND_BLACKLIST, null, res -> {
 			if (res.succeeded()) {
 				JsonObject body = res.result().body();
 				if (body.getValue(VxApiDATAStoreConstant.BLACKLIST_CONTENT_NAME) instanceof JsonArray) {
@@ -250,15 +258,17 @@ public class SysVerticle extends AbstractVerticle {
 				JsonArray array = msg.body().getJsonArray(VxApiDATAStoreConstant.BLACKLIST_CONTENT_NAME);
 				JsonObject body = new JsonObject().put(VxApiDATAStoreConstant.BLACKLIST_ID_NAME, "blacklist")
 						.put(VxApiDATAStoreConstant.BLACKLIST_CONTENT_NAME, array);
-				vertx.eventBus().<Integer>send(VxApiEventBusAddressConstant.REPLACE_BLACKLIST, body, res -> {
-					if (res.succeeded()) {
-						msg.reply(res.result().body());
-						// 广播更新自己ip地址
-						vertx.eventBus().publish(VxApiEventBusAddressConstant.SYSTEM_PUBLISH_BLACK_IP_LIST, array);
-					} else {
-						msg.fail(500, res.cause().getMessage());
-					}
-				});
+				vertx.eventBus().<Integer>send(thisVertxName + VxApiEventBusAddressConstant.REPLACE_BLACKLIST, body,
+						res -> {
+							if (res.succeeded()) {
+								msg.reply(res.result().body());
+								// 广播更新自己ip地址
+								vertx.eventBus().publish(VxApiEventBusAddressConstant.SYSTEM_PUBLISH_BLACK_IP_LIST,
+										array);
+							} else {
+								msg.fail(500, res.cause().getMessage());
+							}
+						});
 			} else {
 				msg.fail(1405, "参数为空或者缺少参数");
 			}
