@@ -81,13 +81,10 @@ public class SysVerticle extends AbstractVerticle {
 		vertx.eventBus().consumer(thisVertxName + VxApiEventBusAddressConstant.SYSTEM_PLUS_APP, this::plusAPP);
 		vertx.eventBus().consumer(thisVertxName + VxApiEventBusAddressConstant.SYSTEM_MINUS_APP, this::minusAPP);
 		vertx.eventBus().consumer(thisVertxName + VxApiEventBusAddressConstant.SYSTEM_PLUS_ERROR, this::PlusError);
-		vertx.eventBus().consumer(thisVertxName + VxApiEventBusAddressConstant.SYSTEM_PLUS_TRACK_INFO,
-				this::plusTrackInfos);
-		vertx.eventBus().consumer(thisVertxName + VxApiEventBusAddressConstant.SYSTEM_GET_TRACK_INFO,
-				this::getTrackInfo);
+		vertx.eventBus().consumer(thisVertxName + VxApiEventBusAddressConstant.SYSTEM_PLUS_TRACK_INFO, this::plusTrackInfos);
+		vertx.eventBus().consumer(thisVertxName + VxApiEventBusAddressConstant.SYSTEM_GET_TRACK_INFO, this::getTrackInfo);
 		vertx.eventBus().consumer(thisVertxName + VxApiEventBusAddressConstant.SYSTEM_BLACK_IP_FIND, this::findIpList);
-		vertx.eventBus().consumer(thisVertxName + VxApiEventBusAddressConstant.SYSTEM_BLACK_IP_REPLACE,
-				this::replaceIpList);
+		vertx.eventBus().consumer(thisVertxName + VxApiEventBusAddressConstant.SYSTEM_BLACK_IP_REPLACE, this::replaceIpList);
 		startFuture.complete();
 	}
 
@@ -156,8 +153,8 @@ public class SysVerticle extends AbstractVerticle {
 		errorCount++;
 		if (msg.body() != null) {
 			VxApiTrackInfos infos = VxApiTrackInfos.fromJson(msg.body());
-			LOG.error(MessageFormat.format("应用:{0} , API:{1} ,在执行的过程中发生了异常:{2} ,堆栈信息{3}", infos.getAppName(),
-					infos.getApiName(), infos.getErrMsg(), infos.getErrStackTrace()));
+			LOG.error(MessageFormat.format("应用:{0} , API:{1} ,在执行的过程中发生了异常:{2} ,堆栈信息{3}", infos.getAppName(), infos.getApiName(),
+					infos.getErrMsg(), infos.getErrStackTrace()));
 		}
 	}
 
@@ -179,8 +176,8 @@ public class SysVerticle extends AbstractVerticle {
 					requstFailedCount.put(key, 0L);
 				}
 				requstFailedCount.put(key, requstFailedCount.get(key) + 1);
-				LOG.error(MessageFormat.format("应用:{0} , API:{1} ,在执行的过程中发生了异常:{2} ,堆栈信息{3}", infos.getAppName(),
-						infos.getApiName(), infos.getErrMsg(), infos.getErrStackTrace()));
+				LOG.error(MessageFormat.format("应用:{0} , API:{1} ,在执行的过程中发生了异常:{2} ,堆栈信息{3}", infos.getAppName(), infos.getApiName(),
+						infos.getErrMsg(), infos.getErrStackTrace()));
 			} else {
 				JsonObject json = new JsonObject();
 				Duration proc = Duration.between(infos.getStartTime(), infos.getEndTime());
@@ -258,17 +255,15 @@ public class SysVerticle extends AbstractVerticle {
 				JsonArray array = msg.body().getJsonArray(VxApiDATAStoreConstant.BLACKLIST_CONTENT_NAME);
 				JsonObject body = new JsonObject().put(VxApiDATAStoreConstant.BLACKLIST_ID_NAME, "blacklist")
 						.put(VxApiDATAStoreConstant.BLACKLIST_CONTENT_NAME, array);
-				vertx.eventBus().<Integer>send(thisVertxName + VxApiEventBusAddressConstant.REPLACE_BLACKLIST, body,
-						res -> {
-							if (res.succeeded()) {
-								msg.reply(res.result().body());
-								// 广播更新自己ip地址
-								vertx.eventBus().publish(VxApiEventBusAddressConstant.SYSTEM_PUBLISH_BLACK_IP_LIST,
-										array);
-							} else {
-								msg.fail(500, res.cause().getMessage());
-							}
-						});
+				vertx.eventBus().<Integer>send(thisVertxName + VxApiEventBusAddressConstant.REPLACE_BLACKLIST, body, res -> {
+					if (res.succeeded()) {
+						msg.reply(res.result().body());
+						// 广播更新自己ip地址
+						vertx.eventBus().publish(VxApiEventBusAddressConstant.SYSTEM_PUBLISH_BLACK_IP_LIST, array);
+					} else {
+						msg.fail(500, res.cause().getMessage());
+					}
+				});
 			} else {
 				msg.fail(1405, "参数为空或者缺少参数");
 			}

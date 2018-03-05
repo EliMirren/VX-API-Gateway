@@ -133,8 +133,7 @@ public class VxApiRouteHandlerHttpTypeImpl implements VxApiRouteHandlerHttpType 
 					}
 				}
 			}
-			HttpRequest<Buffer> request = webClient.requestAbs(serOptions.getMethod(), requestPath)
-					.timeout(serOptions.getTimeOut());
+			HttpRequest<Buffer> request = webClient.requestAbs(serOptions.getMethod(), requestPath).timeout(serOptions.getTimeOut());
 			headers.forEach(va -> request.putHeader(va.getKey(), va.getValue()));
 			queryParams.forEach(va -> request.addQueryParam(va.getKey(), va.getValue()));
 			trackInfo.setRequestTime(Instant.now());
@@ -149,8 +148,7 @@ public class VxApiRouteHandlerHttpTypeImpl implements VxApiRouteHandlerHttpType 
 						});
 					}
 					rct.response().putHeader(VxApiRouteConstant.SERVER, VxApiGatewayAttribute.FULL_NAME)
-							.putHeader(VxApiRouteConstant.CONTENT_TYPE, api.getContentType()).setChunked(true)
-							.write(result.body());
+							.putHeader(VxApiRouteConstant.CONTENT_TYPE, api.getContentType()).setChunked(true).write(result.body());
 					if (isNext) {
 						rct.put(VxApiAfterHandler.PREV_IS_SUCCESS_KEY, Future.<Boolean>succeededFuture(true));// 告诉后置处理器当前操作成功执行
 						rct.next();
@@ -164,16 +162,13 @@ public class VxApiRouteHandlerHttpTypeImpl implements VxApiRouteHandlerHttpType 
 						rct.put(VxApiAfterHandler.PREV_IS_SUCCESS_KEY, Future.<Boolean>failedFuture(res.cause()));// 告诉后置处理器当前操作成功执行
 						rct.next();
 					} else {
-						HttpServerResponse response = rct.response()
-								.putHeader(VxApiRouteConstant.SERVER, VxApiGatewayAttribute.FULL_NAME)
+						HttpServerResponse response = rct.response().putHeader(VxApiRouteConstant.SERVER, VxApiGatewayAttribute.FULL_NAME)
 								.putHeader(VxApiRouteConstant.CONTENT_TYPE, api.getContentType());
 						// 如果是连接异常返回无法连接的错误信息,其他异常返回相应的异常
 						if (res.cause() instanceof ConnectException || res.cause() instanceof TimeoutException) {
-							response.setStatusCode(api.getResult().getCantConnServerStatus())
-									.end(api.getResult().getCantConnServerExample());
+							response.setStatusCode(api.getResult().getCantConnServerStatus()).end(api.getResult().getCantConnServerExample());
 						} else {
-							response.setStatusCode(api.getResult().getFailureStatus())
-									.end(api.getResult().getFailureExample());
+							response.setStatusCode(api.getResult().getFailureStatus()).end(api.getResult().getFailureExample());
 						}
 					}
 					// 提交连接请求失败
@@ -184,8 +179,7 @@ public class VxApiRouteHandlerHttpTypeImpl implements VxApiRouteHandlerHttpType 
 					trackInfo.setErrMsg(res.cause().getMessage());
 					trackInfo.setErrStackTrace(res.cause().getStackTrace());
 				}
-				rct.vertx().eventBus().send(thisVertxName + VxApiEventBusAddressConstant.SYSTEM_PLUS_TRACK_INFO,
-						trackInfo.toJson());
+				rct.vertx().eventBus().send(thisVertxName + VxApiEventBusAddressConstant.SYSTEM_PLUS_TRACK_INFO, trackInfo.toJson());
 			});
 
 			// 判断是否有坏的连接
@@ -195,12 +189,11 @@ public class VxApiRouteHandlerHttpTypeImpl implements VxApiRouteHandlerHttpType 
 					rct.vertx().setTimer(serOptions.getRetryTime(), testConn -> {
 						List<VxApiServerURLInfo> service = policy.getBadService();
 						for (VxApiServerURLInfo urlinfo : service) {
-							webClient.requestAbs(serOptions.getMethod(), urlinfo.getUrl())
-									.timeout(serOptions.getTimeOut()).send(res -> {
-										if (res.succeeded()) {
-											policy.reportGreatService(urlinfo.getIndex());
-										}
-									});
+							webClient.requestAbs(serOptions.getMethod(), urlinfo.getUrl()).timeout(serOptions.getTimeOut()).send(res -> {
+								if (res.succeeded()) {
+									policy.reportGreatService(urlinfo.getIndex());
+								}
+							});
 						}
 						policy.setCheckWaiting(false);
 					});
@@ -210,13 +203,11 @@ public class VxApiRouteHandlerHttpTypeImpl implements VxApiRouteHandlerHttpType 
 			// 无可用连接时,结束当前处理器并尝试重新尝试连接是否可用
 			if (isNext) {
 				// 告诉后置处理器当前操作执行结果
-				rct.put(VxApiAfterHandler.PREV_IS_SUCCESS_KEY,
-						Future.<Boolean>failedFuture(new ConnectException("无法连接上后台交互的服务器")));
+				rct.put(VxApiAfterHandler.PREV_IS_SUCCESS_KEY, Future.<Boolean>failedFuture(new ConnectException("无法连接上后台交互的服务器")));
 				rct.next();
 			} else {
 				rct.response().putHeader(VxApiRouteConstant.SERVER, VxApiGatewayAttribute.FULL_NAME)
-						.putHeader(VxApiRouteConstant.CONTENT_TYPE, api.getContentType())
-						.setStatusCode(api.getResult().getCantConnServerStatus())
+						.putHeader(VxApiRouteConstant.CONTENT_TYPE, api.getContentType()).setStatusCode(api.getResult().getCantConnServerStatus())
 						.end(api.getResult().getCantConnServerExample());
 			}
 			if (!policy.isCheckWaiting()) {
@@ -224,12 +215,11 @@ public class VxApiRouteHandlerHttpTypeImpl implements VxApiRouteHandlerHttpType 
 				rct.vertx().setTimer(serOptions.getRetryTime(), testConn -> {
 					List<VxApiServerURLInfo> service = policy.getBadService();
 					for (VxApiServerURLInfo urlinfo : service) {
-						webClient.requestAbs(serOptions.getMethod(), urlinfo.getUrl()).timeout(serOptions.getTimeOut())
-								.send(res -> {
-									if (res.succeeded()) {
-										policy.reportGreatService(urlinfo.getIndex());
-									}
-								});
+						webClient.requestAbs(serOptions.getMethod(), urlinfo.getUrl()).timeout(serOptions.getTimeOut()).send(res -> {
+							if (res.succeeded()) {
+								policy.reportGreatService(urlinfo.getIndex());
+							}
+						});
 					}
 					policy.setCheckWaiting(false);
 				});

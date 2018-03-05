@@ -49,21 +49,21 @@ public class VxApiCustomHandlerFactory {
 	 * 自定义处理器
 	 * 
 	 * @param name
-	 *            处理器在工厂中的名字
+	 *          处理器在工厂中的名字
 	 * @param options
-	 *            处理器配置文件
+	 *          处理器配置文件
 	 * 
 	 * @param api
-	 *            API 相关配置文件
+	 *          API 相关配置文件
 	 * @param httpClient
-	 *            http的客户端
+	 *          http的客户端
 	 * @return
 	 * @throws NullPointerException
 	 * @throws ClassNotFoundException
 	 * @throws Exception
 	 */
-	public static VxApiCustomHandler getCustomHandler(String name, JsonObject options, VxApis api,
-			HttpClient httpClient) throws NullPointerException, ClassNotFoundException, Exception {
+	public static VxApiCustomHandler getCustomHandler(String name, JsonObject options, VxApis api, HttpClient httpClient)
+			throws NullPointerException, ClassNotFoundException, Exception {
 		if (StrUtil.isNullOrEmpty(name)) {
 			throw new NullPointerException("获取自定义处理器-->失败:工厂名字不能为空");
 		}

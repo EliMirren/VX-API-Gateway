@@ -85,8 +85,7 @@ public class VxApiCustomHandlerOptions {
 
 	@Override
 	public String toString() {
-		return "VxApiCustomHandlerOptions [inFactoryName=" + inFactoryName + ", isNext=" + isNext + ", option=" + option
-				+ "]";
+		return "VxApiCustomHandlerOptions [inFactoryName=" + inFactoryName + ", isNext=" + isNext + ", option=" + option + "]";
 	}
 
 }

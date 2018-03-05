@@ -64,8 +64,7 @@ public class DATAVerticle extends AbstractVerticle {
 		vertx.eventBus().consumer(thisVertxName + VxApiEventBusAddressConstant.UPDT_API, this::updtAPI);
 		// blacklist
 		vertx.eventBus().consumer(thisVertxName + VxApiEventBusAddressConstant.FIND_BLACKLIST, this::findBlacklist);
-		vertx.eventBus().consumer(thisVertxName + VxApiEventBusAddressConstant.REPLACE_BLACKLIST,
-				this::replaceBlacklist);
+		vertx.eventBus().consumer(thisVertxName + VxApiEventBusAddressConstant.REPLACE_BLACKLIST, this::replaceBlacklist);
 		System.out.println("start DATA Verticle successful");
 		fut.complete();
 	}
@@ -135,8 +134,7 @@ public class DATAVerticle extends AbstractVerticle {
 		if (name == null) {
 			msg.fail(411, "the application name is null");
 		} else {
-			String sql = MessageFormat.format("select {0} AS {1} ,{2} AS {3} from {4} where {0} = ? ", APPIC, APPIN,
-					APPCC, APPCN, APPTN);
+			String sql = MessageFormat.format("select {0} AS {1} ,{2} AS {3} from {4} where {0} = ? ", APPIC, APPIN, APPCC, APPCN, APPTN);
 			JsonArray params = new JsonArray();
 			params.add(name);
 			jdbcClient.queryWithParams(sql, params, res -> {
@@ -286,8 +284,8 @@ public class DATAVerticle extends AbstractVerticle {
 			msg.fail(411, "the application name is null");
 		} else {
 			JsonObject body = msg.body();
-			String sql = MessageFormat.format("select {0} AS {1},{2} AS {3},{4} AS {5} from {6} where {2} = ? ", APIIC,
-					APIIN, API_APPIC, API_APPIN, APICC, APICN, APITN);
+			String sql = MessageFormat.format("select {0} AS {1},{2} AS {3},{4} AS {5} from {6} where {2} = ? ", APIIC, APIIN, API_APPIC,
+					API_APPIN, APICC, APICN, APITN);
 			JsonArray params = new JsonArray();
 			params.add(body.getString(API_APPIN));
 			jdbcClient.queryWithParams(sql, params, res -> {
@@ -325,9 +323,8 @@ public class DATAVerticle extends AbstractVerticle {
 					Object value = count.result().getResults().get(0).getValue(0);
 					long dataCount = ((Number) value).longValue();
 					// TODO 如果存储的数据库不支持limit 与offset 需要自己修改一下分页语句
-					String sql = MessageFormat.format(
-							"select {0} AS {1},{2} AS {3},{4} AS {5} from {6} where {2} = ? limit ? offset ?", APIIC,
-							APIIN, API_APPIC, API_APPIN, APICC, APICN, APITN);
+					String sql = MessageFormat.format("select {0} AS {1},{2} AS {3},{4} AS {5} from {6} where {2} = ? limit ? offset ?", APIIC, APIIN,
+							API_APPIC, API_APPIN, APICC, APICN, APITN);
 					JsonArray params = new JsonArray();
 					params.add(body.getString(VxApiDATAStoreConstant.API_APP_ID_NAME));
 					params.add(body.getInteger("limit"));
@@ -367,8 +364,8 @@ public class DATAVerticle extends AbstractVerticle {
 		if (name == null) {
 			msg.fail(411, "the application name is null");
 		} else {
-			String sql = MessageFormat.format("select {0} AS {1},{2} AS {3},{4} AS {5} from {6} where {0} = ? ", APIIC,
-					APIIN, API_APPIC, API_APPIN, APICC, APICN, APITN);
+			String sql = MessageFormat.format("select {0} AS {1},{2} AS {3},{4} AS {5} from {6} where {0} = ? ", APIIC, APIIN, API_APPIC,
+					API_APPIN, APICC, APICN, APITN);
 			JsonArray params = new JsonArray();
 			params.add(name);
 			jdbcClient.queryWithParams(sql, params, res -> {
@@ -399,8 +396,7 @@ public class DATAVerticle extends AbstractVerticle {
 			msg.fail(411, "the application options is null");
 		} else {
 			JsonObject body = msg.body();
-			String sql = MessageFormat.format("insert into {0} ({1},{2},{3}) values(?,?,?)", APITN, APIIC, API_APPIC,
-					APICC);
+			String sql = MessageFormat.format("insert into {0} ({1},{2},{3}) values(?,?,?)", APITN, APIIC, API_APPIC, APICC);
 			JsonArray params = new JsonArray();
 			params.add(body.getString(APIIN));
 			params.add(body.getString(API_APPIN));

@@ -32,17 +32,13 @@ public class VxApiMain extends AbstractVerticle {
 					JsonObject datac = conf.result().getJsonObject("dataConfig", getDefaultDataConfig());
 					// 客户端的配置文件
 					JsonObject clinetc = conf.result().getJsonObject("clientConfig", getDefaultClientConfig());
-					Future.<String>future(sysInfo -> vertx.deployVerticle(SysVerticle.class.getName(),
-							new DeploymentOptions(option), sysInfo))
-							.compose(res -> Future
-									.<String>future(data -> vertx.deployVerticle(DATAVerticle.class.getName(),
-											new DeploymentOptions(option).setConfig(datac), data)))
-							.compose(res -> Future
-									.<String>future(client -> vertx.deployVerticle(ClientVerticle.class.getName(),
-											new DeploymentOptions(option).setConfig(clinetc), client)))
-							.compose(res -> Future
-									.<String>future(deploy -> vertx.deployVerticle(DeploymentVerticle.class.getName(),
-											new DeploymentOptions(option), deploy)))
+					Future.<String>future(sysInfo -> vertx.deployVerticle(SysVerticle.class.getName(), new DeploymentOptions(option), sysInfo))
+							.compose(res -> Future.<String>future(
+									data -> vertx.deployVerticle(DATAVerticle.class.getName(), new DeploymentOptions(option).setConfig(datac), data)))
+							.compose(res -> Future.<String>future(
+									client -> vertx.deployVerticle(ClientVerticle.class.getName(), new DeploymentOptions(option).setConfig(clinetc), client)))
+							.compose(res -> Future.<String>future(
+									deploy -> vertx.deployVerticle(DeploymentVerticle.class.getName(), new DeploymentOptions(option), deploy)))
 							.setHandler(res -> {
 								if (res.succeeded()) {
 									System.out.println("start VX-API successful");
@@ -77,8 +73,7 @@ public class VxApiMain extends AbstractVerticle {
 					try {
 						JsonObject config = res.result().toJsonObject();
 						// 集群配置文件
-						JsonObject clusterc = config.getJsonObject("cluster",
-								new JsonObject().put("clusterType", CLUSTER_TYPE));
+						JsonObject clusterc = config.getJsonObject("cluster", new JsonObject().put("clusterType", CLUSTER_TYPE));
 						String clusterType = clusterc.getString("clusterType");
 						// 从集群环境中获取应用配置文件
 						if (!CLUSTER_TYPE.equals(clusterType)) {
@@ -100,8 +95,7 @@ public class VxApiMain extends AbstractVerticle {
 							JsonObject nextConf = new JsonObject();
 							nextConf.put("verticleConfig", config.getJsonObject("verticleConfig", new JsonObject()));
 							nextConf.put("dataConfig", config.getJsonObject("dataConfig", getDefaultDataConfig()));
-							nextConf.put("clientConfig",
-									config.getJsonObject("clientConfig", getDefaultClientConfig()));
+							nextConf.put("clientConfig", config.getJsonObject("clientConfig", getDefaultClientConfig()));
 							conf.handle(Future.<JsonObject>succeededFuture(nextConf));
 						}
 					} catch (Exception e) {

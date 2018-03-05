@@ -277,12 +277,11 @@ public class VxApiApplicationDTO {
 
 	@Override
 	public String toString() {
-		return "VxApiApplicationDTO [appName=" + appName + ", describe=" + describe + ", contentLength=" + contentLength
-				+ ", scope=" + scope + ", sessionTimeOut=" + sessionTimeOut + ", sessionCookieName=" + sessionCookieName
-				+ ", decoderInitialBufferSize=" + decoderInitialBufferSize + ", maxPoolSize=" + maxPoolSize
-				+ ", maxInitialLineLength=" + maxInitialLineLength + ", maxHeaderSize=" + maxHeaderSize + ", keepAlive="
-				+ keepAlive + ", serverOptions=" + serverOptions + ", corsOptions=" + corsOptions + ", time=" + time
-				+ "]";
+		return "VxApiApplicationDTO [appName=" + appName + ", describe=" + describe + ", contentLength=" + contentLength + ", scope=" + scope
+				+ ", sessionTimeOut=" + sessionTimeOut + ", sessionCookieName=" + sessionCookieName + ", decoderInitialBufferSize="
+				+ decoderInitialBufferSize + ", maxPoolSize=" + maxPoolSize + ", maxInitialLineLength=" + maxInitialLineLength + ", maxHeaderSize="
+				+ maxHeaderSize + ", keepAlive=" + keepAlive + ", serverOptions=" + serverOptions + ", corsOptions=" + corsOptions + ", time="
+				+ time + "]";
 	}
 
 }

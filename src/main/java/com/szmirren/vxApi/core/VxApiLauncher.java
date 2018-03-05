@@ -28,7 +28,6 @@ public class VxApiLauncher extends Launcher {
 		String thisVertxName = UUID.randomUUID().toString() + LocalTime.now().getNano();
 		// 设置当前系统Vertx的唯一标识
 		System.setProperty("thisVertxName", thisVertxName);
-
 		new VxApiLauncher().dispatch(args);
 	}
 
@@ -55,8 +54,8 @@ public class VxApiLauncher extends Launcher {
 				ClusterManager cmgr = VxApiClusterManagerFactory.getClusterManager(clusterc.getString("clusterType"),
 						clusterc.getJsonObject("clusterConf", getDefaultClusterConfig()));
 				options.setClusterManager(cmgr);
+				options.setClustered(true);
 			}
-
 		} catch (IOException e) {
 			throw new FileSystemException(e);
 		}

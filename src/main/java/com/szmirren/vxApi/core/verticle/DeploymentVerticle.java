@@ -55,20 +55,15 @@ public class DeploymentVerticle extends AbstractVerticle {
 		}
 
 		vertx.eventBus().consumer(thisVertxName + VxApiEventBusAddressConstant.DEPLOY_APP_DEPLOY, this::deploymentAPP);
-		vertx.eventBus().consumer(thisVertxName + VxApiEventBusAddressConstant.DEPLOY_APP_UNDEPLOY,
-				this::unDeploymentAPP);
+		vertx.eventBus().consumer(thisVertxName + VxApiEventBusAddressConstant.DEPLOY_APP_UNDEPLOY, this::unDeploymentAPP);
 		vertx.eventBus().consumer(thisVertxName + VxApiEventBusAddressConstant.DEPLOY_API_START_ALL, this::startAllAPI);
 		vertx.eventBus().consumer(thisVertxName + VxApiEventBusAddressConstant.DEPLOY_API_START, this::startAPI);
 		vertx.eventBus().consumer(thisVertxName + VxApiEventBusAddressConstant.DEPLOY_API_STOP, this::stopAPI);
 
-		vertx.eventBus().consumer(thisVertxName + VxApiEventBusAddressConstant.DEPLOY_FIND_ONLINE_APP,
-				this::findOnlineAPP);
-		vertx.eventBus().consumer(thisVertxName + VxApiEventBusAddressConstant.DEPLOY_APP_IS_ONLINE,
-				this::getAppIsOnline);
-		vertx.eventBus().consumer(thisVertxName + VxApiEventBusAddressConstant.DEPLOY_FIND_ONLINE_API,
-				this::findOnlineAPI);
-		vertx.eventBus().consumer(thisVertxName + VxApiEventBusAddressConstant.DEPLOY_API_IS_ONLINE,
-				this::getApiIsOnline);
+		vertx.eventBus().consumer(thisVertxName + VxApiEventBusAddressConstant.DEPLOY_FIND_ONLINE_APP, this::findOnlineAPP);
+		vertx.eventBus().consumer(thisVertxName + VxApiEventBusAddressConstant.DEPLOY_APP_IS_ONLINE, this::getAppIsOnline);
+		vertx.eventBus().consumer(thisVertxName + VxApiEventBusAddressConstant.DEPLOY_FIND_ONLINE_API, this::findOnlineAPI);
+		vertx.eventBus().consumer(thisVertxName + VxApiEventBusAddressConstant.DEPLOY_API_IS_ONLINE, this::getApiIsOnline);
 
 		startFuture.complete();
 	}
@@ -88,37 +83,34 @@ public class DeploymentVerticle extends AbstractVerticle {
 			}
 		}
 		// 获得全局黑名单并部署应用
-		vertx.eventBus().<JsonArray>send(thisVertxName + VxApiEventBusAddressConstant.SYSTEM_BLACK_IP_FIND, null,
-				iplist -> {
-					if (iplist.succeeded()) {
-						// 添加到加载配置
-						body.put("blackIpSet", iplist.result().body());
-						DeploymentOptions options = new DeploymentOptions(config());
-						options.setIsolationGroup(name);
-						options.setConfig(body);
-						vertx.deployVerticle(VxApiApplication.class.getName(), options, res -> {
-							if (res.succeeded()) {
-								LOG.info("启动应用程序:" + name + "-->成功!");
-								// 部署成功正在运行的应用数量+1
-								vertx.eventBus().send(thisVertxName + VxApiEventBusAddressConstant.SYSTEM_PLUS_APP,
-										null);
-								applicationMaps.put(name, res.result());
-								applicationApiMaps.put(name, new HashSet<>());
-								msg.reply("ok");
-							} else {
-								LOG.error("启动应用程序:" + name + "-->失败:" + res.cause());
-								int code = 500;
-								if (res.cause() != null
-										&& res.cause().toString().indexOf("Address already in use: bind") > -1) {
-									code = 1111;
-								}
-								msg.fail(code, res.cause().toString());
-							}
-						});
+		vertx.eventBus().<JsonArray>send(thisVertxName + VxApiEventBusAddressConstant.SYSTEM_BLACK_IP_FIND, null, iplist -> {
+			if (iplist.succeeded()) {
+				// 添加到加载配置
+				body.put("blackIpSet", iplist.result().body());
+				DeploymentOptions options = new DeploymentOptions(config());
+				options.setIsolationGroup(name);
+				options.setConfig(body);
+				vertx.deployVerticle(VxApiApplication.class.getName(), options, res -> {
+					if (res.succeeded()) {
+						LOG.info("启动应用程序:" + name + "-->成功!");
+						// 部署成功正在运行的应用数量+1
+						vertx.eventBus().send(thisVertxName + VxApiEventBusAddressConstant.SYSTEM_PLUS_APP, null);
+						applicationMaps.put(name, res.result());
+						applicationApiMaps.put(name, new HashSet<>());
+						msg.reply("ok");
 					} else {
-						msg.fail(500, iplist.cause().toString());
+						LOG.error("启动应用程序:" + name + "-->失败:" + res.cause());
+						int code = 500;
+						if (res.cause() != null && res.cause().toString().indexOf("Address already in use: bind") > -1) {
+							code = 1111;
+						}
+						msg.fail(code, res.cause().toString());
 					}
 				});
+			} else {
+				msg.fail(500, iplist.cause().toString());
+			}
+		});
 
 	}
 
@@ -179,16 +171,14 @@ public class DeploymentVerticle extends AbstractVerticle {
 				AtomicInteger er = new AtomicInteger(0);// 存储启动失败API的次数
 				body.forEach(va -> {
 					JsonObject api = (JsonObject) va;
-					vertx.eventBus().send(
-							thisVertxName + appName + VxApiEventBusAddressConstant.APPLICATION_ADD_API_SUFFIX,
+					vertx.eventBus().send(thisVertxName + appName + VxApiEventBusAddressConstant.APPLICATION_ADD_API_SUFFIX,
 							new JsonObject().put("api", api), reply -> {
 								if (reply.succeeded()) {
 									applicationApiMaps.get(appName).add(api.getString("apiName"));
 									suc.incrementAndGet();
 								} else {
 									er.incrementAndGet();
-									LOG.error(
-											"启动所有API-->执行启动API" + api.getString("apiName") + "-->失败:" + reply.cause());
+									LOG.error("启动所有API-->执行启动API" + api.getString("apiName") + "-->失败:" + reply.cause());
 								}
 							});
 				});
@@ -203,8 +193,8 @@ public class DeploymentVerticle extends AbstractVerticle {
 					}
 					int size = suc.get() + er.get();
 					if (size >= body.size()) {
-						fut.complete(ResultFormat.format(HTTPStatusCodeMsgEnum.C200,
-								"启动" + appName + "所有API结果: 成功数量:" + suc.get() + ",失败数量:" + er.get()));
+						fut.complete(
+								ResultFormat.format(HTTPStatusCodeMsgEnum.C200, "启动" + appName + "所有API结果: 成功数量:" + suc.get() + ",失败数量:" + er.get()));
 						LOG.info("启动" + appName + "所有API结果: 成功数量:" + suc.get() + ".失败数量:" + er.get());
 						vertx.cancelTimer(time);
 					}
@@ -238,25 +228,24 @@ public class DeploymentVerticle extends AbstractVerticle {
 		}
 		JsonObject body = new JsonObject();
 		body.put("api", msg.body().getJsonObject("api"));
-		vertx.eventBus().<Integer>send(
-				thisVertxName + appName + VxApiEventBusAddressConstant.APPLICATION_ADD_API_SUFFIX, body, reply -> {
-					if (reply.succeeded()) {
-						LOG.info("执行启动API: " + apiName + "-->结果:" + reply.result().body());
-						if (reply.result().body() == 1) {
-							msg.reply(1);
-							if (applicationApiMaps.get(appName) == null) {
-								applicationApiMaps.put(appName, new HashSet<>());
-							} else {
-								applicationApiMaps.get(appName).add(apiName);
-							}
-						} else {
-							msg.reply(0);
-						}
+		vertx.eventBus().<Integer>send(thisVertxName + appName + VxApiEventBusAddressConstant.APPLICATION_ADD_API_SUFFIX, body, reply -> {
+			if (reply.succeeded()) {
+				LOG.info("执行启动API: " + apiName + "-->结果:" + reply.result().body());
+				if (reply.result().body() == 1) {
+					msg.reply(1);
+					if (applicationApiMaps.get(appName) == null) {
+						applicationApiMaps.put(appName, new HashSet<>());
 					} else {
-						LOG.error("执行启动API: " + apiName + "-->失败:" + reply.cause());
-						msg.fail(500, reply.cause().getMessage());
+						applicationApiMaps.get(appName).add(apiName);
 					}
-				});
+				} else {
+					msg.reply(0);
+				}
+			} else {
+				LOG.error("执行启动API: " + apiName + "-->失败:" + reply.cause());
+				msg.fail(500, reply.cause().getMessage());
+			}
+		});
 
 	}
 
@@ -273,19 +262,18 @@ public class DeploymentVerticle extends AbstractVerticle {
 				return;
 			}
 		}
-		vertx.eventBus().send(thisVertxName + appName + VxApiEventBusAddressConstant.APPLICATION_DEL_API_SUFFIX,
-				apiName, reply -> {
-					if (reply.succeeded()) {
-						if (applicationApiMaps.get(appName) != null) {
-							applicationApiMaps.get(appName).remove(apiName);
-						}
-						LOG.info("暂停启动API: " + apiName + "-->成功");
-						msg.reply(1);
-					} else {
-						LOG.error("暂停应用:" + appName + " API:" + apiName + "-->失败:" + reply.cause());
-						msg.fail(500, reply.cause().toString());
-					}
-				});
+		vertx.eventBus().send(thisVertxName + appName + VxApiEventBusAddressConstant.APPLICATION_DEL_API_SUFFIX, apiName, reply -> {
+			if (reply.succeeded()) {
+				if (applicationApiMaps.get(appName) != null) {
+					applicationApiMaps.get(appName).remove(apiName);
+				}
+				LOG.info("暂停启动API: " + apiName + "-->成功");
+				msg.reply(1);
+			} else {
+				LOG.error("暂停应用:" + appName + " API:" + apiName + "-->失败:" + reply.cause());
+				msg.fail(500, reply.cause().toString());
+			}
+		});
 	}
 
 	/**

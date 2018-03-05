@@ -37,9 +37,9 @@ public class VxApiAuthFactory {
 	 * 通过名字获得相应的权限实现类,可采用本类自带的静态字符串,如果配置信息类为空则采用默认的实现类
 	 * 
 	 * @param name
-	 *            实现类的在工厂中的名字,可以使用本类静态属性
+	 *          实现类的在工厂中的名字,可以使用本类静态属性
 	 * @param options
-	 *            配置信息
+	 *          配置信息
 	 * @return
 	 * @throws ClassNotFoundException
 	 */

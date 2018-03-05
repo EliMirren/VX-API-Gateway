@@ -95,8 +95,7 @@ public class VxApiRouteHandlerParamCheckImpl implements VxApiRouteHandlerParamCh
 				rct.next();
 			} else {
 				rct.response().putHeader(VxApiRouteConstant.SERVER, VxApiGatewayAttribute.FULL_NAME)
-						.putHeader(VxApiRouteConstant.CONTENT_TYPE, api.getContentType())
-						.setStatusCode(api.getResult().getApiEnterCheckFailureStatus())
+						.putHeader(VxApiRouteConstant.CONTENT_TYPE, api.getContentType()).setStatusCode(api.getResult().getApiEnterCheckFailureStatus())
 						.end(api.getResult().getApiEnterCheckFailureExample());
 			}
 		}

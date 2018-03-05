@@ -477,14 +477,14 @@ public class ClientVerticle extends AbstractVerticle {
 			user.isAuthorized(VxApiRolesConstant.WRITE, res -> {
 				if (res.succeeded()) {
 					JsonObject config = new JsonObject().put("appName", name);
-					// 将应用暂停
-					if (vertx.isClustered()) {
-						vertx.eventBus().publish(VxApiEventBusAddressConstant.DEPLOY_APP_UNDEPLOY,
-								config.copy().put("thisVertxName", thisVertxName));
-						LOG.debug("执行删除应用-->广播告诉集群环境中暂停应用:" + name);
-					}
 					vertx.eventBus().send(thisVertxName + VxApiEventBusAddressConstant.DEPLOY_APP_UNDEPLOY, config);
 					if (res.result()) {
+						// 将应用暂停
+						if (vertx.isClustered()) {
+							vertx.eventBus().publish(VxApiEventBusAddressConstant.DEPLOY_APP_UNDEPLOY,
+									config.copy().put("thisVertxName", thisVertxName));
+							LOG.debug("执行删除应用-->广播告诉集群环境中暂停应用:" + name);
+						}
 						LOG.info(MessageFormat.format("[user : {0}] 执行删除应用{1}...",
 								rct.session().<String>get("userName"), name));
 						vertx.eventBus().<Integer>send(thisVertxName + VxApiEventBusAddressConstant.DEL_APP, name,
@@ -545,6 +545,12 @@ public class ClientVerticle extends AbstractVerticle {
 										LOG.debug("启动应用-->" + name + ":成功!");
 										rct.response().putHeader(CONTENT_TYPE, CONTENT_VALUE_JSON_UTF8)
 												.end(ResultFormat.formatAsOne(HTTPStatusCodeMsgEnum.C200));
+										System.out.println("vert.x is cluster : " + vertx.isClustered());
+										if (vertx.isClustered()) {
+											vertx.eventBus().publish(VxApiEventBusAddressConstant.DEPLOY_APP_DEPLOY,
+													config.copy().put("thisVertxName", thisVertxName));
+											LOG.info("广播告诉集群环境中启动应用:" + name);
+										}
 									} else {
 										LOG.error("启动应用-->" + name + " 失败:" + deploy.cause());
 										HTTPStatusCodeMsgEnum msgCode = HTTPStatusCodeMsgEnum.C500;
@@ -558,11 +564,6 @@ public class ClientVerticle extends AbstractVerticle {
 												.end(ResultFormat.formatAsZero(msgCode));
 									}
 								});
-						if (vertx.isClustered()) {
-							vertx.eventBus().publish(VxApiEventBusAddressConstant.DEPLOY_APP_DEPLOY,
-									config.copy().put("thisVertxName", thisVertxName));
-							LOG.info("广播告诉集群环境中启动应用:" + name);
-						}
 					}
 				} else {
 					LOG.error("启动应用-->" + name + " 失败:" + body.cause());
@@ -593,17 +594,17 @@ public class ClientVerticle extends AbstractVerticle {
 							LOG.debug("执行暂停应用-->" + name + " 成功!");
 							rct.response().putHeader(CONTENT_TYPE, CONTENT_VALUE_JSON_UTF8)
 									.end(ResultFormat.formatAsOne(HTTPStatusCodeMsgEnum.C200));
+							if (vertx.isClustered()) {
+								vertx.eventBus().publish(VxApiEventBusAddressConstant.DEPLOY_APP_UNDEPLOY,
+										config.copy().put("thisVertxName", thisVertxName));
+								LOG.info("广播集群环境中启动应用:" + name);
+							}
 						} else {
 							rct.response().putHeader(CONTENT_TYPE, CONTENT_VALUE_JSON_UTF8)
 									.end(ResultFormat.formatAsZero(HTTPStatusCodeMsgEnum.C500));
 							LOG.debug("执行暂停应用-->" + name + " 失败:" + deploy.cause());
 						}
 					});
-			if (vertx.isClustered()) {
-				vertx.eventBus().publish(VxApiEventBusAddressConstant.DEPLOY_APP_UNDEPLOY,
-						config.copy().put("thisVertxName", thisVertxName));
-				LOG.info("广播集群环境中启动应用:" + name);
-			}
 		}
 	}
 
@@ -912,19 +913,18 @@ public class ClientVerticle extends AbstractVerticle {
 					if (res.result()) {
 						LOG.info(MessageFormat.format("[user : {0}] 执行删除API:{1}...",
 								rct.session().<String>get("userName"), apiName));
-						if (vertx.isClustered()) {
-							vertx.eventBus().publish(VxApiEventBusAddressConstant.DEPLOY_API_STOP,
-									body.copy().put("thisVertxName", thisVertxName));
-							LOG.info("广播告诉集群环境中暂停应用:" + appName + "的" + apiName + "API");
-						}
-						vertx.eventBus().send(thisVertxName + VxApiEventBusAddressConstant.DEL_API, body);
-						vertx.eventBus().<Integer>send(thisVertxName + VxApiEventBusAddressConstant.DEL_API, apiName,
+						vertx.eventBus().<Integer>send(thisVertxName + VxApiEventBusAddressConstant.DEL_API, body,
 								cres -> {
 									if (cres.succeeded()) {
 										rct.response().putHeader(CONTENT_TYPE, CONTENT_VALUE_JSON_UTF8).end(
 												ResultFormat.format(HTTPStatusCodeMsgEnum.C200, cres.result().body()));
 										LOG.info(MessageFormat.format("[user : {0}] 执行删除API:{2}-->结果: {1}",
 												rct.session().<String>get("userName"), cres.result().body(), apiName));
+										if (vertx.isClustered()) {
+											vertx.eventBus().publish(VxApiEventBusAddressConstant.DEPLOY_API_STOP,
+													body.copy().put("thisVertxName", thisVertxName));
+											LOG.info("广播告诉集群环境中暂停应用:" + appName + "的" + apiName + "API");
+										}
 									} else {
 										LOG.error(MessageFormat.format("[user : {0}] 执行删除API:{2}-->失败:{1}",
 												rct.session().get("userName"), cres.cause(), apiName));
@@ -982,6 +982,12 @@ public class ClientVerticle extends AbstractVerticle {
 											rct.response().putHeader(CONTENT_TYPE, CONTENT_VALUE_JSON_UTF8)
 													.end(ResultFormat.format(HTTPStatusCodeMsgEnum.C200,
 															reply.result().body()));
+											if (vertx.isClustered()) {
+												vertx.eventBus().publish(
+														VxApiEventBusAddressConstant.DEPLOY_API_START_ALL,
+														config.copy().put("thisVertxName", thisVertxName));
+												LOG.info("广播通知集群环境中 应用:" + appName + ",启动所有API");
+											}
 										} else {
 											LOG.error(MessageFormat.format(
 													"[user : {0}] 执行启动所有API-->查看API:{1}-->失败:{2}",
@@ -991,11 +997,7 @@ public class ClientVerticle extends AbstractVerticle {
 															reply.cause().toString()));
 										}
 									});
-							if (vertx.isClustered()) {
-								vertx.eventBus().publish(VxApiEventBusAddressConstant.DEPLOY_API_START_ALL,
-										config.copy().put("thisVertxName", thisVertxName));
-								LOG.info("广播通知集群环境中 应用:" + appName + ",启动所有API");
-							}
+
 						} else {
 							LOG.error(MessageFormat.format("[user : {0}] 执行启动所有API-->查看API:{1}-->失败:{2}",
 									rct.session().get("userName"), appName, data.cause().toString()));
@@ -1035,6 +1037,11 @@ public class ClientVerticle extends AbstractVerticle {
 											rct.session().get("userName"), apiName, result));
 									rct.response().putHeader(CONTENT_TYPE, CONTENT_VALUE_JSON_UTF8)
 											.end(ResultFormat.format(HTTPStatusCodeMsgEnum.C200, result));
+									if (vertx.isClustered()) {
+										vertx.eventBus().publish(VxApiEventBusAddressConstant.DEPLOY_API_START,
+												data.copy().put("thisVertxName", thisVertxName));
+										LOG.info("广播告诉集群环境中启动应用:" + appName + "的" + apiName + "API");
+									}
 								} else {
 									LOG.error(MessageFormat.format("[user : {0}] 执行启动API:{1}-->失败:{2}",
 											rct.session().get("userName"), apiName, reply.cause().toString()));
@@ -1042,11 +1049,6 @@ public class ClientVerticle extends AbstractVerticle {
 											ResultFormat.format(HTTPStatusCodeMsgEnum.C500, reply.cause().toString()));
 								}
 							});
-					if (vertx.isClustered()) {
-						vertx.eventBus().publish(VxApiEventBusAddressConstant.DEPLOY_API_START,
-								data.copy().put("thisVertxName", thisVertxName));
-						LOG.info("广播告诉集群环境中启动应用:" + appName + "的" + apiName + "API");
-					}
 
 				} else {
 					LOG.error(MessageFormat.format("[user : {0}] 执行启动API-->查看API:{1}-->失败:{2}",
@@ -1078,6 +1080,11 @@ public class ClientVerticle extends AbstractVerticle {
 						apiName, result));
 				rct.response().putHeader(CONTENT_TYPE, CONTENT_VALUE_JSON_UTF8)
 						.end(ResultFormat.format(HTTPStatusCodeMsgEnum.C200, result));
+				if (vertx.isClustered()) {
+					vertx.eventBus().publish(VxApiEventBusAddressConstant.DEPLOY_API_STOP,
+							body.copy().put("thisVertxName", thisVertxName));
+					LOG.info("广播告诉集群环境中暂停应用:" + appName + "的" + apiName + "API");
+				}
 			} else {
 				LOG.error(MessageFormat.format("[user : {0}] 执行暂停API:{1}-->失败:{2}", rct.session().get("userName"),
 						apiName, reply.cause().toString()));
@@ -1085,11 +1092,7 @@ public class ClientVerticle extends AbstractVerticle {
 						.end(ResultFormat.format(HTTPStatusCodeMsgEnum.C500, reply.cause().toString()));
 			}
 		});
-		if (vertx.isClustered()) {
-			vertx.eventBus().publish(VxApiEventBusAddressConstant.DEPLOY_API_STOP,
-					body.copy().put("thisVertxName", thisVertxName));
-			LOG.info("广播告诉集群环境中暂停应用:" + appName + "的" + apiName + "API");
-		}
+
 	}
 
 	/**

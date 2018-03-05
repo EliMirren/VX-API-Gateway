@@ -40,7 +40,7 @@ public class VxApiClusterManagerFactory {
 	 * @return
 	 */
 	public static ClusterManager getClusterManager(String name, JsonObject options) {
-		if (ZOOKEEPER.equals(name)) {
+		if (ZOOKEEPER.equalsIgnoreCase(name)) {
 			return new ZookeeperClusterManager(options);
 		}
 		return null;

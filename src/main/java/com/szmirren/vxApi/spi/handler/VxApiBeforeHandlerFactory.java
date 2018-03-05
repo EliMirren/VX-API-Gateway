@@ -37,8 +37,8 @@ public class VxApiBeforeHandlerFactory {
 	 * @throws NullPointerException
 	 * @throws ClassNotFoundException
 	 */
-	public static VxApiBeforeHandler getBeforeHandler(String name, JsonObject options, VxApis api,
-			HttpClient httpClient) throws NullPointerException, ClassNotFoundException {
+	public static VxApiBeforeHandler getBeforeHandler(String name, JsonObject options, VxApis api, HttpClient httpClient)
+			throws NullPointerException, ClassNotFoundException {
 		if (StrUtil.isNullOrEmpty(name)) {
 			throw new NullPointerException("获取前置处理器实现-->失败:工厂名字不能为空");
 		}

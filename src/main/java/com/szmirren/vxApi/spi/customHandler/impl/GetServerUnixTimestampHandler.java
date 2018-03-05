@@ -35,8 +35,8 @@ public class GetServerUnixTimestampHandler implements VxApiCustomHandler {
 		String result = resultFormat.replace("$(val)", Long.toString(System.currentTimeMillis()));
 		if (isNext) {
 			rct.put(VxApiAfterHandler.PREV_IS_SUCCESS_KEY, Future.<Boolean>succeededFuture(true));// 告诉后置处理器当前操作成功执行
-			rct.response().putHeader(HttpHeaderConstant.SERVER, VxApiGatewayAttribute.FULL_NAME)
-					.putHeader(HttpHeaderConstant.CONTENT_TYPE, contentType);
+			rct.response().putHeader(HttpHeaderConstant.SERVER, VxApiGatewayAttribute.FULL_NAME).putHeader(HttpHeaderConstant.CONTENT_TYPE,
+					contentType);
 			rct.next();
 		} else {
 			rct.response().putHeader(HttpHeaderConstant.SERVER, VxApiGatewayAttribute.FULL_NAME)

@@ -63,17 +63,15 @@ public class VxApiAuthSessionTokenImpl implements VxApiAuth {
 
 	/**
 	 * @param obj
-	 *            通过一个JsonObject实例化一个对象 <br>
-	 *            obj.apiTokenName = API中token的名字<br>
-	 *            obj.userTokenName = 用户token在请求中的名字<br>
-	 *            obj.userTokenScope =
-	 *            用户token在请求中的名字所在的位置枚举类型{@link ParamPositionEnum}
-	 *            默认在HEADER中<br>
-	 *            obj.authFailContentType =
-	 *            验证不通过时返回的Content-Type枚举类型{@link ContentTypeEnum}
-	 *            默认为JSON_UTF8<br>
-	 *            obj.authFailResult = 验证不通过时的返回结果 默认为
-	 *            {@link ResultFormat}.formatAsNull({@link HTTPStatusCodeMsgEnum}.C401)<br>
+	 *          通过一个JsonObject实例化一个对象 <br>
+	 *          obj.apiTokenName = API中token的名字<br>
+	 *          obj.userTokenName = 用户token在请求中的名字<br>
+	 *          obj.userTokenScope =
+	 *          用户token在请求中的名字所在的位置枚举类型{@link ParamPositionEnum} 默认在HEADER中<br>
+	 *          obj.authFailContentType =
+	 *          验证不通过时返回的Content-Type枚举类型{@link ContentTypeEnum} 默认为JSON_UTF8<br>
+	 *          obj.authFailResult = 验证不通过时的返回结果 默认为
+	 *          {@link ResultFormat}.formatAsNull({@link HTTPStatusCodeMsgEnum}.C401)<br>
 	 */
 	public VxApiAuthSessionTokenImpl(JsonObject obj) {
 		if (obj == null) {

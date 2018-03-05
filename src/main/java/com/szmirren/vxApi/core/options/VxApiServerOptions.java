@@ -232,9 +232,9 @@ public class VxApiServerOptions extends HttpServerOptions {
 
 	@Override
 	public String toString() {
-		return "VxApiServerOptions [createHttp=" + createHttp + ", createHttps=" + createHttps + ", createwebSocket="
-				+ createwebSocket + ", httpPort=" + httpPort + ", httpsPort=" + httpsPort + ", webSocketPort="
-				+ webSocketPort + ", certOptions=" + certOptions + ", custom=" + custom + "]";
+		return "VxApiServerOptions [createHttp=" + createHttp + ", createHttps=" + createHttps + ", createwebSocket=" + createwebSocket
+				+ ", httpPort=" + httpPort + ", httpsPort=" + httpsPort + ", webSocketPort=" + webSocketPort + ", certOptions=" + certOptions
+				+ ", custom=" + custom + "]";
 	}
 
 }
