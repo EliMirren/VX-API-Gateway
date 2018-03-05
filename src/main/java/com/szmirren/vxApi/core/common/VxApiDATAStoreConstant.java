@@ -31,17 +31,17 @@ package com.szmirren.vxApi.core.common;
  * <li>内容 = API_CONTENT_NAME 内容在json中的名字</li>
  * </ul>
  * <p>
- * 黑名单列表的表结构:
+ * 黑名单列表的表结构:(系统默认取黑名单列表第一行数据,)
  * <ul>
- * <li>表名 = BLACKLIST_TABLE_NAME 存放网关应用的表名</li>
- * <li>主键列 = BLACKLIST_ID_COLUMN 字符串用于存放应用网关的名字</li>
- * <li>内容列 = BLACKLIST_ID_COLUMN json字符串用于存放应用网关的名字</li>
+ * <li>表名 = BLACKLIST_TABLE_NAME 存放网关应用的黑名单的表名</li>
+ * <li>主键列 = BLACKLIST_ID_COLUMN 字符串用于存放应用网关黑名单主键的名字</li>
+ * <li>内容列 = BLACKLIST_ID_COLUMN json数组字符串用于存放应用网关黑名单内容的名字</li>
  * </ul>
  * <p>
  * 黑名单列表在传输中的名字:
  * <ul>
- * <li>主键 = BLACKLIST_ID_NAME 主键在json中的名字</li>
- * <li>内容 = BLACKLIST_CONTENT_COLUMN 内容在json中的名字</li>
+ * <li>主键 = BLACKLIST_ID_NAME 黑名单主键在json中的名字</li>
+ * <li>内容 = BLACKLIST_CONTENT_COLUMN 黑名单内容在json中的名字</li>
  * </ul>
  * <p>
  * 
@@ -131,7 +131,7 @@ public interface VxApiDATAStoreConstant {
 	/**
 	 * 黑名单列表通讯传输中获取json中存放主键的属性名
 	 */
-	static final String BLACKLIST_ID_NAME = "name";
+	static final String BLACKLIST_ID_NAME = "blacklist";
 	/**
 	 * 黑名单列表通讯传输中获取json中存放json字符串对象的属性名
 	 */
