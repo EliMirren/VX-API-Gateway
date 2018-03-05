@@ -62,4 +62,18 @@ logs 日志文件<br/>
 temp 缓存/临时文件<br/>
 ## 项目目录说明
 src/main/java中core包存放核心代码,spi包存放用户可以自定义插件的接口与工厂,自定义插件时实现相应的接口并在工场中添加获取该实现的名字与实现类,同时在客户端静态文件中添加相应的名字便可<br/>
-
+## 性能测试
+ 后台服务输出hello<br/>
+Nginx Stable1.12.0 配置<br/>
+![nginx-conf](http://duhua.gitee.io/vx-api-gateway-doc/image/other/nginx-conf.png)
+<br>
+阿里云 centos 7 1G内存1核1兆带宽环境 ab -n 1000 -c 1000 执行结果<br/>
+Nginx:ab结果<br/>
+![nginx-linux-ab](http://duhua.gitee.io/vx-api-gateway-doc/image/other/linux-1c1n1gnqcq-nginx.png)<br>
+VX-API: JVM -Xms512m -Xmx512m 其他默认 ab结果<br>
+![VX-API-linux-ab](http://duhua.gitee.io/vx-api-gateway-doc/image/other/linux-1c1n1gnqcq-vx-xsm-512m.png)<br>
+Windows 10 8核8G内存 环境 ab -n 100000 -c 2000 执行结果<br>
+Nginx:ab结果<br>
+![nginx-win-ab](http://duhua.gitee.io/vx-api-gateway-doc/image/other/win-8g8cn10wc2q-nginx.png)<br>
+VX-API: JVM -Xms2G -Xmx2G 其他默认 ab结果<br/>
+![VX-API-win-ab](http://duhua.gitee.io/vx-api-gateway-doc/image/other/win-8g8cn10wc2q-vx-xsm-2g.png)<br>

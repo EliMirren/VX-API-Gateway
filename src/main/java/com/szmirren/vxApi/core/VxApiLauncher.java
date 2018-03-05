@@ -5,6 +5,7 @@ import java.nio.file.Files;
 import java.time.LocalTime;
 import java.util.UUID;
 
+import com.szmirren.vxApi.cluster.VxApiClusterManagerFactory;
 import com.szmirren.vxApi.core.common.PathUtil;
 
 import io.vertx.core.Launcher;
@@ -13,7 +14,6 @@ import io.vertx.core.buffer.Buffer;
 import io.vertx.core.file.FileSystemException;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.spi.cluster.ClusterManager;
-import io.vertx.spi.cluster.zookeeper.ZookeeperClusterManager;
 
 /**
  * VX-API的启动器
@@ -52,7 +52,7 @@ public class VxApiLauncher extends Launcher {
 			// 集群配置文件
 			JsonObject clusterc = conf.getJsonObject("cluster", new JsonObject().put("clusterType", CLUSTER_TYPE));
 			if (!CLUSTER_TYPE.equals(clusterc.getString("clusterType"))) {
-				ClusterManager cmgr = new ZookeeperClusterManager(
+				ClusterManager cmgr = VxApiClusterManagerFactory.getClusterManager(clusterc.getString("clusterType"),
 						clusterc.getJsonObject("clusterConf", getDefaultClusterConfig()));
 				options.setClusterManager(cmgr);
 			}

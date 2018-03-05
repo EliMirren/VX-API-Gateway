@@ -52,11 +52,11 @@ public class VxApiCustomHandlerFactory {
 	 *            处理器在工厂中的名字
 	 * @param options
 	 *            处理器配置文件
-	 * @param appName
-	 *            应用程序的名字
+	 * 
 	 * @param api
 	 *            API 相关配置文件
 	 * @param httpClient
+	 *            http的客户端
 	 * @return
 	 * @throws NullPointerException
 	 * @throws ClassNotFoundException

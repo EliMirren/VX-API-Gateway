@@ -1,7 +1,7 @@
 /**
  * Created by Mirren on 2018/2/13.
  */
-// 认证插件改变事件
+// 权限认证改变事件
 $("#auth-options-name").change(function () {
     if ($(this).val() == 'none') {
         $(".auth-hide-show").hide();

@@ -78,7 +78,7 @@ public class ClientVerticle extends AbstractVerticle {
 	@Override
 	public void start(Future<Void> fut) throws Exception {
 		System.out.println("start Client ...");
-		thisVertxName = config().getString("thisVertxName", "VX-API");
+		thisVertxName = System.getProperty("thisVertxName", "VX-API");
 		Router router = Router.router(vertx);
 		router.route().handler(FaviconHandler.create(getFaviconPath()));
 		router.route().handler(BodyHandler.create().setUploadsDirectory(getUploadsDirectory()));
