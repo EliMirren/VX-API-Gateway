@@ -42,7 +42,7 @@ public class CURLClientVerticle extends AbstractVerticle {
 
 	@Override
 	public void start(Future<Void> fut) throws Exception {
-		thisVertxName = config().getString("thisVertxName", "VX-API");
+		thisVertxName = System.getProperty("thisVertxName", "VX-API");
 		Router router = Router.router(vertx);
 		router.route().handler(BodyHandler.create());
 		router.route().handler(ResponseContentTypeHandler.create());
