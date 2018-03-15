@@ -179,7 +179,6 @@
 									<!-- <extraArgument>-Xmx2G</extraArgument> <extraArgument>-Xms2G</extraArgument> -->
 								</extraArguments>
 							</jvmSettings>
-
 						</program>
 					</programs>
 				</configuration>

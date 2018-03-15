@@ -923,6 +923,7 @@ function saveAPI() {
     if (!apiResultInfo()) {
         return;
     }
+    
     apiInfo.appName = $("#appName").val();
     console.log(JSON.stringify(apiInfo));
     $.ajax({

@@ -252,11 +252,11 @@
                 <table>
                     <tbody>
                     <tr>
-                        <th class="" width="20%">后端参数名称</th>
-                        <th class="" width="20%">后端参数位置</th>
-                        <th class="" width="20%">对应入参名称</th>
-                        <th class="" width="20%">对应入参位置</th>
-                        <th class="" width="20%">对应入参类型</th>
+                        <th class="" width="20%">请求参数名称</th>
+                        <th class="" width="20%">请求参数位置</th>
+                        <th class="" width="20%">服务参数名称</th>
+                        <th class="" width="20%">服务参数位置</th>
+                        <th class="" width="20%">数据类型</th>
                     </tr>
                     <#if context.api.serverEntrance.body.params?exists>
                     	<#list context.api.serverEntrance.body.params as item>
@@ -290,8 +290,8 @@
                     <tr>
                         <th width="25%" >请求参数名字</th>
                         <th width="25%">请求参数位置</th>
-                        <th width="25%">后端参数名字</th>
-                        <th class="25%">后端参数位置</th>
+                        <th width="25%">服务参数名字</th>
+                        <th class="25%">服务参数位置</th>
                     </tr>
                      <#if context.api.serverEntrance.body.params?exists>
                     	<#list context.api.serverEntrance.body.params as item>
@@ -321,9 +321,9 @@
                 <table>
                     <tbody>
                     <tr>
-                        <th width="25%">后端参数名称</th>
+                        <th width="25%">服务参数名称</th>
                         <th width="25%">参数值</th>
-                        <th width="25%">后端参数位置</th>
+                        <th width="25%">服务参数位置</th>
                         <th class="25%">描述</th>
                     </tr>
                      <#if context.api.serverEntrance.body.params?exists>
@@ -355,7 +355,7 @@
                     <tbody>
                     <tr>
                         <th width="25%">系统参数名</th>
-                        <th width="25%">后端参数名称</th>
+                        <th width="25%">服务参数名称</th>
                         <th width="25%">参数位置</th>
                         <th class="25%">描述</th>
                     </tr>

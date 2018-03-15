@@ -127,7 +127,7 @@ public class VxApiRouteHandlerHttpTypeImpl implements VxApiRouteHandlerHttpType 
 					if (p.getSerParamPosition() == ParamPositionEnum.HEADER) {
 						headers.add(p.getSerParamName(), param);
 					} else if (p.getSerParamPosition() == ParamPositionEnum.PATH) {
-						requestPath.replace(":" + p.getSerParamName(), param);
+						requestPath = requestPath.replace(":" + p.getSerParamName(), param);
 					} else {
 						queryParams.add(p.getSerParamName(), param);
 					}
@@ -136,6 +136,7 @@ public class VxApiRouteHandlerHttpTypeImpl implements VxApiRouteHandlerHttpType 
 			HttpRequest<Buffer> request = webClient.requestAbs(serOptions.getMethod(), requestPath).timeout(serOptions.getTimeOut());
 			headers.forEach(va -> request.putHeader(va.getKey(), va.getValue()));
 			queryParams.forEach(va -> request.addQueryParam(va.getKey(), va.getValue()));
+
 			trackInfo.setRequestTime(Instant.now());
 			request.send(res -> {
 				trackInfo.setResponseTime(Instant.now());
