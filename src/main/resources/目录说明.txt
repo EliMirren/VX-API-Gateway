@@ -14,4 +14,4 @@ conf --->配置文件
 ┃
 ┣━━━━log4j.properties --->日志配置文件
 ┃
-┗━━━user.json -->运行访问的用户
+┗━━━{*className*}.json -->运行访问的用户

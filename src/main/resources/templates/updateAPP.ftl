@@ -102,7 +102,7 @@
                                 </tr>
                                 <tr class="http-hide-show">
                                     <td align="right" class="t-r">HTTP服务端口:</td>
-                                    <td><input type="text" value="8330"
+                                    <td><input type="text" value="${context.app.serverOptions.httpPort?c}"
                                                class="console-textbox console-width-4 ng-pristine ng-valid"
                                                placeholder="请输入HTTP服务端口号" id="http-port"
                                                value="${context.app.serverOptions.httpPort?c}"
@@ -128,7 +128,7 @@
                                 </tr>
                                 <tr class="https-hide-show" style="display: none">
                                     <td align="right" class="t-r">HTTPS服务端口:</td>
-                                    <td><input type="text" value="8430"
+                                    <td><input type="text" value="${context.app.serverOptions.httpsPort?c}"
                                                class="console-textbox console-width-4 ng-pristine ng-valid"
                                                placeholder="请输入HTTPS服务端口号" id="https-port"
                                                 value="${context.app.serverOptions.httpsPort?c}"

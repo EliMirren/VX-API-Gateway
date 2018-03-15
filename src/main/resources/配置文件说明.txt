@@ -54,7 +54,7 @@ isolatedClasses = 设置隔离组, JsonArray格式
 =============================================
 url = 数据库 JDBC 连接地址
 driver_clas = JDBC 驱动
-user = 数据库用户名
+{*className*} = 数据库用户名
 password = 数据库密码
 initial_pool_size = 连接池初始连接数, 默认3
 max_pool_size = 连接池最大连接数, 默认15
