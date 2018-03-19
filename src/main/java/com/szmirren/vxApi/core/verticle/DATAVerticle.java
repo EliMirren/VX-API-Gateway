@@ -6,6 +6,7 @@ import java.util.List;
 import org.apache.log4j.Logger;
 
 import com.szmirren.vxApi.core.common.PathUtil;
+import com.szmirren.vxApi.core.common.StrUtil;
 import com.szmirren.vxApi.core.common.VxApiDATAStoreConstant;
 import com.szmirren.vxApi.core.common.VxApiEventBusAddressConstant;
 import com.szmirren.vxApi.core.common.VxApiGatewayAttribute;
@@ -418,13 +419,20 @@ public class DATAVerticle extends AbstractVerticle {
 	 * 
 	 * @param msg
 	 */
-	public void delAPI(Message<String> msg) {
+	public void delAPI(Message<JsonObject> msg) {
 		if (msg.body() == null) {
-			msg.fail(411, "the application name is null");
+			msg.fail(411, "the msg body name is null");
 		} else {
-			String sql = MessageFormat.format("delete from {0} where {1} = ?", APITN, APIIC);
+			String appName = msg.body().getString("appName");
+			String apiName = msg.body().getString("apiName");
+			if (StrUtil.isNullOrEmpty(appName, apiName)) {
+				msg.fail(411, "the appName or apiName is null");
+				return;
+			}
+			String sql = MessageFormat.format("delete from {0} where {1} = ? and {2} = ? ", APITN, API_APPIC, APIIC);
 			JsonArray params = new JsonArray();
-			params.add(msg.body());
+			params.add(appName);
+			params.add(apiName);
 			jdbcClient.updateWithParams(sql, params, res -> {
 				if (res.succeeded()) {
 					int result = res.result().getUpdated();
