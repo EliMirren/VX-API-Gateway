@@ -1,11 +1,6 @@
 {
-	"cliConfig": {
-		"startAPP": [
-			"test"
-		]
-	},
 	"cluster": {
-		"clusterType": "zookeeper",
+		"clusterType": "NONE",
 		"getVxApiConfFromCluster": false,
 		"clusterConf": {
 			"zookeeperHosts": "127.0.0.1",
