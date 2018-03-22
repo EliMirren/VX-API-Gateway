@@ -27,4 +27,5 @@ public interface VxApiGatewayAttribute {
 	 * 网关userAgent默认名字
 	 */
 	static final String VX_API_USER_AGENT = "VX-API-Gateway/" + VERSION;
+
 }

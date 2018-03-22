@@ -128,9 +128,9 @@ public class StrUtil {
 	 * 检查字符串里面是否包含指定字符,包含返回true
 	 * 
 	 * @param regex
-	 *            指定字符
+	 *          指定字符
 	 * @param str
-	 *            字符串
+	 *          字符串
 	 * @return
 	 */
 	public static boolean indexOf(String regex, String... str) {
@@ -199,6 +199,18 @@ public class StrUtil {
 	 * @param str
 	 * @return
 	 */
+	public static boolean isNullOrEmpty(String str) {
+		if (str == null || "".equals(str.trim())) {
+			return true;
+		}
+		return false;
+	}
+	/**
+	 * 判断字符串是否为null或者空,如果是返回true
+	 * 
+	 * @param str
+	 * @return
+	 */
 	public static boolean isNullOrEmpty(String... str) {
 		if (str == null || str.length == 0) {
 			return true;
@@ -215,10 +227,10 @@ public class StrUtil {
 	 * 将毫秒按指定格式转换为 年日时分秒,如果如果格式中不存在年则将年装换为天
 	 * 
 	 * @param time
-	 *            毫秒
+	 *          毫秒
 	 * @param pattern
-	 *            正则:$y=年,$d=日,$h=小时,$m分钟,$s=秒 <br>
-	 *            示例:$y年$d日 = 10年12天
+	 *          正则:$y=年,$d=日,$h=小时,$m分钟,$s=秒 <br>
+	 *          示例:$y年$d日 = 10年12天
 	 * @return
 	 */
 	public static String millisToDateTime(long time, String pattern) {
@@ -231,8 +243,7 @@ public class StrUtil {
 		} else {
 			pattern = pattern.replace("$y", Long.toString(day / 365)).replace("$d", Long.toString(day % 365));
 		}
-		return pattern.replace("$h", Long.toString(hour)).replace("$m", Long.toString(minute)).replace("$s",
-				Long.toString(second));
+		return pattern.replace("$h", Long.toString(hour)).replace("$m", Long.toString(minute)).replace("$s", Long.toString(second));
 	}
 
 	/**

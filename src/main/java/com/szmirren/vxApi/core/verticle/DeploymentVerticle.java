@@ -5,17 +5,19 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.szmirren.vxApi.core.common.ResultFormat;
 import com.szmirren.vxApi.core.common.VxApiEventBusAddressConstant;
 import com.szmirren.vxApi.core.enums.HTTPStatusCodeMsgEnum;
 
 import io.vertx.core.AbstractVerticle;
+import io.vertx.core.AsyncResult;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Future;
+import io.vertx.core.Handler;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
@@ -28,7 +30,8 @@ import io.vertx.core.json.JsonObject;
  *
  */
 public class DeploymentVerticle extends AbstractVerticle {
-	private Logger LOG = Logger.getLogger(this.getClass());
+	private static final Logger LOG = LogManager.getLogger(DeploymentVerticle.class);
+
 	/**
 	 * 存储已经在运行了的项目
 	 */
@@ -44,6 +47,7 @@ public class DeploymentVerticle extends AbstractVerticle {
 
 	@Override
 	public void start(Future<Void> startFuture) throws Exception {
+		LOG.info("start Deployment Verticle ...");
 		thisVertxName = System.getProperty("thisVertxName", "VX-API");
 		if (vertx.isClustered()) {
 			// 如果vert.x是以集群的方式运行添加接受广播的部署相关
@@ -64,8 +68,8 @@ public class DeploymentVerticle extends AbstractVerticle {
 		vertx.eventBus().consumer(thisVertxName + VxApiEventBusAddressConstant.DEPLOY_APP_IS_ONLINE, this::getAppIsOnline);
 		vertx.eventBus().consumer(thisVertxName + VxApiEventBusAddressConstant.DEPLOY_FIND_ONLINE_API, this::findOnlineAPI);
 		vertx.eventBus().consumer(thisVertxName + VxApiEventBusAddressConstant.DEPLOY_API_IS_ONLINE, this::getApiIsOnline);
-
-		startFuture.complete();
+		LOG.info("start Deployment Verticle successful");
+		super.start(startFuture);
 	}
 
 	/**
@@ -75,13 +79,13 @@ public class DeploymentVerticle extends AbstractVerticle {
 	 */
 	public void deploymentAPP(Message<JsonObject> msg) {
 		JsonObject body = new JsonObject();
-		String name = msg.body().getString("appName");
-		body.put("appConfig", msg.body().getJsonObject("app"));
 		if (vertx.isClustered()) {
 			if (thisVertxName.equals(body.getString("thisVertxName"))) {
 				return;
 			}
 		}
+		String name = msg.body().getString("appName");
+		body.put("appConfig", msg.body().getJsonObject("app"));
 		// 获得全局黑名单并部署应用
 		vertx.eventBus().<JsonArray>send(thisVertxName + VxApiEventBusAddressConstant.SYSTEM_BLACK_IP_FIND, null, iplist -> {
 			if (iplist.succeeded()) {
@@ -120,15 +124,15 @@ public class DeploymentVerticle extends AbstractVerticle {
 	 * @param msg
 	 */
 	public void unDeploymentAPP(Message<JsonObject> msg) {
-		String name = msg.body().getString("appName");
-		if (applicationMaps.get(name) == null) {
-			msg.reply("ok");
-			return;
-		}
 		if (vertx.isClustered()) {
 			if (thisVertxName.equals(msg.body().getString("thisVertxName"))) {
 				return;
 			}
+		}
+		String name = msg.body().getString("appName");
+		if (applicationMaps.get(name) == null) {
+			msg.reply("ok");
+			return;
 		}
 		vertx.undeploy(applicationMaps.get(name), res -> {
 			if (res.succeeded()) {
@@ -150,63 +154,73 @@ public class DeploymentVerticle extends AbstractVerticle {
 	 * @param msg
 	 */
 	public void startAllAPI(Message<JsonObject> msg) {
+		if (vertx.isClustered()) {
+			if (thisVertxName.equals(msg.body().getString("thisVertxName"))) {
+				return;
+			}
+		}
 		String appName = msg.body().getString("appName");
 		if (applicationMaps.get(appName) == null) {
 			msg.reply(ResultFormat.format(HTTPStatusCodeMsgEnum.C1400, "应用尚未启动"));
 			LOG.info("启动" + appName + "所有API-->失败:应用尚未启动");
 			return;
 		}
-		if (vertx.isClustered()) {
-			if (thisVertxName.equals(msg.body().getString("thisVertxName"))) {
-				return;
-			}
-		}
 		JsonArray body = msg.body().getJsonArray("apis");
 		if (body != null && body.size() > 0) {
 			if (applicationApiMaps.get(appName) == null) {
 				applicationApiMaps.put(appName, new HashSet<>());
 			}
+			// 启动所有API
 			vertx.<String>executeBlocking(fut -> {
-				AtomicInteger suc = new AtomicInteger(0);// 存储启动成功API的次数
-				AtomicInteger er = new AtomicInteger(0);// 存储启动失败API的次数
-				body.forEach(va -> {
-					JsonObject api = (JsonObject) va;
-					vertx.eventBus().send(thisVertxName + appName + VxApiEventBusAddressConstant.APPLICATION_ADD_API_SUFFIX,
-							new JsonObject().put("api", api), reply -> {
-								if (reply.succeeded()) {
-									applicationApiMaps.get(appName).add(api.getString("apiName"));
-									suc.incrementAndGet();
-								} else {
-									er.incrementAndGet();
-									LOG.error("启动所有API-->执行启动API" + api.getString("apiName") + "-->失败:" + reply.cause());
-								}
-							});
-				});
-				// 存储轮询了几次
-				AtomicInteger periodicCount = new AtomicInteger(0);
-				vertx.setPeriodic(200, time -> {
-					if (periodicCount.get() >= 300) {
-						vertx.cancelTimer(time);
-						fut.complete(ResultFormat.format(HTTPStatusCodeMsgEnum.C500,
-								"启动" + appName + "所有API时间大于6万毫秒,启动成功数量:" + suc.get() + ",失败数量:" + er.get()));
-						LOG.error("启动" + appName + "所有API时间大于6万毫秒,启动成功数量:" + suc.get() + ",失败数量:" + er.get());
-					}
-					int size = suc.get() + er.get();
-					if (size >= body.size()) {
-						fut.complete(
-								ResultFormat.format(HTTPStatusCodeMsgEnum.C200, "启动" + appName + "所有API结果: 成功数量:" + suc.get() + ",失败数量:" + er.get()));
-						LOG.info("启动" + appName + "所有API结果: 成功数量:" + suc.get() + ".失败数量:" + er.get());
-						vertx.cancelTimer(time);
-					}
-					periodicCount.incrementAndGet();
+				startAllAPIRecursion(body, appName, 0, 0, res -> {
+					JsonObject result = res.result() == null ? new JsonObject() : res.result();
+					int success = result.getInteger("success", 0);
+					int fail = result.getInteger("fail", 0);
+					LOG.info("启动" + appName + "所有API结果: 成功数量:" + success + ",失败数量:" + fail);
+					fut.complete(ResultFormat.format(HTTPStatusCodeMsgEnum.C200, "启动" + appName + "所有API结果: 成功数量:" + success + ",失败数量:" + fail));
 				});
 			}, res -> {
 				msg.reply(res.result());
 			});
 		} else {
 			msg.reply(ResultFormat.format(HTTPStatusCodeMsgEnum.C200, "API数量为: 0"));
-			LOG.debug("启动" + appName + "所有API结果:API数量为 0");
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("启动" + appName + "所有API结果:API数量为 0");
+			}
 		}
+	}
+	/**
+	 * 启动所有API的方法
+	 * 
+	 * @param apis
+	 *          apis集合
+	 * @param appName
+	 *          应用的名称
+	 * @param success
+	 *          启动成功的种子
+	 * @param fail
+	 *          启动失败的种子
+	 * @return 返回json key : success成功的数量,fail失败的数量
+	 */
+	public void startAllAPIRecursion(JsonArray apis, String appName, int success, int fail, Handler<AsyncResult<JsonObject>> handler) {
+		if (apis == null || apis.size() < 1) {
+			JsonObject result = new JsonObject();
+			result.put("success", success);
+			result.put("fail", fail);
+			handler.handle(Future.succeededFuture(result));
+			return;
+		}
+		JsonObject api = (JsonObject) apis.remove(0);
+		String address = thisVertxName + appName + VxApiEventBusAddressConstant.APPLICATION_ADD_API_SUFFIX;
+		vertx.eventBus().send(address, new JsonObject().put("api", api), reply -> {
+			if (reply.succeeded()) {
+				applicationApiMaps.get(appName).add(api.getString("apiName"));
+				startAllAPIRecursion(apis, appName, success + 1, fail, handler);
+			} else {
+				LOG.error("启动所有API->执行启动API" + api.getString("apiName") + "-->失败:" + reply.cause());
+				startAllAPIRecursion(apis, appName, success, fail + 1, handler);
+			}
+		});
 	}
 
 	/**
@@ -215,16 +229,16 @@ public class DeploymentVerticle extends AbstractVerticle {
 	 * @param msg
 	 */
 	public void startAPI(Message<JsonObject> msg) {
+		if (vertx.isClustered()) {
+			if (thisVertxName.equals(msg.body().getString("thisVertxName"))) {
+				return;
+			}
+		}
 		String appName = msg.body().getString("appName");
 		String apiName = msg.body().getString("apiName");
 		if (applicationMaps.get(appName) == null) {
 			msg.reply(-1);
 			return;
-		}
-		if (vertx.isClustered()) {
-			if (thisVertxName.equals(msg.body().getString("thisVertxName"))) {
-				return;
-			}
 		}
 		JsonObject body = new JsonObject();
 		body.put("api", msg.body().getJsonObject("api"));
@@ -255,13 +269,13 @@ public class DeploymentVerticle extends AbstractVerticle {
 	 * @param msg
 	 */
 	public void stopAPI(Message<JsonObject> msg) {
-		String appName = msg.body().getString("appName");
-		String apiName = msg.body().getString("apiName");
 		if (vertx.isClustered()) {
 			if (thisVertxName.equals(msg.body().getString("thisVertxName"))) {
 				return;
 			}
 		}
+		String appName = msg.body().getString("appName");
+		String apiName = msg.body().getString("apiName");
 		vertx.eventBus().send(thisVertxName + appName + VxApiEventBusAddressConstant.APPLICATION_DEL_API_SUFFIX, apiName, reply -> {
 			if (reply.succeeded()) {
 				if (applicationApiMaps.get(appName) != null) {

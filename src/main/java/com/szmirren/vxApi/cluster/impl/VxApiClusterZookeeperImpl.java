@@ -4,11 +4,13 @@ import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.retry.ExponentialBackoffRetry;
 
-import com.szmirren.vxApi.cluster.VxApiClusterConfig;
+import com.szmirren.vxApi.cluster.VxApiCluster;
 
 import io.vertx.core.AsyncResult;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
 /**
@@ -17,7 +19,7 @@ import io.vertx.core.json.JsonObject;
  * @author <a href="http://szmirren.com">Mirren</a>
  *
  */
-public class VxApiClusterConfigZookeeperImpl implements VxApiClusterConfig {
+public class VxApiClusterZookeeperImpl implements VxApiCluster {
 	private JsonObject zkConf = new JsonObject();// 配置信息
 	private Vertx vertx;
 
@@ -26,7 +28,7 @@ public class VxApiClusterConfigZookeeperImpl implements VxApiClusterConfig {
 	 * 
 	 * @param zkConf
 	 */
-	public VxApiClusterConfigZookeeperImpl(JsonObject zkConf, Vertx vertx) {
+	public VxApiClusterZookeeperImpl(JsonObject zkConf, Vertx vertx) {
 		this.zkConf = zkConf;
 		this.vertx = vertx;
 	}
@@ -43,8 +45,7 @@ public class VxApiClusterConfigZookeeperImpl implements VxApiClusterConfig {
 			int connectionTimeoutMs = zkConf.getInteger("connectTimeout", 3000);
 			ExponentialBackoffRetry retryPolicy = new ExponentialBackoffRetry(baseSleepTimeMs, maxRetries, maxSleepMs);
 			String vxApiConfPath = zkConf.getString("vxApiConfPath", "/io.vertx/vx.api.gateway/conf");
-			CuratorFramework client = CuratorFrameworkFactory.newClient(hosts, sessionTimeoutMs, connectionTimeoutMs,
-					retryPolicy);
+			CuratorFramework client = CuratorFrameworkFactory.newClient(hosts, sessionTimeoutMs, connectionTimeoutMs, retryPolicy);
 			try {
 				client.start();
 				byte[] data = client.getData().forPath(vxApiConfPath);
@@ -57,4 +58,22 @@ public class VxApiClusterConfigZookeeperImpl implements VxApiClusterConfig {
 			}
 		}, event);
 	}
+
+	@Override
+	public void putApplication(JsonObject app, Handler<AsyncResult<Integer>> event) {
+		event.handle(Future.failedFuture("该方法会在后续版本实现"));
+	}
+	@Override
+	public void getApplication(Handler<AsyncResult<JsonArray>> event) {
+		event.handle(Future.failedFuture("该方法会在后续版本实现"));
+	}
+	@Override
+	public void putAPI(String appName, JsonObject api, Handler<AsyncResult<JsonArray>> event) {
+		event.handle(Future.failedFuture("该方法会在后续版本实现"));
+	}
+	@Override
+	public void getAPIS(String appName, Handler<AsyncResult<JsonArray>> event) {
+		event.handle(Future.failedFuture("该方法会在后续版本实现"));
+	}
+
 }

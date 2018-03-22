@@ -3,7 +3,8 @@ package com.szmirren.vxApi.core.verticle;
 import java.text.MessageFormat;
 import java.util.List;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.szmirren.vxApi.core.common.PathUtil;
 import com.szmirren.vxApi.core.common.StrUtil;
@@ -25,7 +26,8 @@ import io.vertx.ext.jdbc.JDBCClient;
  *
  */
 public class DATAVerticle extends AbstractVerticle {
-	private final Logger LOG = Logger.getLogger(this.getClass());
+	private static final Logger LOG = LogManager.getLogger(DATAVerticle.class);
+
 	/**
 	 * JDBC客户端
 	 */
@@ -37,7 +39,7 @@ public class DATAVerticle extends AbstractVerticle {
 
 	@Override
 	public void start(Future<Void> fut) throws Exception {
-		System.out.println("start DATA Verticle ...");
+		LOG.info("start DATA Verticle ...");
 		thisVertxName = System.getProperty("thisVertxName", "VX-API");
 		initShorthand();// 初始化简写后的常量数据
 		JsonObject dbConfig = config();
@@ -66,7 +68,7 @@ public class DATAVerticle extends AbstractVerticle {
 		// blacklist
 		vertx.eventBus().consumer(thisVertxName + VxApiEventBusAddressConstant.FIND_BLACKLIST, this::findBlacklist);
 		vertx.eventBus().consumer(thisVertxName + VxApiEventBusAddressConstant.REPLACE_BLACKLIST, this::replaceBlacklist);
-		System.out.println("start DATA Verticle successful");
+		LOG.info("start DATA Verticle successful");
 		fut.complete();
 	}
 
@@ -168,8 +170,8 @@ public class DATAVerticle extends AbstractVerticle {
 			JsonObject body = msg.body();
 			String sql = MessageFormat.format("insert into {0} ({1},{2}) values(?,?)", APPTN, APPIC, APPCC);
 			JsonArray params = new JsonArray();
-			params.add(body.getString(APPIN));
-			params.add(body.getJsonObject(APPCN).toString());
+			params.add(body.getString("appName"));
+			params.add(body.getJsonObject("app").toString());
 			jdbcClient.updateWithParams(sql, params, res -> {
 				if (res.succeeded()) {
 					int result = res.result().getUpdated();
@@ -229,8 +231,8 @@ public class DATAVerticle extends AbstractVerticle {
 			JsonObject body = msg.body();
 			String sql = MessageFormat.format("update {0} set {1}= ? where {2} = ?", APPTN, APPCC, APIIC);
 			JsonArray params = new JsonArray();
-			params.add(body.getJsonObject(APPCN).toString());
-			params.add(body.getString(APPIN));
+			params.add(body.getJsonObject("app").toString());
+			params.add(body.getString("appName"));
 			jdbcClient.updateWithParams(sql, params, res -> {
 				if (res.succeeded()) {
 					int result = res.result().getUpdated();
@@ -281,14 +283,14 @@ public class DATAVerticle extends AbstractVerticle {
 	 * @param msg
 	 */
 	public void findAPI(Message<JsonObject> msg) {
-		if (msg.body() == null) {
+		if (msg.body() == null || msg.body().getString("appName") == null) {
 			msg.fail(411, "the application name is null");
 		} else {
-			JsonObject body = msg.body();
 			String sql = MessageFormat.format("select {0} AS {1},{2} AS {3},{4} AS {5} from {6} where {2} = ? ", APIIC, APIIN, API_APPIC,
 					API_APPIN, APICC, APICN, APITN);
+			// 添加从请求中获取添加值并添加到查询条件中
 			JsonArray params = new JsonArray();
-			params.add(body.getString(API_APPIN));
+			params.add(msg.body().getString("appName"));
 			jdbcClient.queryWithParams(sql, params, res -> {
 				if (res.succeeded()) {
 					List<JsonObject> rows = res.result().getRows();
@@ -327,7 +329,7 @@ public class DATAVerticle extends AbstractVerticle {
 					String sql = MessageFormat.format("select {0} AS {1},{2} AS {3},{4} AS {5} from {6} where {2} = ? limit ? offset ?", APIIC, APIIN,
 							API_APPIC, API_APPIN, APICC, APICN, APITN);
 					JsonArray params = new JsonArray();
-					params.add(body.getString(VxApiDATAStoreConstant.API_APP_ID_NAME));
+					params.add(body.getString("appName"));
 					params.add(body.getInteger("limit"));
 					params.add(body.getInteger("offset"));
 					jdbcClient.queryWithParams(sql, params, res -> {
@@ -399,9 +401,9 @@ public class DATAVerticle extends AbstractVerticle {
 			JsonObject body = msg.body();
 			String sql = MessageFormat.format("insert into {0} ({1},{2},{3}) values(?,?,?)", APITN, APIIC, API_APPIC, APICC);
 			JsonArray params = new JsonArray();
-			params.add(body.getString(APIIN));
-			params.add(body.getString(API_APPIN));
-			params.add(body.getJsonObject(APICN).toString());
+			params.add(body.getString("apiName"));
+			params.add(body.getString("appName"));
+			params.add(body.getJsonObject("api").toString());
 			jdbcClient.updateWithParams(sql, params, res -> {
 				if (res.succeeded()) {
 					int result = res.result().getUpdated();
@@ -457,8 +459,8 @@ public class DATAVerticle extends AbstractVerticle {
 			JsonObject body = msg.body();
 			String sql = MessageFormat.format("update {0} set {1}= ? where {2} = ?", APITN, APICC, APIIC);
 			JsonArray params = new JsonArray();
-			params.add(body.getJsonObject(APICN).toString());
-			params.add(body.getString(APIIN));
+			params.add(body.getJsonObject("api").toString());
+			params.add(body.getString("apiName"));
 			jdbcClient.updateWithParams(sql, params, res -> {
 				if (res.succeeded()) {
 					int result = res.result().getUpdated();
@@ -534,8 +536,8 @@ public class DATAVerticle extends AbstractVerticle {
 			JsonObject body = msg.body();
 			String sql = MessageFormat.format("REPLACE INTO {0} ({1},{2}) values(?,?)", BLTN, BLIC, BLCC);
 			JsonArray params = new JsonArray();
-			params.add(body.getString(BLIN));
-			params.add(body.getJsonArray(BLCN).toString());
+			params.add(body.getString("blacklistName"));
+			params.add(body.getJsonArray("blacklistBody").toString());
 			jdbcClient.updateWithParams(sql, params, res -> {
 				if (res.succeeded()) {
 					int result = res.result().getUpdated();

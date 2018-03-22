@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration status="WARN" monitorInterval="30">
+	<properties>
+		<!-- 日志所在目录 -->
+		<property name="LOG_HOME">logs</property>
+		<!-- 历史日志目录 -->
+		<property name="LOG_HOME_HISTORY">history</property>
+		<!-- 日志的打印级别 -->
+		<property name="LOG_LEVEL">debug</property>
+		<!-- 制台的打印级别 -->
+		<property name="LOG_CONSOLE_LEVEL">debug</property>
+		<!-- 程序的包名 -->
+		<property name="CODE_PACKAGE">com.szmirren.vxApi</property>
+	</properties>
+	<appenders>
+		<!--这个输出控制台的配置 -->
+		<console name="Console" target="SYSTEM_OUT">
+			<ThresholdFilter level="${LOG_CONSOLE_LEVEL}"
+				onMatch="ACCEPT" onMismatch="DENY" />
+			<!--输出日志的格式 -->
+			<PatternLayout pattern="[%p] [%d{yyyy-MM-dd HH:mm:ss}] %l %msg%n" />
+		</console>
+		<RollingFile name="RollingFileInfo" fileName="${LOG_HOME}/info.log"
+			filePattern="${LOG_HOME}/${LOG_HOME_HISTORY}/info/$${date:yyyy-MM}/%d{yyyy-MM-dd}-%i.log">
+			<!--控制台只输出level及以上级别的信息（onMatch），其他的直接拒绝（onMismatch） -->
+			<Filters>
+				<ThresholdFilter level="warn" onMatch="DENY"
+					onMismatch="NEUTRAL" />
+				<ThresholdFilter level="info" onMatch="ACCEPT"
+					onMismatch="DENY" />
+			</Filters>
+			<PatternLayout pattern="[%p] [%d{yyyy-MM-dd HH:mm:ss}] %l  %msg%n" />
+			<Policies>
+				<TimeBasedTriggeringPolicy interval="1" />
+				<SizeBasedTriggeringPolicy size="100 MB" />
+			</Policies>
+			<!-- 默认7个可以指定最大保存多少个<DefaultRolloverStrategy max="10" /> -->
+		</RollingFile>
+
+		<RollingFile name="RollingFileWarn" fileName="${LOG_HOME}/warn.log"
+			filePattern="${LOG_HOME}/${LOG_HOME_HISTORY}/warn/$${date:yyyy-MM}/%d{yyyy-MM-dd}-%i.log">
+			<Filters>
+				<ThresholdFilter level="error" onMatch="DENY"
+					onMismatch="NEUTRAL" />
+				<ThresholdFilter level="warn" onMatch="ACCEPT"
+					onMismatch="DENY" />
+			</Filters>
+			<PatternLayout pattern="[%p] [%d{yyyy-MM-dd HH:mm:ss}] %l  %msg%n" />
+			<Policies>
+				<TimeBasedTriggeringPolicy interval="1" />
+				<SizeBasedTriggeringPolicy size="100 MB" />
+			</Policies>
+		</RollingFile>
+		<RollingFile name="RollingFileError" fileName="${LOG_HOME}/error.log"
+			filePattern="${LOG_HOME}/${LOG_HOME_HISTORY}/error/$${date:yyyy-MM}/%d{yyyy-MM-dd}-%i.log">
+			<ThresholdFilter level="error" onMatch="ACCEPT"
+				onMismatch="DENY" />
+			<PatternLayout pattern="[%p] [%d{yyyy-MM-dd HH:mm:ss}] %l  %msg%n" />
+			<Policies>
+				<TimeBasedTriggeringPolicy interval="1" />
+				<SizeBasedTriggeringPolicy size="100 MB" />
+			</Policies>
+		</RollingFile>
+	</appenders>
+
+	<loggers>
+		<!--过滤掉一些无用的DEBUG信息 <logger name="org.mybatis" level="INFO"></logger> -->
+		<!-- 异步输出日志 如果需要显示所在行数可以加上 includeLocation="true" -->
+		<AsyncLogger name="${CODE_PACKAGE}" level="${LOG_LEVEL}"
+			additivity="false" includeLocation="true">
+			<appender-ref ref="Console" level="${LOG_CONSOLE_LEVEL}" />
+			<appender-ref ref="RollingFileInfo" />
+			<appender-ref ref="RollingFileWarn" />
+			<appender-ref ref="RollingFileError" />
+		</AsyncLogger>
+		<root level="${LOG_LEVEL}">
+		</root>
+	</loggers>
+</configuration>

@@ -8,7 +8,8 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.szmirren.vxApi.core.common.StrUtil;
 import com.szmirren.vxApi.core.common.VxApiDATAStoreConstant;
@@ -28,7 +29,8 @@ import io.vertx.core.json.JsonObject;
  *
  */
 public class SysVerticle extends AbstractVerticle {
-	private Logger LOG = Logger.getLogger(this.getClass());
+	private static final Logger LOG = LogManager.getLogger(SysVerticle.class);
+
 	/**
 	 * VX-API的启动时间
 	 */
@@ -76,6 +78,7 @@ public class SysVerticle extends AbstractVerticle {
 
 	@Override
 	public void start(Future<Void> startFuture) throws Exception {
+		LOG.info("start System Verticle ... ");
 		thisVertxName = System.getProperty("thisVertxName", "VX-API");
 		vertx.eventBus().consumer(thisVertxName + VxApiEventBusAddressConstant.SYSTEM_GET_INFO, this::getSysInfo);
 		vertx.eventBus().consumer(thisVertxName + VxApiEventBusAddressConstant.SYSTEM_PLUS_APP, this::plusAPP);
@@ -85,7 +88,8 @@ public class SysVerticle extends AbstractVerticle {
 		vertx.eventBus().consumer(thisVertxName + VxApiEventBusAddressConstant.SYSTEM_GET_TRACK_INFO, this::getTrackInfo);
 		vertx.eventBus().consumer(thisVertxName + VxApiEventBusAddressConstant.SYSTEM_BLACK_IP_FIND, this::findIpList);
 		vertx.eventBus().consumer(thisVertxName + VxApiEventBusAddressConstant.SYSTEM_BLACK_IP_REPLACE, this::replaceIpList);
-		startFuture.complete();
+		LOG.info("start System Verticle successful");
+		super.start(startFuture);
 	}
 
 	/**
@@ -251,10 +255,9 @@ public class SysVerticle extends AbstractVerticle {
 		if (msg.body() == null) {
 			msg.fail(1400, "参数为空或者缺少参数");
 		} else {
-			if (msg.body().getValue(VxApiDATAStoreConstant.BLACKLIST_CONTENT_NAME) instanceof JsonArray) {
-				JsonArray array = msg.body().getJsonArray(VxApiDATAStoreConstant.BLACKLIST_CONTENT_NAME);
-				JsonObject body = new JsonObject().put(VxApiDATAStoreConstant.BLACKLIST_ID_NAME, "blacklist")
-						.put(VxApiDATAStoreConstant.BLACKLIST_CONTENT_NAME, array);
+			if (msg.body().getValue("ipList") instanceof JsonArray) {
+				JsonArray array = msg.body().getJsonArray("ipList");
+				JsonObject body = new JsonObject().put("blacklistName", "blacklist").put("blacklistBody", array);
 				vertx.eventBus().<Integer>send(thisVertxName + VxApiEventBusAddressConstant.REPLACE_BLACKLIST, body, res -> {
 					if (res.succeeded()) {
 						msg.reply(res.result().body());

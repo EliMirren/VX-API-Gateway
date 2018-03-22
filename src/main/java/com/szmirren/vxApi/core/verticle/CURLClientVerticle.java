@@ -2,7 +2,8 @@ package com.szmirren.vxApi.core.verticle;
 
 import java.text.MessageFormat;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.szmirren.vxApi.core.auth.VxApiClientJsonAuth;
 import com.szmirren.vxApi.core.auth.VxApiRolesConstant;
@@ -30,7 +31,8 @@ import io.vertx.ext.web.handler.ResponseContentTypeHandler;
  *
  */
 public class CURLClientVerticle extends AbstractVerticle {
-	private final Logger LOG = Logger.getLogger(this.getClass());
+	private static final Logger LOG = LogManager.getLogger(CURLClientVerticle.class);
+
 	/**
 	 * 返回的CONTENT_TYPE值JSON
 	 */

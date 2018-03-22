@@ -3,7 +3,7 @@ package com.szmirren.vxApi.cluster;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.szmirren.vxApi.cluster.impl.VxApiClusterConfigZookeeperImpl;
+import com.szmirren.vxApi.cluster.impl.VxApiClusterZookeeperImpl;
 import com.szmirren.vxApi.core.common.StrUtil;
 
 import io.vertx.core.Vertx;
@@ -15,7 +15,7 @@ import io.vertx.core.json.JsonObject;
  * @author <a href="http://szmirren.com">Mirren</a>
  *
  */
-public class VxApiClusterConfigFactory {
+public class VxApiClusterFactory {
 	/**
 	 * sessionToken的实现类名称
 	 */
@@ -41,13 +41,13 @@ public class VxApiClusterConfigFactory {
 	 * @throws NullPointerException
 	 * @throws ClassNotFoundException
 	 */
-	public static VxApiClusterConfigZookeeperImpl getClusterConfig(String name, JsonObject options, Vertx vertx)
+	public static VxApiClusterZookeeperImpl getClusterConfig(String name, JsonObject options, Vertx vertx)
 			throws NullPointerException, ClassNotFoundException {
 		if (StrUtil.isNullOrEmpty(name)) {
 			throw new NullPointerException("获取集群配置中心实现类-->失败:工厂名字不能为空");
 		}
 		if (ZOOKEEPER.equalsIgnoreCase(name)) {
-			return new VxApiClusterConfigZookeeperImpl(options, vertx);
+			return new VxApiClusterZookeeperImpl(options, vertx);
 		}
 		throw new ClassNotFoundException("没有找到名字为 : " + name + " 的集群配置中心实现类");
 	}

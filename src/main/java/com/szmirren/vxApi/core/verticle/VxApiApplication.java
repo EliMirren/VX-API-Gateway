@@ -9,7 +9,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.szmirren.vxApi.core.common.StrUtil;
 import com.szmirren.vxApi.core.common.VxApiEventBusAddressConstant;
@@ -71,7 +72,8 @@ import io.vertx.ext.web.sstore.SessionStore;
  *
  */
 public class VxApiApplication extends AbstractVerticle {
-	private final Logger LOG = Logger.getLogger(this.getClass());
+	private static final Logger LOG = LogManager.getLogger(VxApiApplication.class);
+
 	/**
 	 * HTTP服务器route集
 	 */
@@ -123,19 +125,25 @@ public class VxApiApplication extends AbstractVerticle {
 	@Override
 	public void start(Future<Void> fut) throws Exception {
 		try {
-			LOG.debug("加载应用配置信息");
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("加载应用配置信息...");
+			}
 			thisVertxName = System.getProperty("thisVertxName", "VX-API");
 			VxApiApplicationDTO app = VxApiApplicationDTO.fromJson(config().getJsonObject("appConfig"));
 			this.appOption = new VxApiApplicationOptions(app);
 			appName = appOption.getAppName();
 			this.serverOptions = appOption.getServerOptions();
-			LOG.debug("加载全局黑名单");
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("加载全局黑名单");
+			}
 			config().getJsonArray("blackIpSet").forEach(ip -> {
 				if (ip instanceof String) {
 					blackIpSet.add(ip.toString());
 				}
 			});
-			LOG.debug("加载跨域处理信息");
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("加载跨域处理信息");
+			}
 			this.corsOptions = appOption.getCorsOptions();
 			if (appOption == null) {
 				fut.fail("创建应用程序失败:配置信息为空");
@@ -462,7 +470,9 @@ public class VxApiApplication extends AbstractVerticle {
 			routes.add(exRoute);
 			routeMaps.put(api.getApiName(), routes);
 			fut.complete();
-			LOG.debug(appName + ": 服务器创建API成功");
+			if (LOG.isDebugEnabled()) {
+				LOG.debug(appName + ": 服务器创建API成功");
+			}
 		}, result);
 
 	}
