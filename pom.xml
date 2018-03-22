@@ -6,7 +6,6 @@
 	<artifactId>VX-API-Gateway</artifactId>
 	<version>1.0.0</version>
 	<packaging>jar</packaging>
-
 	<name>VX-API-Gateway</name>
 	<url>http://maven.apache.org</url>
 	<properties>
@@ -143,6 +142,17 @@
 	</dependencies>
 
 	<build>
+		<!-- 打包时过滤log4j2-test.xml,运行时可以注释掉该resources -->
+		<resources>
+			<resource>
+				<directory>src/main/resources</directory>
+				<excludes>
+					<exclude>log4j2-test.xml</exclude>
+				</excludes>
+				<filtering>false</filtering>
+			</resource>
+		</resources>
+
 		<pluginManagement>
 			<plugins>
 				<plugin>
@@ -170,7 +180,6 @@
 						</goals>
 					</execution>
 				</executions>
-
 				<configuration>
 					<encoding>UTF-8</encoding>
 					<repositoryLayout>flat</repositoryLayout>
