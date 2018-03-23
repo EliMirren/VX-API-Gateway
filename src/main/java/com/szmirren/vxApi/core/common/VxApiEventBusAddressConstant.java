@@ -35,16 +35,6 @@ public interface VxApiEventBusAddressConstant {
 	 */
 	final static String SYSTEM_GET_INFO = "sys:getSysInfos";
 	/**
-	 * 添加部署app的数量,无需参数<br>
-	 * 没有返回结果
-	 */
-	final static String SYSTEM_PLUS_APP = "sys:plusAPP";
-	/**
-	 * 减去部署app的数量,无需参数<br>
-	 * 没有返回结果
-	 */
-	final static String SYSTEM_MINUS_APP = "sys:minusAPP";
-	/**
 	 * 添加异常信息,参数要求:JsonObject<br>
 	 * [{@link com.szmirren.vxApi.core.entity.VxApiTrackInfos} to JsonObject
 	 * 选填]<br>
@@ -80,6 +70,11 @@ public interface VxApiEventBusAddressConstant {
 	 * 返回结果:失败:500,1400,1405,其他为成功
 	 */
 	final static String SYSTEM_BLACK_IP_REPLACE = "sys:replaceBlackIP";
+	/**
+	 * 获取应用网关的数量,无需参数<br>
+	 * 返回结果:JsonObject:app:网关应用的数量,api:API的数量
+	 */
+	final static String DEPLOY_APP_COUNT = "deploy:applicationCount";
 	/**
 	 * 部署应用程序,参数要求:JsonObject<br>
 	 * [String 必填 ]appName网关名字,[JsonObject 必填 ]app网关配置信息<br>
@@ -119,7 +114,8 @@ public interface VxApiEventBusAddressConstant {
 	final static String DEPLOY_API_STOP = "deploy:stopAPI";
 
 	/**
-	 * 获得已部署的应用程序,无需参数
+	 * 获得已部署的应用程序,无需参数<br>
+	 * 结果:JsonArray
 	 */
 	final static String DEPLOY_FIND_ONLINE_APP = "deploy:findOnlineAPP";
 	/**
@@ -128,26 +124,32 @@ public interface VxApiEventBusAddressConstant {
 	 */
 	final static String DEPLOY_APP_IS_ONLINE = "deploy:getAppIsOnline";
 	/**
-	 * 获得已部署的API,无需参数:JsonObject<br>
+	 * 获得已部署的API,参数要求:JsonObject<br>
+	 * [String 必填] appName 网关名字, <br>
+	 * [String 必填] apiName API名字, <br>
+	 * 结果:JsonArray
+	 */
+	final static String DEPLOY_FIND_ONLINE_API = "deploy:findOnlineAPI";
+	/**
+	 * 查看API是否已经启动,参数要求:JsonObject<br>
 	 * [String 必填] appName 网关名字, <br>
 	 * [String 必填] apiName API名字, <br>
 	 * 结果:Boolean
 	 */
-	final static String DEPLOY_FIND_ONLINE_API = "deploy:findOnlineAPI";
-	/**
-	 * 查看API是否已经部署,参数要求:
-	 */
 	final static String DEPLOY_API_IS_ONLINE = "deploy:getApiIsOnline";
+
 	/**
-	 * 应用程序添加API的后缀
+	 * 应用程序添加API的后缀,参数要求,JsonObject<br>
+	 * [JsonObject 必填] api API的配置信息<br>
+	 * [Boolean 选填] elseRouteToThis 是否代理启动API, <br>
+	 * [Integer 选填] serverType 服务的类型1=HTTP,2=HTTPS,3=webSocket <br>
+	 * 结果:成功=1,其他失败404,500,1400
 	 */
 	final static String APPLICATION_ADD_API_SUFFIX = "/:addRoute";
+
 	/**
-	 * 应用程序修改API的后缀
-	 */
-	final static String APPLICATION_UPDT_API_SUFFIX = "/:updtRoute";
-	/**
-	 * 应用程序删除API的后缀
+	 * 应用程序删除API的后缀,参数要求,String 必填 API的名字<br>
+	 * 结果:成功=1,其他失败1400
 	 */
 	final static String APPLICATION_DEL_API_SUFFIX = "/:delRoute";
 

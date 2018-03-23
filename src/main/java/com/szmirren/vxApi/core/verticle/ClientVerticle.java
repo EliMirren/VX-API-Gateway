@@ -277,11 +277,11 @@ public class ClientVerticle extends AbstractVerticle {
 		});
 		onlineFuture.setHandler(res -> {
 			// 拓展原来没有显示是否正在运行的属性,如果后期需要优化,可以加多一层业务层,查看应用是否正在运行在业务层处理
-			vertx.eventBus().<JsonObject>send(thisVertxName + VxApiEventBusAddressConstant.DEPLOY_FIND_ONLINE_APP, null, dep -> {
+			vertx.eventBus().<JsonArray>send(thisVertxName + VxApiEventBusAddressConstant.DEPLOY_FIND_ONLINE_APP, null, dep -> {
 				if (dep.succeeded()) {
 					JsonArray body = res.result();
 					JsonArray array = new JsonArray();
-					JsonObject online = dep.result().body();
+					JsonArray online = dep.result().body();
 					body.forEach(obj -> {
 						JsonObject data = (JsonObject) obj;
 						JsonObject newObj = new JsonObject();
@@ -290,7 +290,7 @@ public class ClientVerticle extends AbstractVerticle {
 						newObj.put("describe", data.getString("describe"));
 						newObj.put("time", data.getInstant("time"));
 						newObj.put("scope", data.getInteger("scope"));
-						newObj.put("online", online.getString(appName) != null);
+						newObj.put("online", online.contains(appName));
 						array.add(newObj);
 					});
 					response.end(ResultFormat.format(HTTPStatusCodeMsgEnum.C200, array));
@@ -522,7 +522,6 @@ public class ClientVerticle extends AbstractVerticle {
 							if (deploy.succeeded()) {
 								LOG.info("启动应用-->" + name + ":成功!");
 								response.end(ResultFormat.formatAsOne(HTTPStatusCodeMsgEnum.C200));
-								System.out.println("vert.x is cluster : " + vertx.isClustered());
 								if (vertx.isClustered()) {
 									vertx.eventBus().publish(VxApiEventBusAddressConstant.DEPLOY_APP_DEPLOY,
 											config.copy().put("thisVertxName", thisVertxName));

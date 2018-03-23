@@ -12,6 +12,10 @@ conf --->配置文件
 ┃
 ┣━━━━configDB.db --->存储网关应用的sqlite数据库
 ┃
-┣━━━━log4j.properties --->日志配置文件
+┣━━━━log4j.properties --->一些框架需要使用到的日志配置文件
+┃
+┣━━━━log4j2-test.xml --->VX-API使用的测试环境日志配置文件
+┃
+┣━━━━log4j2.xml --->VX-API使用的正式环境日志配置文件
 ┃
 ┗━━━{*className*}.json -->运行访问的用户

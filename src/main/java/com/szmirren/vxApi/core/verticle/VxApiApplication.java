@@ -44,6 +44,7 @@ import com.szmirren.vxApi.spi.handler.VxApiBeforeHandlerOptions;
 
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.AsyncResult;
+import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.eventbus.Message;
@@ -192,6 +193,14 @@ public class VxApiApplication extends AbstractVerticle {
 	 */
 	public void createHttpServer(Handler<AsyncResult<Boolean>> createHttp) {
 		this.httpRouter = Router.router(vertx);
+
+		// TODO
+		httpRouter.route().handler(rct -> {
+			httpRouter.getRoutes().forEach(va -> {
+				System.out.println(va.getPath());
+			});
+			rct.next();
+		});
 		httpRouter.route().handler(this::filterBlackIP);
 		httpRouter.route().handler(CookieHandler.create());
 		SessionStore sessionStore = null;
@@ -327,34 +336,62 @@ public class VxApiApplication extends AbstractVerticle {
 		VxApisDTO dto = VxApisDTO.fromJson(body);
 		if (dto != null) {
 			VxApis api = new VxApis(dto);
-			if (httpRouter != null && httpsRouter != null) {
-				Future.<Boolean>future(http -> addHttpRouter(api, http))
-						.compose(http -> Future.<Boolean>future(https -> addHttpsRouter(api, https))).setHandler(res -> {
-							if (res.succeeded()) {
-								msg.reply(1);
-							} else {
-								msg.fail(500, res.cause().getMessage());
-							}
-						});
-			} else if (httpRouter != null) {
-				addHttpRouter(api, res -> {
-					if (res.succeeded()) {
-						msg.reply(1);
-					} else {
-						msg.fail(500, res.cause().getMessage());
-					}
-				});
-			} else if (httpsRouter != null) {
-				addHttpsRouter(api, res -> {
-					if (res.succeeded()) {
-						msg.reply(1);
-					} else {
-						msg.fail(500, res.cause().getMessage());
-						res.cause().printStackTrace();
-					}
-				});
+			// 是否代理启动API到当前应用
+			boolean otherRouteAdd = msg.body().getBoolean("elseRouteToThis", false);
+			if (otherRouteAdd) {
+				// 服务器的类型1=http,2=https,3=webSocket
+				int type = msg.body().getInteger("serverType", 0);
+				if (type == 1) {
+					addHttpRouter(api, res -> {
+						if (res.succeeded()) {
+							msg.reply(1);
+						} else {
+							msg.fail(500, res.cause().getMessage());
+						}
+					});
+				} else if (type == 2) {
+					addHttpsRouter(api, res -> {
+						if (res.succeeded()) {
+							msg.reply(1);
+						} else {
+							msg.fail(500, res.cause().getMessage());
+							res.cause().printStackTrace();
+						}
+					});
+				} else {
+					msg.fail(500, "不存在的服务");
+				}
 			} else {
-				msg.fail(404, "找不到的服务器可以加载API");
+				// 本应用添加API,既属于自己的网关应用添加API
+				if (httpRouter != null && httpsRouter != null) {
+					Future<Boolean> httpFuture = Future.future(http -> addHttpRouter(api, http));
+					Future<Boolean> httpsFuture = Future.<Boolean>future(https -> addHttpsRouter(api, https));
+					CompositeFuture.all(httpFuture, httpsFuture).setHandler(res -> {
+						if (res.succeeded()) {
+							msg.reply(1);
+						} else {
+							msg.fail(500, res.cause().getMessage());
+						}
+					});
+				} else if (httpRouter != null) {
+					addHttpRouter(api, res -> {
+						if (res.succeeded()) {
+							msg.reply(1);
+						} else {
+							msg.fail(500, res.cause().getMessage());
+						}
+					});
+				} else if (httpsRouter != null) {
+					addHttpsRouter(api, res -> {
+						if (res.succeeded()) {
+							msg.reply(1);
+						} else {
+							msg.fail(500, res.cause().getMessage());
+						}
+					});
+				} else {
+					msg.fail(404, "找不到的服务器可以加载API");
+				}
 			}
 		} else {
 			msg.fail(1400, "API参数不能为null,请检查APIDTO需要实例化的JSON编写是否正确");

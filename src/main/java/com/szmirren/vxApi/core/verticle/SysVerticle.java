@@ -52,10 +52,6 @@ public class SysVerticle extends AbstractVerticle {
 	 */
 	private long maxMemory = 0;
 	/**
-	 * 应用的数量
-	 */
-	private int appCount = 0;
-	/**
 	 * 异常次数
 	 */
 	private int errorCount = 0;
@@ -81,8 +77,6 @@ public class SysVerticle extends AbstractVerticle {
 		LOG.info("start System Verticle ... ");
 		thisVertxName = System.getProperty("thisVertxName", "VX-API");
 		vertx.eventBus().consumer(thisVertxName + VxApiEventBusAddressConstant.SYSTEM_GET_INFO, this::getSysInfo);
-		vertx.eventBus().consumer(thisVertxName + VxApiEventBusAddressConstant.SYSTEM_PLUS_APP, this::plusAPP);
-		vertx.eventBus().consumer(thisVertxName + VxApiEventBusAddressConstant.SYSTEM_MINUS_APP, this::minusAPP);
 		vertx.eventBus().consumer(thisVertxName + VxApiEventBusAddressConstant.SYSTEM_PLUS_ERROR, this::PlusError);
 		vertx.eventBus().consumer(thisVertxName + VxApiEventBusAddressConstant.SYSTEM_PLUS_TRACK_INFO, this::plusTrackInfos);
 		vertx.eventBus().consumer(thisVertxName + VxApiEventBusAddressConstant.SYSTEM_GET_TRACK_INFO, this::getTrackInfo);
@@ -98,54 +92,55 @@ public class SysVerticle extends AbstractVerticle {
 	 * @param msg
 	 */
 	public void getSysInfo(Message<JsonObject> msg) {
-		availableProcessors = Runtime.getRuntime().availableProcessors();
-		totalMemory = Runtime.getRuntime().totalMemory();
-		freeMemory = Runtime.getRuntime().freeMemory();
-		maxMemory = Runtime.getRuntime().maxMemory();
-		JsonObject result = new JsonObject();
-		result.put("availableProcessors", availableProcessors);
-		result.put("totalMemory", totalMemory / (1024 * 1024));
-		result.put("freeMemory", freeMemory / (1024 * 1024));
-		result.put("maxMemory", maxMemory / (1024 * 1024));
-		Duration duration = Duration.between(startVxApiTime, LocalDateTime.now());
-		result.put("vxApiRunTime", StrUtil.millisToDateTime(duration.toMillis(), "$dD $hH $mMin $sS"));
-		result.put("appCount", appCount);
-		result.put("errorCount", errorCount);
-		vertx.eventBus().<JsonObject>send(thisVertxName + VxApiEventBusAddressConstant.FIND_BLACKLIST, null, res -> {
+		// 获取在线网关应用与API的数量
+		Future<JsonObject> countResult = Future.future();
+		vertx.eventBus().<JsonObject>send(thisVertxName + VxApiEventBusAddressConstant.DEPLOY_APP_COUNT, null, res -> {
 			if (res.succeeded()) {
-				JsonObject body = res.result().body();
-				if (body.getValue(VxApiDATAStoreConstant.BLACKLIST_CONTENT_NAME) instanceof JsonArray) {
-					result.put("content", body.getJsonArray(VxApiDATAStoreConstant.BLACKLIST_CONTENT_NAME));
-				} else if (body.getValue(VxApiDATAStoreConstant.BLACKLIST_CONTENT_NAME) instanceof String) {
-					result.put("content", new JsonArray(body.getString(VxApiDATAStoreConstant.BLACKLIST_CONTENT_NAME)));
-				} else {
-					result.put("content", new JsonArray());
+				JsonObject result = res.result().body();
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("执行获取在线应用的数量-->结果:" + result);
 				}
-				msg.reply(result);
+				countResult.complete(result);
 			} else {
-				msg.fail(500, res.cause().getMessage());
+				countResult.complete(new JsonObject());
+				LOG.error("执行获取在线应用的数量-->失败:", res.cause());
 			}
 		});
-	}
-
-	/**
-	 * app数量+1
-	 * 
-	 * @param msg
-	 */
-	public void plusAPP(Message<JsonObject> msg) {
-		appCount++;
-	}
-
-	/**
-	 * app数量-1
-	 * 
-	 * @param msg
-	 */
-	public void minusAPP(Message<JsonObject> msg) {
-		if (appCount > 0) {
-			appCount--;
-		}
+		countResult.setHandler(res -> {
+			availableProcessors = Runtime.getRuntime().availableProcessors();
+			totalMemory = Runtime.getRuntime().totalMemory();
+			freeMemory = Runtime.getRuntime().freeMemory();
+			maxMemory = Runtime.getRuntime().maxMemory();
+			JsonObject result = new JsonObject();
+			result.put("availableProcessors", availableProcessors);
+			result.put("totalMemory", totalMemory / (1024 * 1024));
+			result.put("freeMemory", freeMemory / (1024 * 1024));
+			result.put("maxMemory", maxMemory / (1024 * 1024));
+			Duration duration = Duration.between(startVxApiTime, LocalDateTime.now());
+			result.put("vxApiRunTime", StrUtil.millisToDateTime(duration.toMillis(), "$dD $hH $mMin $sS"));
+			result.put("appCount", res.result().getInteger("app", 0));
+			result.put("apiCount", res.result().getInteger("api", 0));
+			result.put("errorCount", errorCount);
+			vertx.eventBus().<JsonObject>send(thisVertxName + VxApiEventBusAddressConstant.FIND_BLACKLIST, null, balckList -> {
+				if (res.succeeded()) {
+					JsonObject body = balckList.result().body();
+					if (body.getValue(VxApiDATAStoreConstant.BLACKLIST_CONTENT_NAME) instanceof JsonArray) {
+						result.put("content", body.getJsonArray(VxApiDATAStoreConstant.BLACKLIST_CONTENT_NAME));
+					} else if (body.getValue(VxApiDATAStoreConstant.BLACKLIST_CONTENT_NAME) instanceof String) {
+						result.put("content", new JsonArray(body.getString(VxApiDATAStoreConstant.BLACKLIST_CONTENT_NAME)));
+					} else {
+						result.put("content", new JsonArray());
+					}
+					if (LOG.isDebugEnabled()) {
+						LOG.debug("执行查询运行状态-->结果:" + result);
+					}
+					msg.reply(result);
+				} else {
+					LOG.error("执行查询运行状态-->结果:" + balckList.cause());
+					msg.fail(500, balckList.cause().getMessage());
+				}
+			});
+		});
 	}
 
 	/**
@@ -154,7 +149,7 @@ public class SysVerticle extends AbstractVerticle {
 	 * @param msg
 	 */
 	public void PlusError(Message<JsonObject> msg) {
-		errorCount++;
+		errorCount += 1;
 		if (msg.body() != null) {
 			VxApiTrackInfos infos = VxApiTrackInfos.fromJson(msg.body());
 			LOG.error(MessageFormat.format("应用:{0} , API:{1} ,在执行的过程中发生了异常:{2} ,堆栈信息{3}", infos.getAppName(), infos.getApiName(),
@@ -175,7 +170,7 @@ public class SysVerticle extends AbstractVerticle {
 			// 记录API相关信息
 			if (!infos.isSuccessful()) {
 				// 记录异常
-				errorCount++;
+				errorCount += 1;
 				if (requstFailedCount.get(key) == null) {
 					requstFailedCount.put(key, 0L);
 				}

@@ -4,7 +4,7 @@
 
 	<groupId>com.szmirren</groupId>
 	<artifactId>VX-API-Gateway</artifactId>
-	<version>1.0.0</version>
+	<version>1.0.1</version>
 	<packaging>jar</packaging>
 	<name>VX-API-Gateway</name>
 	<url>http://maven.apache.org</url>
@@ -142,7 +142,7 @@
 	</dependencies>
 
 	<build>
-		<!-- 打包时过滤log4j2-test.xml,运行时可以注释掉该resources -->
+		<!-- 打包时过滤log4j2-test.xml,运行时可以注释掉该resources
 		<resources>
 			<resource>
 				<directory>src/main/resources</directory>
@@ -151,7 +151,7 @@
 				</excludes>
 				<filtering>false</filtering>
 			</resource>
-		</resources>
+		</resources>-->
 
 		<pluginManagement>
 			<plugins>
@@ -210,7 +210,8 @@
 								<extraArguments>
 									<extraArgument>-Dfile.encoding=UTF-8</extraArgument>
 									<extraArgument>-Dvertx.cacheDirBase=../temp/file-cache</extraArgument>
-									<!-- <extraArgument>-Xmx2G</extraArgument> <extraArgument>-Xms2G</extraArgument> -->
+									<extraArgument>-Xmx2G</extraArgument>
+									<extraArgument>-Xms2G</extraArgument>
 								</extraArguments>
 							</jvmSettings>
 						</program>
