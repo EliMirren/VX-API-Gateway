@@ -25,6 +25,8 @@ public class VxApiApplicationOptions extends WebClientOptions {
 	private int scope;// 网关应用的作用域0=测试版,1=预览版,2=正式版
 	private long sessionTimeOut = DEFAULT_SESSION_TIMEOUT;// 会话超时时间
 	private String sessionCookieName = VxApiGatewayAttribute.SESSION_COOKIE_NAME;// 会话的cookie名称
+	private String notFoundContentType;// 找不到路径(404)返回什么Content-Type类型
+	private String notFoundResult;// 找不到路径(404)状态码返回什么内容,默认 not found resource
 
 	/**
 	 * 通过VxApiApplicationDTO实例化一个网关应用配置
@@ -40,6 +42,8 @@ public class VxApiApplicationOptions extends WebClientOptions {
 		this.scope = option.getScope();
 		this.sessionTimeOut = option.getSessionTimeOut();
 		this.sessionCookieName = option.getSessionCookieName();
+		this.notFoundContentType = option.getNotFoundContentType();
+		this.notFoundResult = option.getNotFoundResult();
 		super.setDecoderInitialBufferSize(option.getDecoderInitialBufferSize());
 		super.setMaxHeaderSize(option.getMaxHeaderSize());
 		super.setMaxPoolSize(option.getMaxPoolSize());
@@ -230,6 +234,42 @@ public class VxApiApplicationOptions extends WebClientOptions {
 	public VxApiApplicationOptions setSessionCookieName(String sessionCookieName) {
 		this.sessionCookieName = sessionCookieName;
 		return this;
+	}
+
+	/**
+	 * 获取找不到路径(404)返回什么Content-Type类型
+	 * 
+	 * @return
+	 */
+	public String getNotFoundContentType() {
+		return notFoundContentType;
+	}
+
+	/**
+	 * 设置找不到路径(404)返回什么Content-Type类型
+	 * 
+	 * @param notFoundContentType
+	 */
+	public void setNotFoundContentType(String notFoundContentType) {
+		this.notFoundContentType = notFoundContentType;
+	}
+
+	/**
+	 * 获取找不到路径(404)状态码返回什么内容
+	 * 
+	 * @return
+	 */
+	public String getNotFoundResult() {
+		return notFoundResult;
+	}
+
+	/**
+	 * 设置找不到路径(404)状态码返回什么内容
+	 * 
+	 * @param notFoundResult
+	 */
+	public void setNotFoundResult(String notFoundResult) {
+		this.notFoundResult = notFoundResult;
 	}
 
 }

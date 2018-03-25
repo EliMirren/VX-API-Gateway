@@ -19,6 +19,7 @@ public class VxApiApplicationDTO {
 	public final int DEFAULT_MAX_INITIAL_LINE_LENGTH = 4096;
 	public final int DEFAULT_MAX_HEADER_SIZE = 8192;
 	public final boolean DEFAULT_KEEP_ALIVE = true;
+	public final String DEFAULT_NOT_FOUND_RESULT = "not found resource";
 
 	private String appName;// 网关应用的名称
 	private String describe;// 网关应用的描述
@@ -31,6 +32,8 @@ public class VxApiApplicationDTO {
 	private int maxInitialLineLength = DEFAULT_MAX_INITIAL_LINE_LENGTH;// 请求大小
 	private int maxHeaderSize = DEFAULT_MAX_HEADER_SIZE;// 设置header大小
 	private boolean keepAlive = DEFAULT_KEEP_ALIVE;// 设置是否keepalive
+	private String notFoundContentType;// 找不到路径(404)返回什么Content-Type类型
+	private String notFoundResult = DEFAULT_NOT_FOUND_RESULT;// 找不到路径(404)状态码返回什么内容,默认not found resource
 	private VxApiServerOptions serverOptions = new VxApiServerOptions();// 网关应用的端口集合
 	private VxApiCorsOptions corsOptions;// 跨域处理
 	private Instant time;
@@ -80,6 +83,12 @@ public class VxApiApplicationDTO {
 		json.put("maxInitialLineLength", this.maxInitialLineLength);
 		json.put("maxHeaderSize", this.maxHeaderSize);
 		json.put("keepAlive", this.keepAlive);
+		if (this.notFoundContentType != null) {
+			json.put("notFoundContentType", this.notFoundContentType);
+		}
+		if (this.notFoundResult != null) {
+			json.put("notFoundResult", this.notFoundResult);
+		}
 		json.put("serverOptions", this.serverOptions.toJson());
 		if (this.corsOptions != null) {
 			json.put("corsOptions", this.corsOptions.toJson());
@@ -138,6 +147,12 @@ public class VxApiApplicationDTO {
 			}
 			if (obj.getValue("maxHeaderSize") instanceof Number) {
 				options.setMaxHeaderSize(((Number) obj.getValue("maxHeaderSize")).intValue());
+			}
+			if (obj.getValue("notFoundContentType") instanceof String) {
+				options.setNotFoundContentType(obj.getString("notFoundContentType"));
+			}
+			if (obj.getValue("notFoundResult") instanceof String) {
+				options.setNotFoundResult(obj.getString("notFoundResult"));
 			}
 			if (obj.getValue("serverOptions") instanceof JsonObject) {
 				// TODO 这里设置了ServerOption最大值与应用的一样
@@ -267,6 +282,22 @@ public class VxApiApplicationDTO {
 		this.keepAlive = keepAlive;
 	}
 
+	public String getNotFoundContentType() {
+		return notFoundContentType;
+	}
+
+	public void setNotFoundContentType(String notFoundContentType) {
+		this.notFoundContentType = notFoundContentType;
+	}
+
+	public String getNotFoundResult() {
+		return notFoundResult;
+	}
+
+	public void setNotFoundResult(String notFoundResult) {
+		this.notFoundResult = notFoundResult;
+	}
+
 	public Instant getTime() {
 		return time;
 	}
@@ -277,11 +308,12 @@ public class VxApiApplicationDTO {
 
 	@Override
 	public String toString() {
-		return "VxApiApplicationDTO [appName=" + appName + ", describe=" + describe + ", contentLength=" + contentLength + ", scope=" + scope
-				+ ", sessionTimeOut=" + sessionTimeOut + ", sessionCookieName=" + sessionCookieName + ", decoderInitialBufferSize="
-				+ decoderInitialBufferSize + ", maxPoolSize=" + maxPoolSize + ", maxInitialLineLength=" + maxInitialLineLength + ", maxHeaderSize="
-				+ maxHeaderSize + ", keepAlive=" + keepAlive + ", serverOptions=" + serverOptions + ", corsOptions=" + corsOptions + ", time="
-				+ time + "]";
+		return "VxApiApplicationDTO [appName=" + appName + ", describe=" + describe + ", contentLength=" + contentLength
+				+ ", scope=" + scope + ", sessionTimeOut=" + sessionTimeOut + ", sessionCookieName=" + sessionCookieName
+				+ ", decoderInitialBufferSize=" + decoderInitialBufferSize + ", maxPoolSize=" + maxPoolSize
+				+ ", maxInitialLineLength=" + maxInitialLineLength + ", maxHeaderSize=" + maxHeaderSize + ", keepAlive="
+				+ keepAlive + ", notFoundContentType=" + notFoundContentType + ", notFoundResult=" + notFoundResult
+				+ ", serverOptions=" + serverOptions + ", corsOptions=" + corsOptions + ", time=" + time + "]";
 	}
 
 }

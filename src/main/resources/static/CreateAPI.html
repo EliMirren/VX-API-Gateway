@@ -284,7 +284,11 @@
                                 <tr>
                                     <td></td>
                                     <td style="padding-top: 0;">
-                                        <span class="console-form-tip-block ng-binding">请求Path必须以 / 开头,如果Path带请求参数需要加上 : 号,示例:[/test/:name]该Path会取name位置的值</span>
+                                        <span class="console-form-tip-block ng-binding">
+                                        	请求Path必须以 / 开头,如果Path带请求参数需要加上 : 号,示例:[/test/:name]该Path会取name位置的值<br>
+                                        	基于路径前缀通配请求可以使用/*,示例:[/path/*],所有以/path/起头的路径都会被会被匹配<br>
+                                        	如果网关应用需要端口号复用需保证Path的唯一性,否则有可能在暂停应用的时候误停相同Path的API
+                                        </span>
                                     </td>
                                 </tr>
 

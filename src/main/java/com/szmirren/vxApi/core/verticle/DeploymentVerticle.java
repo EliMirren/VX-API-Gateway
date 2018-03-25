@@ -77,18 +77,24 @@ public class DeploymentVerticle extends AbstractVerticle {
 			vertx.eventBus().consumer(VxApiEventBusAddressConstant.DEPLOY_API_STOP, this::stopAPI);
 		}
 
-		vertx.eventBus().consumer(thisVertxName + VxApiEventBusAddressConstant.DEPLOY_APP_COUNT, this::applicationCount);
+		vertx.eventBus().consumer(thisVertxName + VxApiEventBusAddressConstant.DEPLOY_APP_COUNT,
+				this::applicationCount);
 
 		vertx.eventBus().consumer(thisVertxName + VxApiEventBusAddressConstant.DEPLOY_APP_DEPLOY, this::deploymentAPP);
-		vertx.eventBus().consumer(thisVertxName + VxApiEventBusAddressConstant.DEPLOY_APP_UNDEPLOY, this::unDeploymentAPP);
+		vertx.eventBus().consumer(thisVertxName + VxApiEventBusAddressConstant.DEPLOY_APP_UNDEPLOY,
+				this::unDeploymentAPP);
 		vertx.eventBus().consumer(thisVertxName + VxApiEventBusAddressConstant.DEPLOY_API_START_ALL, this::startAllAPI);
 		vertx.eventBus().consumer(thisVertxName + VxApiEventBusAddressConstant.DEPLOY_API_START, this::startAPI);
 		vertx.eventBus().consumer(thisVertxName + VxApiEventBusAddressConstant.DEPLOY_API_STOP, this::stopAPI);
 
-		vertx.eventBus().consumer(thisVertxName + VxApiEventBusAddressConstant.DEPLOY_FIND_ONLINE_APP, this::findOnlineAPP);
-		vertx.eventBus().consumer(thisVertxName + VxApiEventBusAddressConstant.DEPLOY_APP_IS_ONLINE, this::getAppIsOnline);
-		vertx.eventBus().consumer(thisVertxName + VxApiEventBusAddressConstant.DEPLOY_FIND_ONLINE_API, this::findOnlineAPI);
-		vertx.eventBus().consumer(thisVertxName + VxApiEventBusAddressConstant.DEPLOY_API_IS_ONLINE, this::getApiIsOnline);
+		vertx.eventBus().consumer(thisVertxName + VxApiEventBusAddressConstant.DEPLOY_FIND_ONLINE_APP,
+				this::findOnlineAPP);
+		vertx.eventBus().consumer(thisVertxName + VxApiEventBusAddressConstant.DEPLOY_APP_IS_ONLINE,
+				this::getAppIsOnline);
+		vertx.eventBus().consumer(thisVertxName + VxApiEventBusAddressConstant.DEPLOY_FIND_ONLINE_API,
+				this::findOnlineAPI);
+		vertx.eventBus().consumer(thisVertxName + VxApiEventBusAddressConstant.DEPLOY_API_IS_ONLINE,
+				this::getApiIsOnline);
 		LOG.info("start Deployment Verticle successful");
 		super.start(startFuture);
 	}
@@ -110,62 +116,64 @@ public class DeploymentVerticle extends AbstractVerticle {
 		body.put("appConfig", application);
 
 		// 获得全局黑名单并部署应用
-		vertx.eventBus().<JsonArray>send(thisVertxName + VxApiEventBusAddressConstant.SYSTEM_BLACK_IP_FIND, null, iplist -> {
-			if (iplist.succeeded()) {
-				// 添加到加载配置
-				body.put("blackIpSet", iplist.result().body());
-				DeploymentOptions options = new DeploymentOptions(config());
-				options.setIsolationGroup(name);
-				options.setConfig(body);
-				vertx.deployVerticle(VxApiApplication.class.getName(), options, res -> {
-					if (res.succeeded()) {
-						LOG.info("启动应用程序:" + name + "-->成功!");
-						// 记录部署信息
-						VxApiServerOptions serverOptions = VxApiServerOptions.fromJson(application.getJsonObject("serverOptions"));
-						VxApiDeployInfos infos = new VxApiDeployInfos(name, res.result(), serverOptions);
-						applicationMaps.put(name, infos);
-						applicationApiMaps.put(name, new HashSet<>());
-						// 设置端口服务号代理
-						// http端口号
-						Integer httpPort = infos.getHttpPort();
-						if (httpPort != null) {
-							if (portProxyMap.get(httpPort) == null) {
-								portProxyMap.put(httpPort, infos);
+		vertx.eventBus().<JsonArray>send(thisVertxName + VxApiEventBusAddressConstant.SYSTEM_BLACK_IP_FIND, null,
+				iplist -> {
+					if (iplist.succeeded()) {
+						// 添加到加载配置
+						body.put("blackIpSet", iplist.result().body());
+						DeploymentOptions options = new DeploymentOptions(config());
+						options.setIsolationGroup(name);
+						options.setConfig(body);
+						vertx.deployVerticle(VxApiApplication.class.getName(), options, res -> {
+							if (res.succeeded()) {
+								LOG.info("启动应用程序:" + name + "-->成功!");
+								// 记录部署信息
+								VxApiServerOptions serverOptions = VxApiServerOptions
+										.fromJson(application.getJsonObject("serverOptions"));
+								VxApiDeployInfos infos = new VxApiDeployInfos(name, res.result(), serverOptions);
+								applicationMaps.put(name, infos);
+								applicationApiMaps.put(name, new HashSet<>());
+								// 设置端口服务号代理
+								// http端口号
+								Integer httpPort = infos.getHttpPort();
+								if (httpPort != null) {
+									if (portProxyMap.get(httpPort) == null) {
+										portProxyMap.put(httpPort, infos);
+									} else {
+										List<VxApiDeployInfos> item = portStandbyProxyMap.get(httpPort) == null
+												? new ArrayList<VxApiDeployInfos>() : portStandbyProxyMap.get(httpPort);
+										item.add(infos);
+										portStandbyProxyMap.put(httpPort, item);
+									}
+								}
+								// https端口号
+								Integer httpsPort = infos.getHttpsPort();
+								if (httpsPort != null) {
+									if (portProxyMap.get(httpsPort) == null) {
+										portProxyMap.put(httpsPort, infos);
+									} else {
+										List<VxApiDeployInfos> item = portStandbyProxyMap.get(httpsPort) == null
+												? new ArrayList<VxApiDeployInfos>()
+												: portStandbyProxyMap.get(httpsPort);
+										item.add(infos);
+										portStandbyProxyMap.put(httpsPort, item);
+									}
+								}
+								msg.reply("ok");
 							} else {
-								List<VxApiDeployInfos> item = portStandbyProxyMap.get(httpPort) == null
-										? new ArrayList<VxApiDeployInfos>()
-										: portStandbyProxyMap.get(httpPort);
-								item.add(infos);
-								portStandbyProxyMap.put(httpPort, item);
+								LOG.error("启动应用程序:" + name + "-->失败:" + res.cause());
+								int code = 500;
+								if (res.cause() != null
+										&& res.cause().toString().indexOf("Address already in use: bind") > -1) {
+									code = 1111;
+								}
+								msg.fail(code, res.cause().toString());
 							}
-						}
-						// https端口号
-						Integer httpsPort = infos.getHttpsPort();
-						if (httpsPort != null) {
-							if (portProxyMap.get(httpsPort) == null) {
-								portProxyMap.put(httpsPort, infos);
-							} else {
-								List<VxApiDeployInfos> item = portStandbyProxyMap.get(httpsPort) == null
-										? new ArrayList<VxApiDeployInfos>()
-										: portStandbyProxyMap.get(httpsPort);
-								item.add(infos);
-								portStandbyProxyMap.put(httpsPort, item);
-							}
-						}
-						msg.reply("ok");
+						});
 					} else {
-						LOG.error("启动应用程序:" + name + "-->失败:" + res.cause());
-						int code = 500;
-						if (res.cause() != null && res.cause().toString().indexOf("Address already in use: bind") > -1) {
-							code = 1111;
-						}
-						msg.fail(code, res.cause().toString());
+						msg.fail(500, iplist.cause().toString());
 					}
 				});
-			} else {
-				msg.fail(500, iplist.cause().toString());
-			}
-		});
 
 	}
 
@@ -187,130 +195,159 @@ public class DeploymentVerticle extends AbstractVerticle {
 			return;
 		}
 		String deployId = deployInfos.getDeployId();
-		vertx.undeploy(deployId, res -> {
-			if (res.succeeded()) {
-				vertx.executeBlocking(futrue -> {
-					LOG.info("暂停应用程序:" + name + "-->成功!");
-					// 设置备用端口服务代理为主端口服务代理
-					Integer httpPort = deployInfos.getHttpPort();
-					if (httpPort != null) {
-						// 代理类部署信息
-						VxApiDeployInfos proxy = portProxyMap.get(httpPort);
-						if (proxy != null && proxy.getHttpPort() != null) {
-							if (portProxyApplicationMap == null) {
-								portProxyApplicationMap = new HashMap<>();
-							}
-							if (portProxyApplicationApiMap == null) {
-								portProxyApplicationApiMap = new HashMap<>();
-							}
-							Integer proxyPort = proxy.getHttpPort();
-							// 查询代理类中是否有启动当前应用的API
-							Set<String> proxySet = portProxyApplicationMap.get(proxyPort);
-							String proxyKey = httpPort + deployInfos.getAppName();
-							if (proxySet != null && !deployInfos.getAppName().equals(proxy.getAppName()) && proxySet.contains(proxyKey)) {
-								proxySet.remove(proxyKey);
-								portProxyApplicationMap.put(proxyPort, proxySet);
-								portProxyApplicationApiMap.remove(proxyKey);
-								Set<String> apiNames = applicationApiMaps.get(deployInfos.getAppName());
-								stopApiRecursion(new ArrayList<>(apiNames), proxy.getAppName(), 0, 0, stopRes -> {
-									JsonObject result = res.result() == null ? new JsonObject() : stopRes.result();
-									int success = result.getInteger("success", 0);
-									int fail = result.getInteger("fail", 0);
-									LOG.info(proxy.getAppName() + "HTTP服务端口代理暂停:" + deployInfos.getAppName() + "所有API结果: 成功数量:" + success + ",失败数量:" + fail);
-								});
-							}
-							// 设置备用代理为主代理并将代理的API移动转交给备用代理类,如果没有备用类则当前代理
-							if (deployInfos.getAppName().equals(proxy.getAppName())) {
-								List<VxApiDeployInfos> item = portStandbyProxyMap.get(proxyPort);
-								if (item != null && item.size() > 0) {
-									VxApiDeployInfos standby = item.remove(0);
-									Set<String> set = portProxyApplicationMap.get(proxyPort);
-									if (set != null) {
-										String standbyAppName = standby.getAppName();
-										JsonArray body = new JsonArray();
-										set.forEach(k -> {
-											body.addAll(portProxyApplicationApiMap.get(k));
-										});
-										startAllAPIRecursion(body, standbyAppName, 0, null, 0, true, 1, startProxy -> {
-											JsonObject result = res.result() == null ? new JsonObject() : startProxy.result();
-											int success = result.getInteger("success", 0);
-											int fail = result.getInteger("fail", 0);
-											LOG.info(
-													"将代理HTTP服务端口" + proxy.getAppName() + "的API迁移到" + standbyAppName + "启动API结果: 成功数量:" + success + ",失败数量:" + fail);
-										});
+
+		Future<Void> undeplyFuture = Future.future();
+		undeplyFuture.setHandler(handle -> {
+			vertx.undeploy(deployId, res -> {
+				if (res.succeeded()) {
+					vertx.executeBlocking(futrue -> {
+						LOG.info("暂停应用程序:" + name + "-->成功!");
+						// 设置备用端口服务代理为主端口服务代理
+						Integer httpPort = deployInfos.getHttpPort();
+						if (httpPort != null) {
+							// 代理类部署信息
+							VxApiDeployInfos proxy = portProxyMap.get(httpPort);
+							if (proxy != null && proxy.getHttpPort() != null) {
+								if (portProxyApplicationMap == null) {
+									portProxyApplicationMap = new HashMap<>();
+								}
+								if (portProxyApplicationApiMap == null) {
+									portProxyApplicationApiMap = new HashMap<>();
+								}
+								Integer proxyPort = proxy.getHttpPort();
+								// 查询代理类中是否有启动当前应用的API
+								Set<String> proxySet = portProxyApplicationMap.get(proxyPort);
+								String proxyKey = httpPort + deployInfos.getAppName();
+								if (proxySet != null && !deployInfos.getAppName().equals(proxy.getAppName())
+										&& proxySet.contains(proxyKey)) {
+									proxySet.remove(proxyKey);
+									portProxyApplicationMap.put(proxyPort, proxySet);
+									portProxyApplicationApiMap.remove(proxyKey);
+									Set<String> apiNames = applicationApiMaps.get(deployInfos.getAppName());
+									stopApiRecursion(new ArrayList<>(apiNames), proxy.getAppName(), 0, 0, stopRes -> {
+										JsonObject result = stopRes.result() == null ? new JsonObject()
+												: stopRes.result();
+										int success = result.getInteger("success", 0);
+										int fail = result.getInteger("fail", 0);
+										LOG.info(proxy.getAppName() + "HTTP服务端口代理暂停:" + deployInfos.getAppName()
+												+ "所有API结果: 成功数量:" + success + ",失败数量:" + fail);
+									});
+								}
+								// 设置备用代理为主代理并将代理的API移动转交给备用代理类,如果没有备用类则当前代理
+								if (deployInfos.getAppName().equals(proxy.getAppName())) {
+									List<VxApiDeployInfos> item = portStandbyProxyMap.get(proxyPort);
+									if (item != null && item.size() > 0) {
+										VxApiDeployInfos standby = item.remove(0);
+										Set<String> set = portProxyApplicationMap.get(proxyPort);
+										if (set != null) {
+											String standbyAppName = standby.getAppName();
+											JsonArray body = new JsonArray();
+											set.forEach(k -> {
+												body.addAll(portProxyApplicationApiMap.get(k));
+											});
+											startAllAPIRecursion(body, standbyAppName, 0, null, 0, true, 1,
+													startProxy -> {
+														JsonObject result = startProxy.result() == null
+																? new JsonObject() : startProxy.result();
+														int success = result.getInteger("success", 0);
+														int fail = result.getInteger("fail", 0);
+														LOG.info("将代理HTTP服务端口" + proxy.getAppName() + "的API迁移到"
+																+ standbyAppName + "启动API结果: 成功数量:" + success + ",失败数量:"
+																+ fail);
+													});
+										}
+										portProxyMap.put(proxyPort, standby);
+									} else {
+										portProxyMap.remove(proxyPort);
 									}
-									portProxyMap.put(proxyPort, standby);
-								} else {
-									portProxyMap.remove(proxyPort);
 								}
 							}
 						}
-					}
-					Integer httpsPort = deployInfos.getHttpsPort();
-					if (httpsPort != null) {
-						// 代理类部署信息
-						VxApiDeployInfos proxy = portProxyMap.get(httpsPort);
-						if (proxy != null && proxy.getHttpsPort() != null) {
-							if (portProxyApplicationMap == null) {
-								portProxyApplicationMap = new HashMap<>();
-							}
-							if (portProxyApplicationApiMap == null) {
-								portProxyApplicationApiMap = new HashMap<>();
-							}
-							Integer proxyPort = proxy.getHttpsPort();
-							// 查询代理类中是否有启动当前应用的API
-							Set<String> proxySet = portProxyApplicationMap.get(proxyPort);
-							String proxyKey = proxyPort + deployInfos.getAppName();
-							if (proxySet != null && !deployInfos.getAppName().equals(proxy.getAppName()) && proxySet.contains(proxyKey)) {
-								proxySet.remove(proxyKey);
-								portProxyApplicationMap.put(proxyPort, proxySet);
-								portProxyApplicationApiMap.remove(proxyKey);
-								Set<String> apiNames = applicationApiMaps.get(deployInfos.getAppName());
-								stopApiRecursion(new ArrayList<>(apiNames), proxy.getAppName(), 0, 0, stopRes -> {
-									JsonObject result = res.result() == null ? new JsonObject() : stopRes.result();
-									int success = result.getInteger("success", 0);
-									int fail = result.getInteger("fail", 0);
-									LOG.info(proxy.getAppName() + "HTTPS服务端口代理暂停:" + deployInfos.getAppName() + "所有API结果: 成功数量:" + success + ",失败数量:" + fail);
-								});
-							}
-							// 设置备用代理为主代理并将代理的API移动转交给备用代理类,如果没有代理则删除自己的代理
-							if (deployInfos.getAppName().equals(proxy.getAppName())) {
-								List<VxApiDeployInfos> item = portStandbyProxyMap.get(proxyPort);
-								if (item != null && item.size() > 0) {
-									VxApiDeployInfos standby = item.remove(0);
-									Set<String> set = portProxyApplicationMap.get(proxyPort);
-									if (set != null) {
-										String standbyAppName = standby.getAppName();
-										JsonArray body = new JsonArray();
-										set.forEach(k -> {
-											body.addAll(portProxyApplicationApiMap.get(k));
-										});
-										startAllAPIRecursion(body, standbyAppName, 0, null, 0, true, 1, startProxy -> {
-											JsonObject result = res.result() == null ? new JsonObject() : startProxy.result();
-											int success = result.getInteger("success", 0);
-											int fail = result.getInteger("fail", 0);
-											LOG.info(
-													"将代理HTTP服务端口" + proxy.getAppName() + "的API迁移到" + standbyAppName + "启动API结果: 成功数量:" + success + ",失败数量:" + fail);
-										});
+						Integer httpsPort = deployInfos.getHttpsPort();
+						if (httpsPort != null) {
+							// 代理类部署信息
+							VxApiDeployInfos proxy = portProxyMap.get(httpsPort);
+							if (proxy != null && proxy.getHttpsPort() != null) {
+								if (portProxyApplicationMap == null) {
+									portProxyApplicationMap = new HashMap<>();
+								}
+								if (portProxyApplicationApiMap == null) {
+									portProxyApplicationApiMap = new HashMap<>();
+								}
+								Integer proxyPort = proxy.getHttpsPort();
+								// 查询代理类中是否有启动当前应用的API
+								Set<String> proxySet = portProxyApplicationMap.get(proxyPort);
+								String proxyKey = proxyPort + deployInfos.getAppName();
+								if (proxySet != null && !deployInfos.getAppName().equals(proxy.getAppName())
+										&& proxySet.contains(proxyKey)) {
+									proxySet.remove(proxyKey);
+									portProxyApplicationMap.put(proxyPort, proxySet);
+									portProxyApplicationApiMap.remove(proxyKey);
+									Set<String> apiNames = applicationApiMaps.get(deployInfos.getAppName());
+									stopApiRecursion(new ArrayList<>(apiNames), proxy.getAppName(), 0, 0, stopRes -> {
+										JsonObject result = stopRes.result() == null ? new JsonObject()
+												: stopRes.result();
+										int success = result.getInteger("success", 0);
+										int fail = result.getInteger("fail", 0);
+										LOG.info(proxy.getAppName() + "HTTPS服务端口代理暂停:" + deployInfos.getAppName()
+												+ "所有API结果: 成功数量:" + success + ",失败数量:" + fail);
+									});
+								}
+								// 设置备用代理为主代理并将代理的API移动转交给备用代理类,如果没有代理则删除自己的代理
+								if (deployInfos.getAppName().equals(proxy.getAppName())) {
+									List<VxApiDeployInfos> item = portStandbyProxyMap.get(proxyPort);
+									if (item != null && item.size() > 0) {
+										VxApiDeployInfos standby = item.remove(0);
+										Set<String> set = portProxyApplicationMap.get(proxyPort);
+										if (set != null) {
+											String standbyAppName = standby.getAppName();
+											JsonArray body = new JsonArray();
+											set.forEach(k -> {
+												body.addAll(portProxyApplicationApiMap.get(k));
+											});
+											startAllAPIRecursion(body, standbyAppName, 0, null, 0, true, 1,
+													startProxy -> {
+														JsonObject result = startProxy.result() == null
+																? new JsonObject() : startProxy.result();
+														int success = result.getInteger("success", 0);
+														int fail = result.getInteger("fail", 0);
+														LOG.info("将代理HTTP服务端口" + proxy.getAppName() + "的API迁移到"
+																+ standbyAppName + "启动API结果: 成功数量:" + success + ",失败数量:"
+																+ fail);
+													});
+										}
+										portProxyMap.put(proxyPort, standby);
+									} else {
+										portProxyMap.remove(proxyPort);
 									}
-									portProxyMap.put(proxyPort, standby);
-								} else {
-									portProxyMap.remove(proxyPort);
 								}
 							}
 						}
-					}
-					futrue.complete();
-				}, futrueRes -> {
-					applicationMaps.remove(deployInfos.getAppName());
-					applicationApiMaps.remove(deployInfos.getAppName());
-					msg.reply("ok");
-				});
-			} else {
-				LOG.error("暂停应用程序:" + name + "-->失败:" + res.cause());
-				msg.fail(500, res.cause().toString());
-			}
+						futrue.complete();
+					}, futrueRes -> {
+						applicationMaps.remove(deployInfos.getAppName());
+						applicationApiMaps.remove(deployInfos.getAppName());
+						msg.reply("ok");
+					});
+				} else {
+					LOG.error("暂停应用程序:" + name + "-->失败:" + res.cause());
+					msg.fail(500, res.cause().toString());
+				}
+			});
+
 		});
+		// 暂停API后暂停应用
+		vertx.executeBlocking(futrue -> {
+			stopApiRecursion(new ArrayList<>(applicationApiMaps.get(deployInfos.getAppName())),
+					deployInfos.getAppName(), 0, 0, res -> {
+						JsonObject result = res.result() == null ? new JsonObject() : res.result();
+						int success = result.getInteger("success", 0);
+						int fail = result.getInteger("fail", 0);
+						LOG.info("执行暂停应用" + deployInfos.getAppName() + "->暂停所有API-->结果:成功数量:" + success + ",失败数量:"
+								+ fail);
+						futrue.complete();
+					});
+		}, undeplyFuture);
 	}
 
 	/**
@@ -349,8 +386,10 @@ public class DeploymentVerticle extends AbstractVerticle {
 							JsonObject result = res.result() == null ? new JsonObject() : res.result();
 							int success = result.getInteger("success", 0);
 							int fail = result.getInteger("fail", 0);
-							LOG.info(proxy.getAppName() + "代理HTTP服务端口-->启动" + appName + "所有API结果: 成功数量:" + success + ",失败数量:" + fail);
-							Set<String> item = portProxyApplicationMap.get(proxyPort) == null ? new HashSet<>() : portProxyApplicationMap.get(proxyPort);
+							LOG.info(proxy.getAppName() + "代理HTTP服务端口-->启动" + appName + "所有API结果: 成功数量:" + success
+									+ ",失败数量:" + fail);
+							Set<String> item = portProxyApplicationMap.get(proxyPort) == null ? new HashSet<>()
+									: portProxyApplicationMap.get(proxyPort);
 							item.add(proxyPort + appName);
 							portProxyApplicationMap.put(proxyPort, item);
 						});
@@ -367,8 +406,10 @@ public class DeploymentVerticle extends AbstractVerticle {
 							JsonObject result = res.result() == null ? new JsonObject() : res.result();
 							int success = result.getInteger("success", 0);
 							int fail = result.getInteger("fail", 0);
-							LOG.info(proxy.getAppName() + "HTTPS服务端口代理-->启动" + appName + "所有API结果: 成功数量:" + success + ",失败数量:" + fail);
-							Set<String> item = portProxyApplicationMap.get(proxyPort) == null ? new HashSet<>() : portProxyApplicationMap.get(proxyPort);
+							LOG.info(proxy.getAppName() + "HTTPS服务端口代理-->启动" + appName + "所有API结果: 成功数量:" + success
+									+ ",失败数量:" + fail);
+							Set<String> item = portProxyApplicationMap.get(proxyPort) == null ? new HashSet<>()
+									: portProxyApplicationMap.get(proxyPort);
 							item.add(proxyPort + appName);
 							portProxyApplicationMap.put(proxyPort, item);
 						});
@@ -382,7 +423,8 @@ public class DeploymentVerticle extends AbstractVerticle {
 					int fail = result.getInteger("fail", 0);
 					LOG.info("启动" + appName + "所有API结果: 成功数量:" + success + ",失败数量:" + fail);
 					applicationApiMaps.put(appName, successSet);
-					fut.complete(ResultFormat.format(HTTPStatusCodeMsgEnum.C200, "启动" + appName + "所有API结果: 成功数量:" + success + ",失败数量:" + fail));
+					fut.complete(ResultFormat.format(HTTPStatusCodeMsgEnum.C200,
+							"启动" + appName + "所有API结果: 成功数量:" + success + ",失败数量:" + fail));
 				});
 			}, res -> {
 				msg.reply(res.result());
@@ -399,42 +441,43 @@ public class DeploymentVerticle extends AbstractVerticle {
 	 * 启动所有API的方法
 	 * 
 	 * @param apis
-	 *          apis集合
+	 *            apis集合
 	 * @param appName
-	 *          应用的名称
+	 *            应用的名称
 	 * @param success
-	 *          启动成功的种子
+	 *            启动成功的种子
 	 * @param successSet
-	 *          启动成功的API,如果successSet等于null,则不添加成功的API
+	 *            启动成功的API,如果successSet等于null,则不添加成功的API
 	 * @param fail
-	 *          启动失败的种子
+	 *            启动失败的种子
 	 * @return 返回json key : success成功的数量,fail失败的数量
 	 */
 	public void startAllAPIRecursion(JsonArray apis, String appName, int success, Set<String> successSet, int fail,
 			Handler<AsyncResult<JsonObject>> handler) {
 		startAllAPIRecursion(apis, appName, success, successSet, fail, null, null, handler);
 	}
+
 	/**
 	 * 启动所有API的方法
 	 * 
 	 * @param apis
-	 *          apis集合
+	 *            apis集合
 	 * @param appName
-	 *          应用的名称
+	 *            应用的名称
 	 * @param success
-	 *          启动成功的种子
+	 *            启动成功的种子
 	 * @param successSet
-	 *          启动成功的API,如果successSet等于null,则不添加成功的API
+	 *            启动成功的API,如果successSet等于null,则不添加成功的API
 	 * @param fail
-	 *          启动失败的种子
+	 *            启动失败的种子
 	 * @param elseRouteToThis
-	 *          是否代理应用启动
+	 *            是否代理应用启动
 	 * @param serverType
-	 *          服务的类型1=http,2=htpps,3=webSocket
+	 *            服务的类型1=http,2=htpps,3=webSocket
 	 * @param handler
 	 */
-	public void startAllAPIRecursion(JsonArray apis, String appName, int success, Set<String> successSet, int fail, Boolean elseRouteToThis,
-			Integer serverType, Handler<AsyncResult<JsonObject>> handler) {
+	public void startAllAPIRecursion(JsonArray apis, String appName, int success, Set<String> successSet, int fail,
+			Boolean elseRouteToThis, Integer serverType, Handler<AsyncResult<JsonObject>> handler) {
 		if (apis == null || apis.size() < 1) {
 			JsonObject result = new JsonObject();
 			result.put("success", success);
@@ -456,10 +499,12 @@ public class DeploymentVerticle extends AbstractVerticle {
 				if (successSet != null) {
 					successSet.add(api.getString("apiName"));
 				}
-				startAllAPIRecursion(apis, appName, success + 1, successSet, fail, elseRouteToThis, serverType, handler);
+				startAllAPIRecursion(apis, appName, success + 1, successSet, fail, elseRouteToThis, serverType,
+						handler);
 			} else {
 				LOG.error("启动所有API->执行启动API" + api.getString("apiName") + "-->失败:" + reply.cause());
-				startAllAPIRecursion(apis, appName, success, successSet, fail + 1, elseRouteToThis, serverType, handler);
+				startAllAPIRecursion(apis, appName, success, successSet, fail + 1, elseRouteToThis, serverType,
+						handler);
 			}
 		});
 
@@ -494,12 +539,14 @@ public class DeploymentVerticle extends AbstractVerticle {
 					startApiService(body.copy(), proxy.getAppName(), true, 1, res -> {
 						if (res.succeeded()) {
 							Integer proxyPort = proxy.getHttpPort();
-							Set<String> set = portProxyApplicationMap.get(proxyPort) == null ? new HashSet<>() : portProxyApplicationMap.get(proxyPort);
+							Set<String> set = portProxyApplicationMap.get(proxyPort) == null ? new HashSet<>()
+									: portProxyApplicationMap.get(proxyPort);
 							set.add(proxyPort + appName);
 							portProxyApplicationMap.put(proxyPort, set);
 							LOG.info(proxy.getAppName() + "HTTP服务端口代理-->启动" + appName + "应用的API:" + apiName + "-->成功!");
 						} else {
-							LOG.error(proxy.getAppName() + "HTTP服务端口代理-->启动" + appName + "应用的API:" + apiName + "失败:", res.cause());
+							LOG.error(proxy.getAppName() + "HTTP服务端口代理-->启动" + appName + "应用的API:" + apiName + "失败:",
+									res.cause());
 							future.fail(res.cause());
 						}
 					}, null);
@@ -514,12 +561,14 @@ public class DeploymentVerticle extends AbstractVerticle {
 					startApiService(body.copy(), proxy.getAppName(), true, 2, res -> {
 						if (res.succeeded()) {
 							Integer proxyPort = proxy.getHttpsPort();
-							Set<String> set = portProxyApplicationMap.get(proxyPort) == null ? new HashSet<>() : portProxyApplicationMap.get(proxyPort);
+							Set<String> set = portProxyApplicationMap.get(proxyPort) == null ? new HashSet<>()
+									: portProxyApplicationMap.get(proxyPort);
 							set.add(proxyPort + appName);
 							portProxyApplicationMap.put(proxyPort, set);
 							LOG.info(proxy.getAppName() + "HTTP服务端口代理-->启动" + appName + "应用的API:" + apiName + "-->成功!");
 						} else {
-							LOG.error(proxy.getAppName() + "HTTPS服务端口代理-->启动" + appName + "应用的API:" + apiName + "失败:", res.cause());
+							LOG.error(proxy.getAppName() + "HTTPS服务端口代理-->启动" + appName + "应用的API:" + apiName + "失败:",
+									res.cause());
 							future.fail(res.cause());
 						}
 					}, null);
@@ -537,7 +586,8 @@ public class DeploymentVerticle extends AbstractVerticle {
 		}, res -> {
 			if (res.succeeded()) {
 				LOG.info("启动" + appName + "应用的API:" + apiName + "-->成功!");
-				Set<String> set = applicationApiMaps.get(appName) == null ? new HashSet<>() : applicationApiMaps.get(appName);
+				Set<String> set = applicationApiMaps.get(appName) == null ? new HashSet<>()
+						: applicationApiMaps.get(appName);
 				set.add(apiName);
 				applicationApiMaps.put(appName, set);
 				msg.reply(1);
@@ -547,21 +597,22 @@ public class DeploymentVerticle extends AbstractVerticle {
 			}
 		});
 	}
+
 	/**
 	 * 启动API的服务,该服务为递归会阻塞线程,请在executeBlocking中执行,startResult参数传入null
 	 * 
 	 * @param body
-	 *          引用信息
+	 *            引用信息
 	 * @param appName
-	 *          应用的名称
+	 *            应用的名称
 	 * @param elseRouteToThis
-	 *          是否代理启动
+	 *            是否代理启动
 	 * @param serverType
-	 *          服务类型1=HTTP服务,2=HTTPS服务,3=webSocket服务
+	 *            服务类型1=HTTP服务,2=HTTPS服务,3=webSocket服务
 	 * @param handler
-	 *          返回结果
+	 *            返回结果
 	 * @param startResult
-	 *          启动的结果,调用时需要传入null
+	 *            启动的结果,调用时需要传入null
 	 */
 	public void startApiService(JsonObject body, String appName, Boolean elseRouteToThis, Integer serverType,
 			Handler<AsyncResult<Message<Integer>>> handler, AsyncResult<Message<Integer>> startResult) {
@@ -611,7 +662,8 @@ public class DeploymentVerticle extends AbstractVerticle {
 						if (res.succeeded()) {
 							LOG.info(proxy.getAppName() + "HTTP服务端口代理-->" + appName + "暂停API: " + apiName + "-->成功");
 						} else {
-							LOG.error(proxy.getAppName() + "HTTP服务端口代理-->" + appName + "暂停API: " + apiName + "-->失败:", res.cause());
+							LOG.error(proxy.getAppName() + "HTTP服务端口代理-->" + appName + "暂停API: " + apiName + "-->失败:",
+									res.cause());
 							futrue.fail(res.cause());
 						}
 					}, null);
@@ -626,7 +678,8 @@ public class DeploymentVerticle extends AbstractVerticle {
 						if (res.succeeded()) {
 							LOG.info(proxy.getAppName() + "HTTPS服务端口代理-->" + appName + "暂停API: " + apiName + "-->成功");
 						} else {
-							LOG.error(proxy.getAppName() + "HTTPS服务端口代理-->" + appName + "暂停API: " + apiName + "-->失败:", res.cause());
+							LOG.error(proxy.getAppName() + "HTTPS服务端口代理-->" + appName + "暂停API: " + apiName + "-->失败:",
+									res.cause());
 							futrue.fail(res.cause());
 						}
 					}, null);
@@ -654,17 +707,18 @@ public class DeploymentVerticle extends AbstractVerticle {
 			}
 		});
 	}
+
 	/**
 	 * 停止一个API的服务,该服务为递归会阻塞线程,请在executeBlocking中执行,stopResult参数传入null
 	 * 
 	 * @param appName
-	 *          应用的名称
+	 *            应用的名称
 	 * @param apiName
-	 *          API的名称
+	 *            API的名称
 	 * @param handler
-	 *          操作结果
+	 *            操作结果
 	 * @param stopResult
-	 *          停止的结果,调用时需要传入null
+	 *            停止的结果,调用时需要传入null
 	 */
 	public void stopApiServiceSingle(String appName, String apiName, Handler<AsyncResult<Message<Integer>>> handler,
 			AsyncResult<Message<Integer>> stopResult) {
@@ -672,24 +726,27 @@ public class DeploymentVerticle extends AbstractVerticle {
 			handler.handle(stopResult);
 			return;
 		}
-		vertx.eventBus().<Integer>send(thisVertxName + appName + VxApiEventBusAddressConstant.APPLICATION_DEL_API_SUFFIX, apiName, reply -> {
-			stopApiServiceSingle(null, null, handler, reply);
-		});
+		vertx.eventBus().<Integer>send(
+				thisVertxName + appName + VxApiEventBusAddressConstant.APPLICATION_DEL_API_SUFFIX, apiName, reply -> {
+					stopApiServiceSingle(null, null, handler, reply);
+				});
 	}
+
 	/**
 	 * 批量暂停API
 	 * 
 	 * @param apis
-	 *          API的名字集
+	 *            API的名字集
 	 * @param appName
-	 *          应用的名称
+	 *            应用的名称
 	 * @param success
-	 *          暂停成功的数量
+	 *            暂停成功的数量
 	 * @param fail
-	 *          暂停失败的数量
+	 *            暂停失败的数量
 	 * @param handler
 	 */
-	public void stopApiRecursion(List<String> apis, String appName, int success, int fail, Handler<AsyncResult<JsonObject>> handler) {
+	public void stopApiRecursion(List<String> apis, String appName, int success, int fail,
+			Handler<AsyncResult<JsonObject>> handler) {
 		if (apis == null || apis.size() < 1) {
 			JsonObject result = new JsonObject();
 			result.put("success", success);

@@ -300,6 +300,20 @@
                                                ></td>
                                 </tr>
                                 <tr>
+                                    <td class="t-r">找不到路径(404) Content-Type:</td>
+                                    <td><input type="text" id="notFoundContentType"
+                                               class="console-textbox console-width-4 ng-pristine ng-valid"
+                                               placeholder="找不到路径(404)返回什么Content-Type类型"
+                                               value="${context.app.notFoundContentType! }"
+                                               ></td>
+                                </tr>
+                                <tr>
+                                    <td class="t-r">找不到路径(404) 返回结果</td>
+                                    <td>
+                                        <textarea id="notFoundResult" class="console-textarea console-width-6 ng-pristine ng-valid" style="resize: none;" rows="4" placeholder="找不到路径(404)的返回结果"><#t>${context.app.notFoundResult!}<#t></textarea>
+                                    </td>
+                                </tr>
+                                <tr>
                                     <td class="t-r">会话超时时间(毫秒):</td>
                                     <td><input type="text" id="sessionTimeOut"
                                                class="console-textbox console-width-4 ng-pristine ng-valid"

@@ -177,9 +177,14 @@ function appConfigCheck() {
             data.serverOptions.custom=$("#custom").val();
         }
     }
+    if ($("#notFoundContentType").val() != '') {
+    	data.notFoundContentType = $("#notFoundContentType").val();
+    }
+    if ($("#notFoundResult").val() != '') {
+    	data.notFoundResult = $("#notFoundResult").val();
+    }
     if ($("#contentLength").val() != '') {
         data.contentLength = parseInt($("#contentLength").val());
-
     }
     if ($("#sessionTimeOut").val() != '') {
         data.sessionTimeOut = parseInt($("#sessionTimeOut").val());

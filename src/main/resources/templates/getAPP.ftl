@@ -113,6 +113,11 @@ span {
 		</#if>
 	</div>
 	<div class="list-group">
+		<a class="list-group-item" style="background-color: #eee"> 找不到资源(404) 返回 </a>
+		<a class="list-group-item"><span>Content-Type : ${context.app.notFoundContentType!"text/html"}</span></a>
+		<a class="list-group-item"><span>内容 : ${context.app.notFoundResult! }</span></a>
+	</div>
+	<div class="list-group">
 		<a class="list-group-item" style="background-color: #eee"> 服务器参数配置
 		</a> <a class="list-group-item">请求主体的最大长度 : <span>${context.app.contentLength?c}</span></a>
 		<a class="list-group-item">会话超时时间 : <span>${context.app.sessionTimeOut?c} ms</span></a> 
