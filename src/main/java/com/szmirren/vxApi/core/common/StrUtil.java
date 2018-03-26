@@ -1,9 +1,13 @@
 package com.szmirren.vxApi.core.common;
 
+import java.time.Instant;
+import java.time.format.DateTimeParseException;
+import java.util.Date;
 import java.util.List;
 
 import com.szmirren.vxApi.core.enums.ParamTypeEnum;
 
+import io.vertx.core.json.DecodeException;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
@@ -332,6 +336,189 @@ public class StrUtil {
 		} catch (Exception e) {
 			return false;
 		}
+	}
+	/**
+	 * 将一个字符串转换为int,如果字符串为null或者""返回0
+	 * 
+	 * @param str
+	 * @return
+	 * @throws NumberFormatException
+	 */
+	public static int getint(String str) throws NumberFormatException {
+		if (isNullOrEmpty(str)) {
+			return 0;
+		}
+		return new Integer(str);
+	}
+	/**
+	 * 将一个字符串转换为int,如果字符串为null或者""返回0,如果转换失败返回0
+	 * 
+	 * @param str
+	 * @return
+	 */
+	public static int getintTry(String str) {
+		if (isNullOrEmpty(str)) {
+			return 0;
+		}
+		try {
+			return new Integer(str);
+		} catch (NumberFormatException e) {
+			return 0;
+		}
+	}
+
+	/**
+	 * 将一个字符串转换为Integer,如果字符串为null或者""返回null
+	 * 
+	 * @param str
+	 * @return
+	 * @throws NumberFormatException
+	 */
+	public static Integer getInteger(String str) throws NumberFormatException {
+		if (isNullOrEmpty(str)) {
+			return null;
+		}
+		return new Integer(str);
+	}
+	/**
+	 * 将一个字符串转换为long,如果字符串为null或者""返回0
+	 * 
+	 * @param str
+	 * @return
+	 * @throws NumberFormatException
+	 */
+	public static long getlong(String str) throws NumberFormatException {
+		if (isNullOrEmpty(str)) {
+			return 0l;
+		}
+		return new Long(str);
+	}
+	/**
+	 * 将一个字符串转换为Long,如果字符串为null或者""返回null
+	 * 
+	 * @param str
+	 * @return
+	 * @throws NumberFormatException
+	 */
+	public static Long getLong(String str) throws NumberFormatException {
+		if (isNullOrEmpty(str)) {
+			return 0L;
+		}
+		return new Long(str);
+	}
+	/**
+	 * 将一个字符串转换为float,如果字符串为null或者""返回0.0f
+	 * 
+	 * @param str
+	 * @return
+	 * @throws NumberFormatException
+	 */
+	public static float getfloat(String str) throws NumberFormatException {
+		if (isNullOrEmpty(str)) {
+			return 0.0f;
+		}
+		return new Float(str);
+	}
+	/**
+	 * 将一个字符串转换为float,如果字符串为null或者""返回null
+	 * 
+	 * @param str
+	 * @return
+	 * @throws NumberFormatException
+	 */
+	public static Float getFloat(String str) throws NumberFormatException {
+		if (isNullOrEmpty(str)) {
+			return null;
+		}
+		return new Float(str);
+	}
+	/**
+	 * 将一个字符串转换为double,如果字符串为null或者""返回0.0
+	 * 
+	 * @param str
+	 * @return
+	 * @throws NumberFormatException
+	 */
+	public static double getdouble(String str) throws NumberFormatException {
+		if (isNullOrEmpty(str)) {
+			return 0.0;
+		}
+		return new Double(str);
+	}
+	/**
+	 * 将一个字符串转换为Double,如果字符串为null或者""返回null
+	 * 
+	 * @param str
+	 * @return
+	 * @throws NumberFormatException
+	 */
+	public static Double getDouble(String str) throws NumberFormatException {
+		if (isNullOrEmpty(str)) {
+			return null;
+		}
+		return new Double(str);
+	}
+	/**
+	 * 将一个字符串转换为Date,如果字符串为null或者""返回null
+	 * 
+	 * @param str
+	 * @return
+	 * @throws NumberFormatException
+	 */
+	public static Date getDate(String str) throws NumberFormatException {
+		if (isNullOrEmpty(str)) {
+			return null;
+		}
+		try {
+			return Date.from(Instant.parse(str));
+		} catch (Exception e) {
+			return new Date(new Long(str));
+		}
+	}
+	/**
+	 * 将一个字符串转换为Instant,如果字符串为null或者""返回null
+	 * 
+	 * @param str
+	 * @return
+	 * @throws NumberFormatException
+	 * @throws DateTimeParseException
+	 * @throws RuntimeException
+	 */
+	public static Instant getInstant(String str) throws NumberFormatException, DateTimeParseException, RuntimeException {
+		if (isNullOrEmpty(str)) {
+			return null;
+		}
+		try {
+			return Instant.parse(str);
+		} catch (Exception e) {
+			return Instant.ofEpochMilli(new Long(str));
+		}
+	}
+	/**
+	 * 将一个字符串转换为JsonObject,如果字符串为null或者""返回null
+	 * 
+	 * @param str
+	 * @return
+	 * @throws DecodeException
+	 */
+	public static JsonObject getJsonObject(String str) throws DecodeException {
+		if (isNullOrEmpty(str)) {
+			return null;
+		}
+		return new JsonObject(str);
+	}
+	/**
+	 * 将一个字符串转换为JsonArray,如果字符串为null或者""返回null
+	 * 
+	 * @param str
+	 * @return
+	 * @throws DecodeException
+	 */
+	public static JsonArray getJsonArray(String str) throws DecodeException {
+		if (isNullOrEmpty(str)) {
+			return null;
+		}
+		return new JsonArray(str);
 	}
 
 }
