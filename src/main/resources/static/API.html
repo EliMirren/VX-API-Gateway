@@ -73,7 +73,7 @@
         }
         var lastIndex=url.lastIndexOf("/");
         var name=url.substring(lastIndex).replace("/","");
-        $("#appName").val(encodeURI(name))
+        $("#appName").val(decodeURI(name))
     }
     getURLParam();
     function createAPI() {

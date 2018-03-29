@@ -399,20 +399,44 @@ public class DATAVerticle extends AbstractVerticle {
 			msg.fail(411, "the application options is null");
 		} else {
 			JsonObject body = msg.body();
-			String sql = MessageFormat.format("insert into {0} ({1},{2},{3}) values(?,?,?)", APITN, APIIC, API_APPIC, APICC);
+			String appName = body.getString("appName");
+
+			Future<Void> addApiFuture = Future.future();
+			// 判断有没有存在该应用后执行
+			addApiFuture.setHandler(check -> {
+				String sql = MessageFormat.format("insert into {0} ({1},{2},{3}) values(?,?,?)", APITN, APIIC, API_APPIC, APICC);
+				JsonArray params = new JsonArray();
+				params.add(body.getString("apiName"));
+				params.add(appName);
+				params.add(body.getJsonObject("api").toString());
+				jdbcClient.updateWithParams(sql, params, res -> {
+					if (res.succeeded()) {
+						int result = res.result().getUpdated();
+						msg.reply(result);
+					} else {
+						msg.fail(500, res.cause().toString());
+						LOG.error("执行添加API-->失败:" + res.cause().toString());
+					}
+				});
+			});
+			String sql = MessageFormat.format("select {0} AS {1} ,{2} AS {3} from {4} where {0} = ? ", APPIC, APPIN, APPCC, APPCN, APPTN);
 			JsonArray params = new JsonArray();
-			params.add(body.getString("apiName"));
-			params.add(body.getString("appName"));
-			params.add(body.getJsonObject("api").toString());
-			jdbcClient.updateWithParams(sql, params, res -> {
+			params.add(appName);
+			jdbcClient.queryWithParams(sql, params, res -> {
 				if (res.succeeded()) {
-					int result = res.result().getUpdated();
-					msg.reply(result);
+					List<JsonObject> rows = res.result().getRows();
+					if (rows != null && rows.size() > 0) {
+						addApiFuture.complete();
+					} else {
+						msg.fail(500, "网关应用不存在!");
+						LOG.debug("执行添加API->查询应用程序-->失败:网关应用不存在!");
+					}
 				} else {
 					msg.fail(500, res.cause().toString());
-					LOG.error("执行添加API-->失败:" + res.cause().toString());
+					LOG.error("执行添加API->查询应用程序-->失败:" + res.cause().toString());
 				}
 			});
+
 		}
 	}
 

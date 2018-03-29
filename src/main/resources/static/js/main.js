@@ -936,7 +936,7 @@ function saveAPI() {
             if (result.status == 200) {
                 var res = result.data;
                 if (res == 0) {
-                    alert("创建失败了");
+                    alert("创建失败了"+result);
                     console.log(result);
                 } else {
                     alert("创建成功");
@@ -946,7 +946,7 @@ function saveAPI() {
                 if (result.status == 1444) {
                     alert("创建失败:已经存在同名的API");
                 } else {
-                    alert("创建失败");
+                    alert("创建失败"+result.data);
                     console.log("创建失败status:" + result.status + " ,msg:"
                         + result.msg + " ,data:");
                     console.log(result.data);
@@ -977,7 +977,7 @@ function updateAPI(){
             if (result.status == 200) {
                 var res = result.data;
                 if (res == 0) {
-                    alert("修改失败了");
+                    alert("修改失败了"+result);
                     console.log(result);
                 } else {
                     alert("修改成功,如果需要该的API生效,请重启该API");
@@ -987,7 +987,7 @@ function updateAPI(){
                 if (result.status == 1444) {
                     alert("创建失败:已经存在同名的API");
                 } else {
-                    alert("创建失败");
+                    alert("创建失败"+result.data);
                     console.log("创建失败status:" + result.status + " ,msg:"
                         + result.msg + " ,data:");
                     console.log(result.data);
