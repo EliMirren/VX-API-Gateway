@@ -150,30 +150,38 @@ public class VxApiApplication extends AbstractVerticle {
 			} else {
 				this.httpClient = vertx.createHttpClient(appOption);
 				Future<Void> httpFuture = Future.future(future -> {
-					createHttpServer(res -> {
-						if (res.succeeded()) {
-							if (LOG.isDebugEnabled()) {
-								LOG.debug("实例化应用程序->创建HTTP服务器-->成功!");
+					if (serverOptions.isCreateHttp()) {
+						createHttpServer(res -> {
+							if (res.succeeded()) {
+								if (LOG.isDebugEnabled()) {
+									LOG.debug("实例化应用程序->创建HTTP服务器-->成功!");
+								}
+								future.complete();
+							} else {
+								LOG.error("实例化应用程序->创建HTTP服务器-->失败:" + res.cause());
+								future.fail(res.cause());
 							}
-							future.complete();
-						} else {
-							LOG.error("实例化应用程序->创建HTTP服务器-->失败:" + res.cause());
-							future.fail(res.cause());
-						}
-					});
+						});
+					} else {
+						future.complete();
+					}
 				});
-				Future<Void> httpsFuture = Future.future(futrue -> {
-					createHttpsServer(res -> {
-						if (res.succeeded()) {
-							if (LOG.isDebugEnabled()) {
-								LOG.debug("实例化应用程序->创建HTTPS服务器-->成功!");
+				Future<Void> httpsFuture = Future.future(future -> {
+					if (serverOptions.isCreateHttps()) {
+						createHttpsServer(res -> {
+							if (res.succeeded()) {
+								if (LOG.isDebugEnabled()) {
+									LOG.debug("实例化应用程序->创建HTTPS服务器-->成功!");
+								}
+								future.complete();
+							} else {
+								LOG.error("实例化应用程序->创建HTTPS服务器-->失败:" + res.cause());
+								future.fail(res.cause());
 							}
-							futrue.complete();
-						} else {
-							LOG.error("实例化应用程序->创建HTTPS服务器-->失败:" + res.cause());
-							futrue.fail(res.cause());
-						}
-					});
+						});
+					} else {
+						future.complete();
+					}
 				});
 				Future<Void> eventFutrue = Future.future(future -> {
 					// 注册操作地址
