@@ -121,7 +121,7 @@ public class VxApiApplication extends AbstractVerticle {
 	private String thisVertxName;
 
 	@Override
-	public void start(Future<Void> fut) throws Exception {
+	public void start(Future<Void> startFuture) throws Exception {
 		try {
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("加载应用配置信息...");
@@ -144,41 +144,59 @@ public class VxApiApplication extends AbstractVerticle {
 			}
 			this.corsOptions = appOption.getCorsOptions();
 			if (appOption == null) {
-				fut.fail("创建应用程序失败:配置信息为空");
 				LOG.error("创建应用程序-->失败:配置信息为空");
+				startFuture.fail("创建应用程序失败:配置信息为空");
+				return;
 			} else {
 				this.httpClient = vertx.createHttpClient(appOption);
-				Future.<Boolean>future(http -> {
-					// 创建HTTP服务器
-					if (serverOptions.isCreateHttp()) {
-						createHttpServer(http);
-					} else {
-						http.handle(Future.<Boolean>succeededFuture(true));
-					}
-				}).compose(http -> Future.<Boolean>future(https -> {
-					// 创建HTTPS服务器
-					if (serverOptions.isCreateHttps()) {
-						createHttpsServer(https);
-					} else {
-						https.handle(Future.<Boolean>succeededFuture());
-					}
-				})).setHandler(res -> {
+				Future<Void> httpFuture = Future.future(future -> {
+					createHttpServer(res -> {
+						if (res.succeeded()) {
+							if (LOG.isDebugEnabled()) {
+								LOG.debug("实例化应用程序->创建HTTP服务器-->成功!");
+							}
+							future.complete();
+						} else {
+							LOG.error("实例化应用程序->创建HTTP服务器-->失败:" + res.cause());
+							future.fail(res.cause());
+						}
+					});
+				});
+				Future<Void> httpsFuture = Future.future(futrue -> {
+					createHttpsServer(res -> {
+						if (res.succeeded()) {
+							if (LOG.isDebugEnabled()) {
+								LOG.debug("实例化应用程序->创建HTTPS服务器-->成功!");
+							}
+							futrue.complete();
+						} else {
+							LOG.error("实例化应用程序->创建HTTPS服务器-->失败:" + res.cause());
+							futrue.fail(res.cause());
+						}
+					});
+				});
+				Future<Void> eventFutrue = Future.future(future -> {
+					// 注册操作地址
+					vertx.eventBus().consumer(thisVertxName + appOption.getAppName() + VxApiEventBusAddressConstant.APPLICATION_ADD_API_SUFFIX,
+							this::addRoute);
+					vertx.eventBus().consumer(thisVertxName + appOption.getAppName() + VxApiEventBusAddressConstant.APPLICATION_DEL_API_SUFFIX,
+							this::delRoute);
+					vertx.eventBus().consumer(VxApiEventBusAddressConstant.SYSTEM_PUBLISH_BLACK_IP_LIST, this::updateIpBlackList);
+					future.complete();
+				});
+				CompositeFuture.all(httpFuture, httpsFuture, eventFutrue).setHandler(res -> {
 					if (res.succeeded()) {
-						// 注册操作地址
-						vertx.eventBus().consumer(thisVertxName + appOption.getAppName() + VxApiEventBusAddressConstant.APPLICATION_ADD_API_SUFFIX,
-								this::addRoute);
-						vertx.eventBus().consumer(thisVertxName + appOption.getAppName() + VxApiEventBusAddressConstant.APPLICATION_DEL_API_SUFFIX,
-								this::delRoute);
-						vertx.eventBus().consumer(VxApiEventBusAddressConstant.SYSTEM_PUBLISH_BLACK_IP_LIST, this::updateIpBlackList);
-						fut.complete();
+						LOG.info("实例化应用程序-->成功");
+						startFuture.complete();
 					} else {
-						fut.fail(res.cause());
+						LOG.error("实例化应用程序-->失败:", res.cause());
+						startFuture.fail(res.cause());
 					}
 				});
 			}
 		} catch (Exception e) {
-			fut.fail("实例化应用程序失败:" + e);
-			LOG.error("实例化应用程序-->失败:" + e);
+			LOG.error("实例化应用程序-->失败:", e);
+			startFuture.fail(e);
 		}
 	}
 
@@ -187,7 +205,7 @@ public class VxApiApplication extends AbstractVerticle {
 	 * 
 	 * @param createHttp
 	 */
-	public void createHttpServer(Handler<AsyncResult<Boolean>> createHttp) {
+	public void createHttpServer(Handler<AsyncResult<Void>> createHttp) {
 		this.httpRouter = Router.router(vertx);
 		httpRouter.route().handler(this::filterBlackIP);
 		httpRouter.route().handler(CookieHandler.create());
@@ -227,10 +245,10 @@ public class VxApiApplication extends AbstractVerticle {
 			if (res.succeeded()) {
 				System.out.println(
 						MessageFormat.format("{0} Running on port {1} by HTTP", appOption.getAppName(), Integer.toString(serverOptions.getHttpPort())));
-				createHttp.handle(Future.<Boolean>succeededFuture(true));
+				createHttp.handle(Future.succeededFuture());
 			} else {
 				System.out.println("create HTTP Server failed : " + res.cause());
-				createHttp.handle(Future.<Boolean>failedFuture(res.cause()));
+				createHttp.handle(Future.failedFuture(res.cause()));
 			}
 		});
 	}
@@ -240,7 +258,7 @@ public class VxApiApplication extends AbstractVerticle {
 	 * 
 	 * @param createHttp
 	 */
-	public void createHttpsServer(Handler<AsyncResult<Boolean>> createHttps) {
+	public void createHttpsServer(Handler<AsyncResult<Void>> createHttps) {
 		this.httpsRouter = Router.router(vertx);
 		httpsRouter.route().handler(this::filterBlackIP);
 		httpsRouter.route().handler(CookieHandler.create());
@@ -265,7 +283,6 @@ public class VxApiApplication extends AbstractVerticle {
 			httpsRouter.route().handler(corsHandler);
 		}
 		// 创建https服务器
-		boolean isCert = true;
 		serverOptions.setSsl(true);
 		VxApiCertOptions certOptions = serverOptions.getCertOptions();
 		if (certOptions.getCertType().equalsIgnoreCase("pem")) {
@@ -274,34 +291,45 @@ public class VxApiApplication extends AbstractVerticle {
 		} else if (certOptions.getCertType().equalsIgnoreCase("pfx")) {
 			serverOptions.setPfxKeyCertOptions(new PfxOptions().setPath(certOptions.getCertPath()).setPassword(certOptions.getCertKey()));
 		} else {
-			LOG.equals("创建https服务器-->失败:无效的证书类型,只支持pem/pfx格式的证书");
-			isCert = false;
-			createHttps.handle(Future.<Boolean>failedFuture(new RuntimeException("创建https服务器-->失败:无效的证书类型,只支持pem/pfx格式的证书")));
+			LOG.error("创建https服务器-->失败:无效的证书类型,只支持pem/pfx格式的证书");
+			createHttps.handle(Future.failedFuture("创建https服务器-->失败:无效的证书类型,只支持pem/pfx格式的证书"));
+			return;
 		}
-		if (isCert) {
-			// 404页面
-			httpsRouter.route().order(999999).handler(rct -> {
-				HttpServerResponse response = rct.response();
-				if (appOption.getNotFoundContentType() != null) {
-					response.putHeader("Content-Type", appOption.getNotFoundContentType());
-				}
-				response.end(appOption.getNotFoundResult());
-			});
-			// 如果在linux系统开启epoll
-			if (vertx.isNativeTransportEnabled()) {
-				serverOptions.setTcpFastOpen(true).setTcpCork(true).setTcpQuickAck(true).setReusePort(true);
-			}
-			vertx.createHttpServer(serverOptions).requestHandler(httpsRouter::accept).listen(serverOptions.getHttpsPort(), res -> {
-				if (res.succeeded()) {
-					System.out.println(MessageFormat.format("{0} Running on port {1} by HTTPS", appOption.getAppName(),
-							Integer.toString(serverOptions.getHttpsPort())));
-					createHttps.handle(Future.<Boolean>succeededFuture(true));
+		Future<Boolean> createFuture = Future.future();
+		vertx.fileSystem().exists(certOptions.getCertPath(), createFuture);
+		createFuture.setHandler(check -> {
+			if (check.succeeded()) {
+				if (check.result()) {
+					// 404页面
+					httpsRouter.route().order(999999).handler(rct -> {
+						HttpServerResponse response = rct.response();
+						if (appOption.getNotFoundContentType() != null) {
+							response.putHeader("Content-Type", appOption.getNotFoundContentType());
+						}
+						response.end(appOption.getNotFoundResult());
+					});
+					// 如果在linux系统开启epoll
+					if (vertx.isNativeTransportEnabled()) {
+						serverOptions.setTcpFastOpen(true).setTcpCork(true).setTcpQuickAck(true).setReusePort(true);
+					}
+					vertx.createHttpServer(serverOptions).requestHandler(httpsRouter::accept).listen(serverOptions.getHttpsPort(), res -> {
+						if (res.succeeded()) {
+							System.out.println(appOption.getAppName() + " Running on port " + serverOptions.getHttpsPort() + " by HTTPS");
+							createHttps.handle(Future.succeededFuture());
+						} else {
+							System.out.println("create HTTPS Server failed : " + res.cause());
+							createHttps.handle(Future.failedFuture(res.cause()));
+						}
+					});
 				} else {
-					System.out.println("create HTTPS Server failed : " + res.cause());
-					createHttps.handle(Future.<Boolean>failedFuture(res.cause()));
+					LOG.error("执行创建https服务器-->失败:无效的证书或者错误的路径:如果证书存放在conf/cert中,路径可以从cert/开始,示例:cert/XXX.XXX");
+					createHttps.handle(Future.failedFuture("无效的证书或者错误的路径"));
 				}
-			});
-		}
+			} else {
+				LOG.error("执行创建https服务器-->失败:无效的证书或者错误的路径:如果证书存放在conf/cert中,路径可以从cert/开始,示例:cert/XXX.XXX", check.cause());
+				createHttps.handle(Future.failedFuture(check.cause()));
+			}
+		});
 	}
 
 	/**
