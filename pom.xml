@@ -88,6 +88,11 @@
 			<version>2.10.0</version>
 		</dependency>
 		<dependency>
+			<groupId>org.apache.logging.log4j</groupId>
+			<artifactId>log4j-jcl</artifactId>
+			<version>2.11.0</version>
+		</dependency>
+		<dependency>
 			<groupId>com.lmax</groupId>
 			<artifactId>disruptor</artifactId>
 			<version>3.3.4</version>
@@ -142,16 +147,9 @@
 	</dependencies>
 
 	<build>
-		<!-- 打包时过滤log4j2-test.xml,运行时可以注释掉该resources
-		<resources>
-			<resource>
-				<directory>src/main/resources</directory>
-				<excludes>
-					<exclude>log4j2-test.xml</exclude>
-				</excludes>
-				<filtering>false</filtering>
-			</resource>
-		</resources>-->
+		<!-- 打包时过滤log4j2-test.xml,运行时可以注释掉该resources <resources> <resource> <directory>src/main/resources</directory> 
+			<excludes> <exclude>log4j2-test.xml</exclude> </excludes> <filtering>false</filtering> 
+			</resource> </resources> -->
 
 		<pluginManagement>
 			<plugins>

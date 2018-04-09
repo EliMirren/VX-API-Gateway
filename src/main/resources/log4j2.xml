@@ -73,7 +73,25 @@
 			<appender-ref ref="RollingFileWarn" />
 			<appender-ref ref="RollingFileError" />
 		</AsyncLogger>
+		<AsyncLogger name="io.vertx" level="${LOG_LEVEL}"
+			additivity="false" includeLocation="true">
+			<appender-ref ref="Console" level="${LOG_CONSOLE_LEVEL}" />
+			<appender-ref ref="RollingFileInfo" />
+			<appender-ref ref="RollingFileWarn" />
+			<appender-ref ref="RollingFileError" />
+		</AsyncLogger>
+		<AsyncLogger name="io.netty" level="${LOG_LEVEL}"
+			additivity="false" includeLocation="true">
+			<appender-ref ref="Console" level="${LOG_CONSOLE_LEVEL}" />
+			<appender-ref ref="RollingFileInfo" />
+			<appender-ref ref="RollingFileWarn" />
+			<appender-ref ref="RollingFileError" />
+		</AsyncLogger>
 		<root level="${LOG_LEVEL}">
+			<appender-ref ref="Console" level="${LOG_CONSOLE_LEVEL}" />
+			<appender-ref ref="RollingFileInfo" />
+			<appender-ref ref="RollingFileWarn" />
+			<appender-ref ref="RollingFileError" />
 		</root>
 	</loggers>
 </configuration>
