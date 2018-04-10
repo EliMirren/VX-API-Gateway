@@ -231,9 +231,17 @@ public class VxApiApplication extends AbstractVerticle {
 		// 跨域处理
 		if (corsOptions != null) {
 			CorsHandler corsHandler = CorsHandler.create(corsOptions.getAllowedOrigin());
-			corsHandler.allowedHeaders(corsOptions.getAllowedHeaders()).allowCredentials(corsOptions.isAllowCredentials())
-					.exposedHeaders(corsOptions.getExposedHeaders()).allowedMethods(corsOptions.getAllowedMethods())
-					.maxAgeSeconds(corsOptions.getMaxAgeSeconds());
+			if (corsOptions.getAllowedHeaders() != null) {
+				corsHandler.allowedHeaders(corsOptions.getAllowedHeaders());
+			}
+			corsHandler.allowCredentials(corsOptions.isAllowCredentials());
+			if (corsOptions.getExposedHeaders() != null) {
+				corsHandler.exposedHeaders(corsOptions.getExposedHeaders());
+			}
+			if (corsOptions.getAllowedMethods() != null) {
+				corsHandler.allowedMethods(corsOptions.getAllowedMethods());
+			}
+			corsHandler.maxAgeSeconds(corsOptions.getMaxAgeSeconds());
 			httpRouter.route().handler(corsHandler);
 		}
 		// 如果在linux系统开启epoll
@@ -285,9 +293,17 @@ public class VxApiApplication extends AbstractVerticle {
 		// 跨域处理
 		if (corsOptions != null) {
 			CorsHandler corsHandler = CorsHandler.create(corsOptions.getAllowedOrigin());
-			corsHandler.allowedHeaders(corsOptions.getAllowedHeaders()).allowCredentials(corsOptions.isAllowCredentials())
-					.exposedHeaders(corsOptions.getExposedHeaders()).allowedMethods(corsOptions.getAllowedMethods())
-					.maxAgeSeconds(corsOptions.getMaxAgeSeconds());
+			if (corsOptions.getAllowedHeaders() != null) {
+				corsHandler.allowedHeaders(corsOptions.getAllowedHeaders());
+			}
+			corsHandler.allowCredentials(corsOptions.isAllowCredentials());
+			if (corsOptions.getExposedHeaders() != null) {
+				corsHandler.exposedHeaders(corsOptions.getExposedHeaders());
+			}
+			if (corsOptions.getAllowedMethods() != null) {
+				corsHandler.allowedMethods(corsOptions.getAllowedMethods());
+			}
+			corsHandler.maxAgeSeconds(corsOptions.getMaxAgeSeconds());
 			httpsRouter.route().handler(corsHandler);
 		}
 		// 创建https服务器

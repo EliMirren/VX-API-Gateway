@@ -126,6 +126,10 @@ function serverInfoCheck() {
         }
         corsOptions.allowCredentials = $(
             'input:radio[name="allowCredentials"]:checked').val();
+        if(corsOptions.allowCredentials == "true" && "*" == corsOptions.allowedOrigin){
+        	alert("跨域请求源,如果为*,allowCredentials不允许为true,需要非*才可以为true");
+        	return false;
+        }
         corsOptions.maxAgeSeconds = parseInt($("#maxAgeSeconds").val());
         var ah = $("#allowedHeaders").val();
         if (ah != '') {

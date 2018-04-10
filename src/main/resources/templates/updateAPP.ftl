@@ -182,7 +182,11 @@
                                                required="required"
                                                placeholder="允许的请求源:多个以号,隔开"
                                                value="<#if context.app.corsOptions??>${context.app.corsOptions.allowedOrigin!}</#if>" 
-                                               ></td>
+                                               >
+                                    <br><br>
+                                    	源基于<a href="https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html" target="_blank"> Pattern </a>正则表达式,<br>
+                                    	示例:(http|https)://szmirren.com ,代表允许http://szmirren.com或者https://szmirren.com
+                                    </td>
                                 </tr>
                                 <tr class="cors-hide-show" style="display: none">
                                     <td align="right" class="t-r">是否允许发送Cookie / allowCredentials:</td>
