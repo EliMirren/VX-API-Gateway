@@ -73,6 +73,13 @@
 			<appender-ref ref="RollingFileWarn" />
 			<appender-ref ref="RollingFileError" />
 		</AsyncLogger>
+		<AsyncLogger name="druid.sql.Statement" level="${LOG_LEVEL}"
+			additivity="false" includeLocation="true">
+			<appender-ref ref="Console" level="${LOG_CONSOLE_LEVEL}" />
+			<appender-ref ref="RollingFileInfo" />
+			<appender-ref ref="RollingFileWarn" />
+			<appender-ref ref="RollingFileError" />
+		</AsyncLogger>
 		<AsyncLogger name="io.vertx" level="${LOG_LEVEL}"
 			additivity="false" includeLocation="true">
 			<appender-ref ref="Console" level="${LOG_CONSOLE_LEVEL}" />

@@ -16,6 +16,7 @@
 		}
 	},
 	"dataConfig": {
+		"provider_class": "com.szmirren.vxApi.core.common.DataSourceProviderOfDruid",
 		"url": "jdbc:sqlite:configDB.db",
 		"driver_class": "org.sqlite.JDBC"
 	},
