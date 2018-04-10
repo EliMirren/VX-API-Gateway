@@ -410,7 +410,7 @@
                         <span class="console-grey console-mr3 ">发生异常/失败返回 : </span>
                         <br>
                         <div>
-                            <pre class="">状态码: ${context.api.result.failureExample!} </br>内容: ${context.api.result.failureExample!}</pre>
+                            <pre class="">状态码: ${context.api.result.failureStatus?c} </br>内容: ${context.api.result.failureExample!}</pre>
                         </div>
                     </td>
                 </tr>
