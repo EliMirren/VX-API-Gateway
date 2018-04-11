@@ -136,6 +136,9 @@ public class SessionTokenGrantAuthHandler implements VxApiCustomHandler {
 					} else {
 						continue;
 					}
+					if (param == null) {
+						continue;
+					}
 					if (p.getSerParamPosition() == ParamPositionEnum.HEADER) {
 						headers.add(p.getSerParamName(), param);
 					} else if (p.getSerParamPosition() == ParamPositionEnum.PATH) {
