@@ -939,8 +939,11 @@ function saveAPI() {
                     alert("创建失败了"+result);
                     console.log(result);
                 } else {
-                    alert("创建成功");
-                    window.location.href = "/static/getAPI/" + apiInfo.apiName;
+                	if (confirm("创建成功,是否继续创建API")) {
+                    	window.location.replace(window.location.href);
+                    }else{
+                    	window.location.href = "/static/getAPI/" + apiInfo.apiName;
+                    }
                 }
             } else {
                 if (result.status == 1444) {
