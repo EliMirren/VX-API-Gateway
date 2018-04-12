@@ -238,12 +238,14 @@ public class VxApiRouteHandlerHttpServiceImpl implements VxApiRouteHandlerHttpSe
 					policy.setCheckWaiting(true);
 					rct.vertx().setTimer(serOptions.getRetryTime(), testConn -> {
 						List<VxApiServerURLInfo> service = policy.getBadService();
-						for (VxApiServerURLInfo urlinfo : service) {
-							webClient.requestAbs(serOptions.getMethod(), urlinfo.getUrl()).timeout(serOptions.getTimeOut()).send(res -> {
-								if (res.succeeded()) {
-									policy.reportGreatService(urlinfo.getIndex());
-								}
-							});
+						if (service != null) {
+							for (VxApiServerURLInfo urlinfo : service) {
+								webClient.requestAbs(serOptions.getMethod(), urlinfo.getUrl()).timeout(serOptions.getTimeOut()).send(res -> {
+									if (res.succeeded()) {
+										policy.reportGreatService(urlinfo.getIndex());
+									}
+								});
+							}
 						}
 						policy.setCheckWaiting(false);
 					});
@@ -264,12 +266,14 @@ public class VxApiRouteHandlerHttpServiceImpl implements VxApiRouteHandlerHttpSe
 				policy.setCheckWaiting(true);
 				rct.vertx().setTimer(serOptions.getRetryTime(), testConn -> {
 					List<VxApiServerURLInfo> service = policy.getBadService();
-					for (VxApiServerURLInfo urlinfo : service) {
-						webClient.requestAbs(serOptions.getMethod(), urlinfo.getUrl()).timeout(serOptions.getTimeOut()).send(res -> {
-							if (res.succeeded()) {
-								policy.reportGreatService(urlinfo.getIndex());
-							}
-						});
+					if (service != null) {
+						for (VxApiServerURLInfo urlinfo : service) {
+							webClient.requestAbs(serOptions.getMethod(), urlinfo.getUrl()).timeout(serOptions.getTimeOut()).send(res -> {
+								if (res.succeeded()) {
+									policy.reportGreatService(urlinfo.getIndex());
+								}
+							});
+						}
 					}
 					policy.setCheckWaiting(false);
 				});

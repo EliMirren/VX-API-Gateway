@@ -165,6 +165,9 @@ public class SysVerticle extends AbstractVerticle {
 	public void plusTrackInfos(Message<JsonObject> msg) {
 		if (msg.body() != null) {
 			VxApiTrackInfos infos = VxApiTrackInfos.fromJson(msg.body());
+			if (LOG.isDebugEnabled()) {
+				LOG.debug(MessageFormat.format("应用:{0} , API:{1} ,执行结果{2}", infos.getAppName(), infos.getApiName(), infos));
+			}
 			// map的key
 			String key = infos.getAppName() + "-" + infos.getApiName();
 			// 记录API相关信息

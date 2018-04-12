@@ -315,7 +315,7 @@ public class VxApiTrackInfos {
 	 * 设置异常的堆栈信息
 	 * 
 	 * @param stackTrace
-	 *            报错的堆栈信息
+	 *          报错的堆栈信息
 	 */
 	public void setErrStackTrace(StackTraceElement[] stackTrace) {
 
@@ -326,6 +326,14 @@ public class VxApiTrackInfos {
 			}
 			errStackTrace = sub.toString();
 		}
+	}
+
+	@Override
+	public String toString() {
+		return "VxApiTrackInfos [startTime=" + startTime + ", endTime=" + endTime
+				+ ", requestTime=" + requestTime + ", responseTime=" + responseTime + ", requestBufferLen=" + requestBufferLen
+				+ ", responseBufferLen=" + responseBufferLen + ", successful=" + successful + ", errMsg=" + errMsg + ", errStackTrace="
+				+ errStackTrace + "]";
 	}
 
 }
