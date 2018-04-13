@@ -485,7 +485,7 @@
                                             <select class="console-selectbox console-width-4 ng-pristine ng-valid"
                                                     id="serverMethod">
                                                 <#if context.api.serverEntrance.serverType == "HTTP_HTTPS">  <option value="${context.api.serverEntrance.body.method}" selected="selected">${context.api.serverEntrance.body.method}</option></#if>
-                                                <option value="GET" selected="selected">GET</option>
+                                                <option value="GET">GET</option>
                                                 <option value="POST">POST</option>
                                                 <option value="OPTIONS">OPTIONS</option>
                                                 <option value="HEAD">HEAD</option>

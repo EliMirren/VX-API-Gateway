@@ -686,6 +686,9 @@ function apiSerEnterInfo() {
                     }
                 }
                 var weight = $(serverUrlBox[i]).find(".input-server-weight").val();
+                if(url.indexOf("/",url.indexOf("://")+3) < 0){
+                	url+="/";
+                }
                 su = {};
                 su.url = url;
                 su.weight = parseInt(weight==''?0:weight);

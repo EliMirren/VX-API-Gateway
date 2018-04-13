@@ -230,4 +230,11 @@ public class VxApiServerEntranceHttpOptions {
 		this.params = params;
 	}
 
+	@Override
+	public String toString() {
+		return "VxApiServerEntranceHttpOptions [DEFAULT_TIME_OUT=" + DEFAULT_TIME_OUT + ", DEFAULT_RETRY_TIME=" + DEFAULT_RETRY_TIME
+				+ ", balanceType=" + balanceType + ", serverUrls=" + serverUrls + ", method=" + method + ", timeOut=" + timeOut + ", retryTime="
+				+ retryTime + ", params=" + params + "]";
+	}
+
 }

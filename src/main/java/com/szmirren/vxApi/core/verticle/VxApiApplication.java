@@ -250,6 +250,9 @@ public class VxApiApplication extends AbstractVerticle {
 		}
 		// 404页面
 		httpRouter.route().order(999999).handler(rct -> {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("用户: " + rct.request().remoteAddress().host() + "请求的了不存的路径: " + rct.request().method() + ":" + rct.request().path());
+			}
 			HttpServerResponse response = rct.response();
 			if (appOption.getNotFoundContentType() != null) {
 				response.putHeader("Content-Type", appOption.getNotFoundContentType());
@@ -326,6 +329,10 @@ public class VxApiApplication extends AbstractVerticle {
 				if (check.result()) {
 					// 404页面
 					httpsRouter.route().order(999999).handler(rct -> {
+						if (LOG.isDebugEnabled()) {
+							LOG.debug(
+									"用户: " + rct.request().remoteAddress().host() + "请求的了不存的路径: " + rct.request().method() + ":" + rct.request().path());
+						}
 						HttpServerResponse response = rct.response();
 						if (appOption.getNotFoundContentType() != null) {
 							response.putHeader("Content-Type", appOption.getNotFoundContentType());

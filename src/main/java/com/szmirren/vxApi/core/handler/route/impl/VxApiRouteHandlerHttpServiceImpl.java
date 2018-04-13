@@ -42,6 +42,7 @@ import io.vertx.ext.web.client.WebClient;
  *
  */
 public class VxApiRouteHandlerHttpServiceImpl implements VxApiRouteHandlerHttpService {
+
 	/**
 	 * 当前Vertx的唯一标识
 	 */
@@ -233,7 +234,7 @@ public class VxApiRouteHandlerHttpServiceImpl implements VxApiRouteHandlerHttpSe
 			if (policy.isHaveBadService()) {
 				if (!policy.isCheckWaiting()) {
 					if (webClient == null) {
-						WebClient.create(rct.vertx());
+						webClient = WebClient.create(rct.vertx());
 					}
 					policy.setCheckWaiting(true);
 					rct.vertx().setTimer(serOptions.getRetryTime(), testConn -> {
@@ -263,6 +264,9 @@ public class VxApiRouteHandlerHttpServiceImpl implements VxApiRouteHandlerHttpSe
 						.end(api.getResult().getCantConnServerExample());
 			}
 			if (!policy.isCheckWaiting()) {
+				if (webClient == null) {
+					webClient = WebClient.create(rct.vertx());
+				}
 				policy.setCheckWaiting(true);
 				rct.vertx().setTimer(serOptions.getRetryTime(), testConn -> {
 					List<VxApiServerURLInfo> service = policy.getBadService();
