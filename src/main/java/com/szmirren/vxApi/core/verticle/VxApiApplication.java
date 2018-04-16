@@ -516,7 +516,7 @@ public class VxApiApplication extends AbstractVerticle {
 				} catch (Exception e) {
 					authRoute.remove();
 					routes.forEach(r -> r.remove());// 清空已经成功的路由
-					LOG.error("添加权限认证-->失败:" + e);
+					LOG.error(appName + ":API:" + api.getApiName() + "添加权限认证-->失败:" + e);
 					fut.fail(e);
 					return;
 				}
@@ -529,7 +529,7 @@ public class VxApiApplication extends AbstractVerticle {
 					initBeforeHandler(api, beforeRoute);
 					routes.add(beforeRoute);
 				} catch (Exception e) {
-					LOG.error("添加前置处理器-->失败:" + e);
+					LOG.error(appName + ":API:" + api.getApiName() + "添加前置处理器-->失败:" + e);
 					beforeRoute.remove();
 					routes.forEach(r -> r.remove());// 清空已经成功的路由
 					fut.fail(e);
@@ -544,7 +544,7 @@ public class VxApiApplication extends AbstractVerticle {
 				initServerHandler(isAfterHandler, api, serverRoute);
 				routes.add(serverRoute);
 			} catch (Exception e) {
-				LOG.error("添加服务处理器-->失败:" + e);
+				LOG.error(appName + ":API:" + api.getApiName() + "添加服务处理器-->失败:" + e);
 				serverRoute.remove();
 				routes.forEach(r -> r.remove());// 清空已经成功的路由
 				fut.fail(e);
@@ -557,7 +557,7 @@ public class VxApiApplication extends AbstractVerticle {
 					initAfterHandler(api, afterRoute);
 					routes.add(afterRoute);
 				} catch (Exception e) {
-					LOG.error("添加后置处理器-->失败:" + e);
+					LOG.error(appName + ":API:" + api.getApiName() + "添加后置处理器-->失败:" + e);
 					afterRoute.remove();
 					routes.forEach(r -> r.remove());// 清空已经成功的路由
 					fut.fail(e);
@@ -571,7 +571,7 @@ public class VxApiApplication extends AbstractVerticle {
 			routeMaps.put(api.getApiName(), routes);
 			fut.complete();
 			if (LOG.isDebugEnabled()) {
-				LOG.debug(appName + ": 服务器创建API成功");
+				LOG.debug("启动" + appName + ": API:" + api.getApiName() + "-->成功");
 			}
 		}, result);
 
