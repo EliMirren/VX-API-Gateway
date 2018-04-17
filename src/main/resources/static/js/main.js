@@ -371,7 +371,7 @@ function basicInfo() {
         return false;
     }
     apiInfo = {};
-    apiInfo.apiName = $("#apiName").val().toString().trim().replace("/","");
+    apiInfo.apiName = $("#apiName").val().toString().trim().replace(/\//g,"_");
     apiInfo.apiDescribe = $("#apiDescribe").val().toString().trim();
 
     if ($("#auth-options-name").val() != 'none') {
