@@ -57,6 +57,9 @@ public class VxApiRouteHandlerParamCheckImpl implements VxApiRouteHandlerParamCh
 						break;
 					}
 				}
+				if (param==null) {
+					continue;
+				}
 				if (p.getCheckOptions() != null) {
 					VxApiParamCheckOptions check = p.getCheckOptions();
 					if (check.getMaxLength() != null) {
