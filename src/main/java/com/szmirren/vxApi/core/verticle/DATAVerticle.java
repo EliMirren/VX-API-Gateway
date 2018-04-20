@@ -321,7 +321,10 @@ public class DATAVerticle extends AbstractVerticle {
 			msg.fail(411, "the application name is null");
 		} else {
 			JsonObject body = msg.body();
-			jdbcClient.query(MessageFormat.format("select count({0}) from {1}", APIIC, APITN), count -> {
+			String countSql = MessageFormat.format("select count({0}) from {1} where {2} = ? ", APIIC, APITN, API_APPIC);
+			JsonArray countParams = new JsonArray();
+			countParams.add(body.getString("appName"));
+			jdbcClient.queryWithParams(countSql, countParams, count -> {
 				if (count.succeeded()) {
 					Object value = count.result().getResults().get(0).getValue(0);
 					long dataCount = ((Number) value).longValue();
