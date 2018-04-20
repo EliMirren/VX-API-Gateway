@@ -34,15 +34,12 @@ public class VxApiClientStaticAuth implements Handler<RoutingContext> {
 		} else {
 			String auth = event.request().getHeader(AUTHORIZATION);
 			if (auth == null) {
-				event.response()
-						.putHeader("WWW-Authenticate", "Basic realm=\"" + VxApiGatewayAttribute.FULL_NAME + "\"")
-						.setStatusCode(401).end();
+				event.response().putHeader("WWW-Authenticate", "Basic realm=\"" + VxApiGatewayAttribute.FULL_NAME + "\"").setStatusCode(401).end();
 			} else {
 				if ("false".equals(event.session().get(IS_AUTH))) {
 					event.session().remove(IS_AUTH);
-					event.response()
-							.putHeader("WWW-Authenticate", "Basic realm=\"" + VxApiGatewayAttribute.FULL_NAME + "\"")
-							.setStatusCode(401).end();
+					event.response().putHeader("WWW-Authenticate", "Basic realm=\"" + VxApiGatewayAttribute.FULL_NAME + "\"").setStatusCode(401)
+							.end();
 				} else {
 					try {
 						final String suser;
@@ -68,7 +65,8 @@ public class VxApiClientStaticAuth implements Handler<RoutingContext> {
 									event.setUser(user);
 									event.next();
 								} else {
-									event.response().end(ResultFormat.formatAsNull(HTTPStatusCodeMsgEnum.C401));
+									event.response().putHeader("WWW-Authenticate", "Basic realm=\"" + VxApiGatewayAttribute.FULL_NAME + "\"")
+											.setStatusCode(401).end();
 								}
 							} else {
 								event.response().end(ResultFormat.format(HTTPStatusCodeMsgEnum.C500, res.cause()));
