@@ -1,5 +1,8 @@
 package com.szmirren.vxApi.core.handler.route.impl;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.szmirren.vxApi.core.common.StrUtil;
 import com.szmirren.vxApi.core.common.VxApiGatewayAttribute;
 import com.szmirren.vxApi.core.entity.VxApiEntranceParam;
@@ -18,6 +21,8 @@ import io.vertx.ext.web.RoutingContext;
  *
  */
 public class VxApiRouteHandlerParamCheckImpl implements VxApiRouteHandlerParamCheck {
+	private static final Logger LOG = LogManager.getLogger(VxApiRouteHandlerParamCheckImpl.class);
+
 	private VxApis api;
 
 	public VxApiRouteHandlerParamCheckImpl(VxApis api) {
@@ -27,6 +32,9 @@ public class VxApiRouteHandlerParamCheckImpl implements VxApiRouteHandlerParamCh
 
 	@Override
 	public void handle(RoutingContext rct) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("API:" + api.getApiName() + "接收到参数:" + rct.request().params());
+		}
 		if (api.getEnterParam() == null) {
 			rct.next();
 		} else {
@@ -57,7 +65,7 @@ public class VxApiRouteHandlerParamCheckImpl implements VxApiRouteHandlerParamCh
 						break;
 					}
 				}
-				if (param==null) {
+				if (param == null) {
 					continue;
 				}
 				if (p.getCheckOptions() != null) {
