@@ -12,21 +12,34 @@ import io.vertx.ext.web.client.WebClientOptions;
  *
  */
 public class VxApiApplicationOptions extends WebClientOptions {
-	/**
-	 * session默认的过期时间
-	 */
+	/** session默认的过期时间 */
 	public final long DEFAULT_SESSION_TIMEOUT = 30 * 60 * 1000;
-
-	private String appName;// 网关应用的名称
-	private String describe;// 网关应用的描述
-	private VxApiServerOptions serverOptions = new VxApiServerOptions();// 网关应用的端口集合
-	private VxApiCorsOptions corsOptions;// 跨域处理
-	private long contentLength = -1;// 请求主体的最大长度-1无限制长度,默认-1
-	private int scope;// 网关应用的作用域0=测试版,1=预览版,2=正式版
-	private long sessionTimeOut = DEFAULT_SESSION_TIMEOUT;// 会话超时时间
-	private String sessionCookieName = VxApiGatewayAttribute.SESSION_COOKIE_NAME;// 会话的cookie名称
-	private String notFoundContentType;// 找不到路径(404)返回什么Content-Type类型
-	private String notFoundResult;// 找不到路径(404)状态码返回什么内容,默认 not found resource
+	/** 网关应用的名称 */
+	private String appName;
+	/** 网关应用的描述 */
+	private String describe;
+	/** 网关应用的端口集合 */
+	private VxApiServerOptions serverOptions = new VxApiServerOptions();
+	/** 跨域处理 */
+	private VxApiCorsOptions corsOptions;
+	/** 请求主体的最大长度-1无限制长度,默认-1 */
+	private long contentLength = -1;
+	/** 网关应用的作用域0=测试版,1=预览版,2=正式版 */
+	private int scope;
+	/** 会话超时时间 */
+	private long sessionTimeOut = DEFAULT_SESSION_TIMEOUT;
+	/** 会话的cookie名称 */
+	private String sessionCookieName = VxApiGatewayAttribute.SESSION_COOKIE_NAME;
+	/** 找不到路径(404)返回什么Content-Type类型 */
+	private String notFoundContentType;
+	/** 找不到路径(404)状态码返回什么内容,默认 not found resource */
+	private String notFoundResult;
+	/** 黑名单列表返回结果,状态码,默认403 */
+	private int blacklistIpCode;
+	/** 黑名单列表返回结果,返回什么Content-Type类型 */
+	private String blacklistIpContentType;
+	/** 黑名单列表返回结果,默认you can't access this service */
+	private String blacklistIpResult;
 
 	/**
 	 * 通过VxApiApplicationDTO实例化一个网关应用配置
@@ -44,6 +57,9 @@ public class VxApiApplicationOptions extends WebClientOptions {
 		this.sessionCookieName = option.getSessionCookieName();
 		this.notFoundContentType = option.getNotFoundContentType();
 		this.notFoundResult = option.getNotFoundResult();
+		this.blacklistIpCode = option.getBlacklistIpCode();
+		this.blacklistIpContentType = option.getBlacklistIpContentType();
+		this.blacklistIpResult = option.getBlacklistIpResult();
 		super.setDecoderInitialBufferSize(option.getDecoderInitialBufferSize());
 		super.setMaxHeaderSize(option.getMaxHeaderSize());
 		super.setMaxPoolSize(option.getMaxPoolSize());
@@ -270,6 +286,55 @@ public class VxApiApplicationOptions extends WebClientOptions {
 	 */
 	public void setNotFoundResult(String notFoundResult) {
 		this.notFoundResult = notFoundResult;
+	}
+	/**
+	 * 获取黑名单返回的状态码
+	 * 
+	 * @return
+	 */
+
+	public int getBlacklistIpCode() {
+		return blacklistIpCode;
+	}
+	/**
+	 * 设置黑名单返回的状态码
+	 * 
+	 * @param blacklistIpCode
+	 */
+	public void setBlacklistIpCode(int blacklistIpCode) {
+		this.blacklistIpCode = blacklistIpCode;
+	}
+	/**
+	 * 获取黑名单返回的ContentType
+	 * 
+	 * @return
+	 */
+	public String getBlacklistIpContentType() {
+		return blacklistIpContentType;
+	}
+	/**
+	 * 设置黑名单返回的ContentType
+	 * 
+	 * @param blacklistIpContentType
+	 */
+	public void setBlacklistIpContentType(String blacklistIpContentType) {
+		this.blacklistIpContentType = blacklistIpContentType;
+	}
+	/**
+	 * 获取黑名单返回的内容
+	 * 
+	 * @return
+	 */
+	public String getBlacklistIpResult() {
+		return blacklistIpResult;
+	}
+	/**
+	 * 设置黑名单返回的内容
+	 * 
+	 * @param blacklistIpResult
+	 */
+	public void setBlacklistIpResult(String blacklistIpResult) {
+		this.blacklistIpResult = blacklistIpResult;
 	}
 
 }

@@ -75,49 +75,27 @@ import io.vertx.ext.web.sstore.SessionStore;
 public class VxApiApplication extends AbstractVerticle {
 	private static final Logger LOG = LogManager.getLogger(VxApiApplication.class);
 
-	/**
-	 * HTTP服务器route集
-	 */
+	/** HTTP服务器route集 */
 	private Map<String, List<Route>> httpRouteMaps = new LinkedHashMap<>();
-	/**
-	 * HTTPS服务器route集
-	 */
+	/** HTTPS服务器route集 */
 	private Map<String, List<Route>> httpsRouteMaps = new LinkedHashMap<>();
-	/**
-	 * 全局IP黑名单
-	 */
+	/** 全局IP黑名单 */
 	private Set<String> blackIpSet = new LinkedHashSet<>();
-	/**
-	 * HTTP的路由服务
-	 */
+	/** HTTP的路由服务 */
 	private Router httpRouter = null;
-	/**
-	 * HTTPS的路由服务
-	 */
+	/** HTTPS的路由服务 */
 	private Router httpsRouter = null;
-	/**
-	 * http客户端
-	 */
+	/** http客户端 */
 	private HttpClient httpClient = null;
-	/**
-	 * 应用的配置信息
-	 */
+	/** 应用的配置信息 */
 	VxApiApplicationOptions appOption = null;
-	/**
-	 * 应用的名字
-	 */
+	/** 应用的名字 */
 	private String appName = null;
-	/**
-	 * 应用的服务器与端口配置信息
-	 */
+	/** 应用的服务器与端口配置信息 */
 	VxApiServerOptions serverOptions = null;
-	/**
-	 * 跨域设置
-	 */
+	/** 跨域设置 */
 	VxApiCorsOptions corsOptions = null;
-	/**
-	 * 当前Vertx的唯一标识
-	 */
+	/** 当前Vertx的唯一标识 */
 	private String thisVertxName;
 
 	@Override
@@ -371,7 +349,17 @@ public class VxApiApplication extends AbstractVerticle {
 	public void filterBlackIP(RoutingContext rct) {
 		String host = rct.request().remoteAddress().host();
 		if (blackIpSet.contains(host)) {
-			rct.response().setStatusCode(404).setStatusMessage("you can't access this service").end();
+			HttpServerResponse response = rct.response();
+			if (appOption.getBlacklistIpContentType() != null) {
+				response.putHeader(CONTENT_TYPE, appOption.getBlacklistIpContentType());
+			}
+			response.setStatusCode(appOption.getBlacklistIpCode());
+			if (appOption.getBlacklistIpResult() != null) {
+				response.setStatusMessage(appOption.getBlacklistIpResult());
+			} else {
+				response.setStatusMessage("you can't access this service");
+			}
+			response.end();
 		} else {
 			rct.next();
 		}

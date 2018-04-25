@@ -34,13 +34,10 @@
             <!-- 创建APP -->
             <div id="apiListModal" cur='1'>
                 <ul class="console-clearfix">
-                    <li class="console-guidebar-default guidebar-current cApiNav cApiNav1" style="width:33.3%;">基本信息
-                    </li>
-
-                    <li class="console-guidebar-default cApiNav cApiNav2" style="width:33.3%;">服务设置</li>
-
-                    <li class="console-guidebar-default cApiNav cApiNav3" style="width:33.3%;">参数设置</li>
-
+                    <li class="console-guidebar-default guidebar-current cApiNav cApiNav1">基本信息</li>
+                    <li class="console-guidebar-default cApiNav cApiNav2">服务设置</li>
+					<li class="console-guidebar-default cApiNav cApiNav3">信息定义</li>
+                    <li class="console-guidebar-default cApiNav cApiNav4">参数设置</li>
                 </ul>
                 <!-- 头部 -->
                 <!--基本设置-->
@@ -282,9 +279,75 @@
                             </table>
                         </div>
                     </div>
-
+<!-- 信息定义 -->
+					<div class="console-panel console-mt4 createAPI3 hide">
+                    	<div class="console-panel-header">
+                            <span class="console-panel-header-line"></span>
+                            <div class="console-float-left ng-binding">信息定义</div>
+                        </div>
+                        <div class="console-panel-body console-p4 console-pt6 console-pb6">
+                            <table width="100%" class="descriptionTable">
+                                <tr>
+                                    <td class="t-r">找不到路径(404) Content-Type:</td>
+                                    <td>
+                                    	<select id="notFoundContentType"
+                                                class="console-selectbox console-width-4 ng-pristine ng-valid">
+                                            <#if context.app.notFoundContentType?exists><option value="${context.app.notFoundContentType}" class="ng-binding">${context.app.notFoundContentType}</option></#if>
+                                            <option value="text/html;charset=UTF-8" class="ng-binding">HTML(text/html;charset=UTF-8)</option>
+                                            <option value="text/plain;charset=UTF-8" class="ng-binding">文本(text/plain;charset=UTF-8)</option>
+                                            <option value="application/json;charset=UTF-8" class="ng-binding">JSON(application/json;charset=UTF-8)</option>
+                                            <option value="application/xml;charset=UTF-8" class="ng-binding">XML(application/xml;charset=UTF-8)</option>
+                                            <option value="custom" class="ng-binding">自定义Content-Type</option>
+                                        </select><br/>	
+                                        <input type="text" id="notFoundContentTypeCustom"
+                                               class="console-textbox console-width-4 ng-pristine ng-valid"
+                                               placeholder="请输入自定义返回Content-Type类型" style="margin-top: 5px;display: none;">
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="t-r">找不到路径(404) 返回结果:</td>
+                                    <td>
+                                        <textarea id="notFoundResult" class="console-textarea console-width-6 ng-pristine ng-valid" style="resize: none;" rows="3" placeholder="请输入找不到路径(404)的返回结果,默认:not found resource"><#t>${context.app.notFoundResult!}<#t></textarea>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="t-r">在黑名单列表中返回状态码:</td>
+                                    <td><input type="text" id="blacklistIpCode"
+                                               class="console-textbox console-width-4 ng-pristine ng-valid"
+                                               placeholder="请输入在黑名单列表中返回状态码,默认403"
+                                               <#if context.app.blacklistIpCode?exists>value="${context.app.blacklistIpCode?c}"</#if>
+                                               >
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="t-r">在黑名单列表中返回Content-Type:</td>
+                                    <td>
+                                    	<select id="blacklistIpContentType"
+                                                class="console-selectbox console-width-4 ng-pristine ng-valid">
+                                                <#if context.app.blacklistIpContentType?exists><option value="${context.app.blacklistIpContentType}" class="ng-binding">${context.app.blacklistIpContentType}</option></#if>
+                                            <option value="text/html;charset=UTF-8" class="ng-binding">HTML(text/html;charset=UTF-8)</option>
+                                            <option value="text/plain;charset=UTF-8" class="ng-binding">文本(text/plain;charset=UTF-8)</option>
+                                            <option value="application/json;charset=UTF-8" class="ng-binding">JSON(application/json;charset=UTF-8)</option>
+                                            <option value="application/xml;charset=UTF-8" class="ng-binding">XML(application/xml;charset=UTF-8)</option>
+                                            <option value="custom" class="ng-binding">自定义Content-Type</option>
+                                        </select><br/>	
+                                        <input type="text" id="blacklistIpContentTypeCustom"
+                                               class="console-textbox console-width-4 ng-pristine ng-valid"
+                                               placeholder="请输入黑名单列表中返回Content-Type类型" style="margin-top: 5px;display: none;">
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="t-r">在黑名单列表中返回结果:</td>
+                                    <td>
+                                        <textarea id="blacklistIpResult" class="console-textarea console-width-6 ng-pristine ng-valid" style="resize: none;" rows="3" placeholder="在黑名单列表中返回结果,默认:you can't access this service"><#t>${context.app.blacklistIpResult!}<#t></textarea>
+                                    </td>
+                                </tr>
+                                
+                         	</table>
+                        </div>
+                    </div>
                     <!-- 参数设置 -->
-                    <div class="console-panel console-mt4 createAPI3 hide">
+                    <div class="console-panel console-mt4 createAPI4 hide">
                         <div class="console-panel-header">
                             <span class="console-panel-header-line"></span>
                             <div class="console-float-left ng-binding">参数配置</div>
@@ -298,20 +361,6 @@
                                                placeholder="请求主体的最大长度既上传文件等大小限制,默认:-1无限制"
                                                value="${context.app.contentLength?c}"
                                                ></td>
-                                </tr>
-                                <tr>
-                                    <td class="t-r">找不到路径(404) Content-Type:</td>
-                                    <td><input type="text" id="notFoundContentType"
-                                               class="console-textbox console-width-4 ng-pristine ng-valid"
-                                               placeholder="找不到路径(404)返回什么Content-Type类型"
-                                               value="${context.app.notFoundContentType! }"
-                                               ></td>
-                                </tr>
-                                <tr>
-                                    <td class="t-r">找不到路径(404) 返回结果</td>
-                                    <td>
-                                        <textarea id="notFoundResult" class="console-textarea console-width-6 ng-pristine ng-valid" style="resize: none;" rows="4" placeholder="找不到路径(404)的返回结果"><#t>${context.app.notFoundResult!}<#t></textarea>
-                                    </td>
                                 </tr>
                                 <tr>
                                     <td class="t-r">会话超时时间(毫秒):</td>

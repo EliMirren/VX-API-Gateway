@@ -114,6 +114,12 @@ span {
 		<a class="list-group-item"><span>内容 : ${context.app.notFoundResult! }</span></a>
 	</div>
 	<div class="list-group">
+		<a class="list-group-item" style="background-color: #eee"> 在黑名单列表中返回 </a>
+		<a class="list-group-item"><span>状态码 : <#if context.app.blacklistIpCode?exists>${context.app.blacklistIpCode?c}</#if></span></a>
+		<a class="list-group-item"><span>Content-Type : ${context.app.blacklistIpContentType!}</span></a>
+		<a class="list-group-item"><span>内容 : ${context.app.blacklistIpResult! }</span></a>
+	</div>
+	<div class="list-group">
 		<a class="list-group-item" style="background-color: #eee"> 服务器参数配置
 		</a> <a class="list-group-item">请求主体的最大长度 : <span>${context.app.contentLength?c}</span></a>
 		<a class="list-group-item">会话超时时间 : <span>${context.app.sessionTimeOut?c} ms</span></a> 

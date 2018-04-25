@@ -10,10 +10,15 @@ function apiNextPage(ev) {
             return;
         }
     }
-  if(cur == 2){
+    if(cur == 2){
         if (!serverInfoCheck()){
             return;
         }
+    }
+    if(cur == 3){
+    	if (!resultInfoCheck()){
+    		return;
+    	}
     }
 
     if (cur <= 5) {
@@ -25,7 +30,7 @@ function apiNextPage(ev) {
         $('.createAPI' + newCur).removeClass('hide');
         $('.cApiNav' + newCur).addClass('guidebar-current');
     }
-    if (cur == 3) {
+    if (cur == 4) {
         $('.cp-nPage').addClass('hide');
         $('.cp-sPage').removeClass('hide');
     } else {
@@ -53,7 +58,7 @@ function apiLastPage(ev) {
         $('.createAPI' + newCur).removeClass('hide');
         $('.cApiNav' + newCur).addClass('guidebar-current');
     }
-    if (cur === 3) {
+    if (cur === 4) {
         $('.cp-sPage').removeClass('hide');
     } else {
         $('.cp-sPage').addClass('hide');
@@ -82,6 +87,37 @@ function basicInfoCheck() {
     data.scope = parseInt($('input:radio[name="scope"]:checked').val());
     return true;
 }
+//信息定义检查
+function resultInfoCheck() {
+	  if ($("#notFoundContentType").val() != 'custom') {
+	    	data.notFoundContentType = $("#notFoundContentType").val();
+	  }else{
+		  data.notFoundContentType = $("#notFoundContentTypeCustom").val();
+	  }
+	  if ($("#notFoundResult").val() != '') {
+		 data.notFoundResult = $("#notFoundResult").val();
+	  }
+	  
+	  if ($("#blacklistIpCode").val() != '') {
+		 var code= parseInt($("#blacklistIpCode").val());
+		  if(isNaN(code)){
+			  alert('状态码必须为数字');
+			  return false;
+		  }
+		  data.blacklistIpCode = code;
+	  }
+	  
+	  if ($("#blacklistIpContentType").val() != 'custom') {
+	    	data.blacklistIpContentType = $("#blacklistIpContentType").val();
+	  }else{
+		  data.blacklistIpContentType = $("#blacklistIpContentTypeCustom").val();
+	  }
+	  if ($("#blacklistIpResult").val() != '') {
+		  data.blacklistIpResult =$("#blacklistIpResult").val();
+	  }
+	return true;
+}
+
 //服务器信息配置检查
 function serverInfoCheck() {
     var serverOptions = {};
@@ -181,12 +217,6 @@ function appConfigCheck() {
             data.serverOptions.custom=$("#custom").val();
         }
     }
-    if ($("#notFoundContentType").val() != '') {
-    	data.notFoundContentType = $("#notFoundContentType").val();
-    }
-    if ($("#notFoundResult").val() != '') {
-    	data.notFoundResult = $("#notFoundResult").val();
-    }
     if ($("#contentLength").val() != '') {
         data.contentLength = parseInt($("#contentLength").val());
     }
@@ -251,6 +281,26 @@ $(function () {
     isCreateHTTP();
     isCreateCORS();
 });
+
+//notFoundContentType 找不到路径(404) Content-Type:下拉框改变事件
+$("#notFoundContentType").change(function() {
+	if($(this).val()=="custom"){
+		$("#notFoundContentTypeCustom").show();
+	}else{
+		$("#notFoundContentTypeCustom").hide();
+	}
+});
+//blacklistIpContentType 在黑名单列表中返回Content-Type:下拉框改变事件
+$("#blacklistIpContentType").change(function() {
+	if($(this).val()=="custom"){
+		$("#blacklistIpContentTypeCustom").show();
+	}else{
+		$("#blacklistIpContentTypeCustom").hide();
+	}
+});
+
+
+
 //初始化事件
 init();
 

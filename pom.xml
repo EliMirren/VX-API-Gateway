@@ -223,8 +223,8 @@
 								<extraArguments>
 									<extraArgument>-Dfile.encoding=UTF-8</extraArgument>
 									<extraArgument>-Dvertx.cacheDirBase=../temp/file-cache</extraArgument>
-									<extraArgument>-Xmx2G</extraArgument>
-									<extraArgument>-Xms2G</extraArgument>
+									<!-- 调整内存大小 <extraArgument>-Xmx2G</extraArgument>
+									<extraArgument>-Xms2G</extraArgument> -->
 								</extraArguments>
 							</jvmSettings>
 						</program>

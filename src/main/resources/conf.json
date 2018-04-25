@@ -21,6 +21,6 @@
 		"driver_class": "org.sqlite.JDBC"
 	},
 	"clientConfig": {
-		"clientPort": 5056
+		"clientPort": 5256
 	}
 }

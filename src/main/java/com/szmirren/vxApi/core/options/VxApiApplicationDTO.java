@@ -3,6 +3,7 @@ package com.szmirren.vxApi.core.options;
 import java.time.Instant;
 
 import com.szmirren.vxApi.core.common.VxApiGatewayAttribute;
+import com.szmirren.vxApi.core.enums.ContentTypeEnum;
 
 import io.vertx.core.json.JsonObject;
 
@@ -20,22 +21,44 @@ public class VxApiApplicationDTO {
 	public final int DEFAULT_MAX_HEADER_SIZE = 8192;
 	public final boolean DEFAULT_KEEP_ALIVE = true;
 	public final String DEFAULT_NOT_FOUND_RESULT = "not found resource";
-
-	private String appName;// 网关应用的名称
-	private String describe;// 网关应用的描述
-	private long contentLength = -1;// 请求主体的最大长度-1无限制长度,默认-1
-	private int scope;// 网关应用的作用域0=测试版,1=预览版,2=正式版
-	private long sessionTimeOut = DEFAULT_SESSION_TIMEOUT;// 会话超时时间
-	private String sessionCookieName = VxApiGatewayAttribute.SESSION_COOKIE_NAME;// 会话的cookie名称
-	private int decoderInitialBufferSize = DEFAULT_DECODER_INITIAL_BUFFER_SIZE;// 设置解码缓存内容大小
-	private int maxPoolSize = DEFAULT_MAX_POOL_SIZE;// 设置交互线程数量
-	private int maxInitialLineLength = DEFAULT_MAX_INITIAL_LINE_LENGTH;// 请求大小
-	private int maxHeaderSize = DEFAULT_MAX_HEADER_SIZE;// 设置header大小
-	private boolean keepAlive = DEFAULT_KEEP_ALIVE;// 设置是否keepalive
-	private String notFoundContentType;// 找不到路径(404)返回什么Content-Type类型
-	private String notFoundResult = DEFAULT_NOT_FOUND_RESULT;// 找不到路径(404)状态码返回什么内容,默认not found resource
-	private VxApiServerOptions serverOptions = new VxApiServerOptions();// 网关应用的端口集合
-	private VxApiCorsOptions corsOptions;// 跨域处理
+	public final int DEFAULT_BLACKLIST_IP_CODE = 403;
+	public final String DEFAULT_BLACKLIST_IP_RESULT = "you can't access this service";
+	/** 网关应用的名称 */
+	private String appName;
+	/** 网关应用的描述 */
+	private String describe;
+	/** 请求主体的最大长度-1无限制长度,默认-1 */
+	private long contentLength = -1;
+	/** 网关应用的作用域0=测试版,1=预览版,2=正式版 */
+	private int scope;
+	/** 会话超时时间 */
+	private long sessionTimeOut = DEFAULT_SESSION_TIMEOUT;
+	/** 会话的cookie名称 */
+	private String sessionCookieName = VxApiGatewayAttribute.SESSION_COOKIE_NAME;
+	/** 设置解码缓存内容大小 */
+	private int decoderInitialBufferSize = DEFAULT_DECODER_INITIAL_BUFFER_SIZE;
+	/** 设置交互线程数量 */
+	private int maxPoolSize = DEFAULT_MAX_POOL_SIZE;
+	/** 请求大小 */
+	private int maxInitialLineLength = DEFAULT_MAX_INITIAL_LINE_LENGTH;
+	/** 设置header大小 */
+	private int maxHeaderSize = DEFAULT_MAX_HEADER_SIZE;
+	/** 设置是否keepalive */
+	private boolean keepAlive = DEFAULT_KEEP_ALIVE;
+	/** 找不到路径(404)返回什么Content-Type类型默认text/html;charset=UTF-8 */
+	private String notFoundContentType = ContentTypeEnum.HTML_UTF8.val();
+	/** 找不到路径(404)状态码返回什么内容,默认not found resource */
+	private String notFoundResult = DEFAULT_NOT_FOUND_RESULT;
+	/** 黑名单列表返回结果,状态码,默认403 */
+	private int blacklistIpCode = DEFAULT_BLACKLIST_IP_CODE;
+	/** 黑名单列表返回结果,返回什么Content-Type类型 */
+	private String blacklistIpContentType = ContentTypeEnum.HTML_UTF8.val();
+	/** 黑名单列表返回结果,默认you can't access this service */
+	private String blacklistIpResult = DEFAULT_BLACKLIST_IP_RESULT;
+	/** 网关应用的端口集合 */
+	private VxApiServerOptions serverOptions = new VxApiServerOptions();
+	/** 跨域处理 */
+	private VxApiCorsOptions corsOptions;
 	private Instant time;
 
 	private VxApiApplicationDTO() {
@@ -63,6 +86,11 @@ public class VxApiApplicationDTO {
 		this.keepAlive = options.isKeepAlive();
 		this.serverOptions = options.getServerOptions();
 		this.corsOptions = options.getCorsOptions();
+		this.notFoundContentType = options.getNotFoundContentType();
+		this.notFoundResult = options.getNotFoundResult();
+		this.blacklistIpCode = options.getBlacklistIpCode();
+		this.blacklistIpContentType = options.getBlacklistIpContentType();
+		this.blacklistIpResult = options.getBlacklistIpResult();
 	}
 
 	/**
@@ -83,12 +111,13 @@ public class VxApiApplicationDTO {
 		json.put("maxInitialLineLength", this.maxInitialLineLength);
 		json.put("maxHeaderSize", this.maxHeaderSize);
 		json.put("keepAlive", this.keepAlive);
-		if (this.notFoundContentType != null) {
-			json.put("notFoundContentType", this.notFoundContentType);
-		}
+		json.put("notFoundContentType", this.notFoundContentType);
 		if (this.notFoundResult != null) {
 			json.put("notFoundResult", this.notFoundResult);
 		}
+		json.put("blacklistIpCode", this.blacklistIpCode);
+		json.put("blacklistIpContentType", this.blacklistIpContentType);
+		json.put("blacklistIpResult", this.blacklistIpResult);
 		json.put("serverOptions", this.serverOptions.toJson());
 		if (this.corsOptions != null) {
 			json.put("corsOptions", this.corsOptions.toJson());
@@ -153,6 +182,15 @@ public class VxApiApplicationDTO {
 			}
 			if (obj.getValue("notFoundResult") instanceof String) {
 				options.setNotFoundResult(obj.getString("notFoundResult"));
+			}
+			if (obj.getValue("blacklistIpCode") instanceof Number) {
+				options.setBlacklistIpCode(((Number) obj.getValue("blacklistIpCode")).intValue());
+			}
+			if (obj.getValue("blacklistIpContentType") instanceof String) {
+				options.setBlacklistIpContentType(obj.getString("blacklistIpContentType"));
+			}
+			if (obj.getValue("blacklistIpResult") instanceof String) {
+				options.setBlacklistIpResult(obj.getString("blacklistIpResult"));
 			}
 			if (obj.getValue("serverOptions") instanceof JsonObject) {
 				// TODO 这里设置了ServerOption最大值与应用的一样
@@ -282,6 +320,30 @@ public class VxApiApplicationDTO {
 		this.keepAlive = keepAlive;
 	}
 
+	public int getBlacklistIpCode() {
+		return blacklistIpCode;
+	}
+
+	public void setBlacklistIpCode(int blacklistIpCode) {
+		this.blacklistIpCode = blacklistIpCode;
+	}
+
+	public String getBlacklistIpContentType() {
+		return blacklistIpContentType;
+	}
+
+	public void setBlacklistIpContentType(String blacklistIpContentType) {
+		this.blacklistIpContentType = blacklistIpContentType;
+	}
+
+	public String getBlacklistIpResult() {
+		return blacklistIpResult;
+	}
+
+	public void setBlacklistIpResult(String blacklistIpResult) {
+		this.blacklistIpResult = blacklistIpResult;
+	}
+
 	public String getNotFoundContentType() {
 		return notFoundContentType;
 	}
@@ -308,11 +370,10 @@ public class VxApiApplicationDTO {
 
 	@Override
 	public String toString() {
-		return "VxApiApplicationDTO [appName=" + appName + ", describe=" + describe + ", contentLength=" + contentLength
-				+ ", scope=" + scope + ", sessionTimeOut=" + sessionTimeOut + ", sessionCookieName=" + sessionCookieName
-				+ ", decoderInitialBufferSize=" + decoderInitialBufferSize + ", maxPoolSize=" + maxPoolSize
-				+ ", maxInitialLineLength=" + maxInitialLineLength + ", maxHeaderSize=" + maxHeaderSize + ", keepAlive="
-				+ keepAlive + ", notFoundContentType=" + notFoundContentType + ", notFoundResult=" + notFoundResult
+		return "VxApiApplicationDTO [appName=" + appName + ", describe=" + describe + ", contentLength=" + contentLength + ", scope=" + scope
+				+ ", sessionTimeOut=" + sessionTimeOut + ", sessionCookieName=" + sessionCookieName + ", decoderInitialBufferSize="
+				+ decoderInitialBufferSize + ", maxPoolSize=" + maxPoolSize + ", maxInitialLineLength=" + maxInitialLineLength + ", maxHeaderSize="
+				+ maxHeaderSize + ", keepAlive=" + keepAlive + ", notFoundContentType=" + notFoundContentType + ", notFoundResult=" + notFoundResult
 				+ ", serverOptions=" + serverOptions + ", corsOptions=" + corsOptions + ", time=" + time + "]";
 	}
 
