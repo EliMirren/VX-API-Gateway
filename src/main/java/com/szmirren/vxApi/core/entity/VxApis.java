@@ -18,23 +18,44 @@ import com.szmirren.vxApi.spi.handler.VxApiBeforeHandlerOptions;
  *
  */
 public class VxApis {
-	private String appName;// 应用网关的名字
-	private String apiName;// API的名字
-	private String apiDescribe;// API的描述
-	private Instant apiCreateTime;// API的创建时间
-	private TimeUnitEnum limitUnit;// 访问限制单位
-	private long apiLimit;// API访问限制次数
-	private long ipLimit;// IP访问限制次数
-	private String path;// 接口路径
-	private VxApiAuthOptions authOptions;// 权限配置信息
-	private VxApiBeforeHandlerOptions beforeHandlerOptions;// 前置处理器配置信息
-	private VxApiAfterHandlerOptions afterHandlerOptions;// 后置处理器配置信息
-	private String contentType;// 返回的Content-Type类型
-	private Set<String> consumes;// 接口consumes
-	private HttpMethodEnum method;// 请求方法类型
-	private List<VxApiEntranceParam> enterParam;// 参数的配置
-	private VxApiServerEntrance serverEntrance;// API 服务端入口
-	private VxApiResult result;// API返回结果
+	/** 应用网关的名字 */
+	private String appName;
+	/** API的名字 */
+	private String apiName;
+	/** API的描述 */
+	private String apiDescribe;
+	/** API的创建时间 */
+	private Instant apiCreateTime;
+	/** 访问限制单位 */
+	private TimeUnitEnum limitUnit;
+	/** API访问限制次数 */
+	private long apiLimit;
+	/** IP访问限制次数 */
+	private long ipLimit;
+	/** 是否透传body */
+	private boolean passBody;
+	/** 是否将body的参数映射到query允许被query访问 */
+	private boolean bodyAsQuery = true;
+	/** 接口路径 */
+	private String path;
+	/** 权限配置信息 */
+	private VxApiAuthOptions authOptions;
+	/** 前置处理器配置信息 */
+	private VxApiBeforeHandlerOptions beforeHandlerOptions;
+	/** 后置处理器配置信息 */
+	private VxApiAfterHandlerOptions afterHandlerOptions;
+	/** 返回的Content-Type类型 */
+	private String contentType;
+	/** 接口consumes */
+	private Set<String> consumes;
+	/** 请求方法类型 */
+	private HttpMethodEnum method;
+	/** 参数的配置 */
+	private List<VxApiEntranceParam> enterParam;
+	/** API 服务端入口 */
+	private VxApiServerEntrance serverEntrance;
+	/** API返回结果 */
+	private VxApiResult result;
 
 	public VxApis(VxApisDTO option) {
 		super();
@@ -48,6 +69,8 @@ public class VxApis {
 		this.limitUnit = option.getLimitUnit();
 		this.apiLimit = option.getApiLimit();
 		this.ipLimit = option.getIpLimit();
+		this.passBody = option.isPassBody();
+		this.bodyAsQuery = option.isBodyAsQuery();
 		this.authOptions = option.getAuthOptions();
 		this.beforeHandlerOptions = option.getBeforeHandlerOptions();
 		this.afterHandlerOptions = option.getAfterHandlerOptions();
@@ -110,6 +133,22 @@ public class VxApis {
 
 	public long getIpLimit() {
 		return ipLimit;
+	}
+
+	public boolean isPassBody() {
+		return passBody;
+	}
+
+	public void setPassBody(boolean passBody) {
+		this.passBody = passBody;
+	}
+
+	public boolean isBodyAsQuery() {
+		return bodyAsQuery;
+	}
+
+	public void setBodyAsQuery(boolean bodyAsQuery) {
+		this.bodyAsQuery = bodyAsQuery;
 	}
 
 	public VxApiAuthOptions getAuthOptions() {
@@ -202,12 +241,10 @@ public class VxApis {
 
 	@Override
 	public String toString() {
-		return "VxApis [apiName=" + apiName + ", apiDescribe=" + apiDescribe + ", apiCreateTime=" + apiCreateTime
-				+ ", limitUnit=" + limitUnit + ", apiLimit=" + apiLimit + ", ipLimit=" + ipLimit + ", path=" + path
-				+ ", authOptions=" + authOptions + ", beforeHandlerOptions=" + beforeHandlerOptions
-				+ ", afterHandlerOptions=" + afterHandlerOptions + ", contentType=" + contentType + ", consumes="
-				+ consumes + ", method=" + method + ", enterParam=" + enterParam + ", serverEntrance=" + serverEntrance
-				+ ", result=" + result + "]";
+		return "VxApis [apiName=" + apiName + ", apiDescribe=" + apiDescribe + ", apiCreateTime=" + apiCreateTime + ", limitUnit=" + limitUnit
+				+ ", apiLimit=" + apiLimit + ", ipLimit=" + ipLimit + ", path=" + path + ", authOptions=" + authOptions + ", beforeHandlerOptions="
+				+ beforeHandlerOptions + ", afterHandlerOptions=" + afterHandlerOptions + ", contentType=" + contentType + ", consumes=" + consumes
+				+ ", method=" + method + ", enterParam=" + enterParam + ", serverEntrance=" + serverEntrance + ", result=" + result + "]";
 	}
 
 }

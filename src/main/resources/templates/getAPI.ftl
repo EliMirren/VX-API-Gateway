@@ -129,6 +129,16 @@
 	                    </td>
 	                </tr>
                 </#if>
+                <#if context.api.passBody?exists>
+                	<tr>
+	                    <td width="50%" class="">
+	                        <span class="console-grey console-mr3">透传Body : </span>${context.api.passBody}
+	                    </td>
+	                    <td class="">
+	                        <span class="console-grey console-mr3 ">Body参数可以被Query获取  : </span><#if context.api.bodyAsQuery?exists>${context.api.bodyAsQuery}</#if>
+	                    </td>
+               		</tr>
+                </#if>
                 <tr>
                     <td colspan="2">
                         <span class="console-grey console-mr3 ">请求入参信息 : </span>

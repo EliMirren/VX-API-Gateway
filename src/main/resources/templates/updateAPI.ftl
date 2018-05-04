@@ -383,6 +383,7 @@
 							                            <select class="console-selectbox console-width-12 ng-pristine ng-valid paramChange" onchange="paramPsHandle(this)">
 							                                <option value="${item.position!}">${item.position!}</option>
 							                                <option value="QUERY">QUERY</option>
+							                                <option value="BODY">BODY</option>
 							                                <option value="PATH">PATH</option>
 							                                <option value="HEADER">HEADER</option>
 							                            </select>
@@ -422,15 +423,20 @@
                                         </tbody>
                                     </table>
                                     <div class="pagination-gird-container console-clearfix">
-                                            <span class="console-mr1 console-button-wrap ng-isolate-scope" icon="add"
-                                                  size="tiny" theme="green">
-                                                <a class="console-button console-button-green console-button-tiny addParams">
-                                                    <i ng-if="!!icon" class="icon-add"></i>
-                                                    <span>
-                                                        <span class="ng-scope ng-binding">增加一行</span>
-                                                    </span>
-                                                </a>
-                                            </span>
+                                        <span class=" console-button-wrap ng-isolate-scope" icon="add" size="tiny" theme="green" style="width: 100%;">
+                                           	<label style="float: left;cursor: pointer;font-weight: normal;margin: 5px 0 0 10px;">
+                                           		<input type="checkbox" id="passBody"<#if context.api.passBody?exists><#if context.api.passBody == true >checked="checked"</#if></#if>  onclick="passBodyFun()"> 透传Body
+                                       		</label>
+                                            <label style="float: left;cursor: pointer;font-weight: normal;margin: 5px 0 0 10px;" title="Body参数可以被Query获取,当Content-Type=application/x-www-form-urlencoded时有效,既query可以获取URL中的参数也可以获取body里面的参数">
+                                            	<input type="checkbox" id="bodyAsQuery" <#if context.api.bodyAsQuery?exists><#if context.api.bodyAsQuery == true >checked="checked"</#if></#if>  > Body参数可以被Query获取
+                                            </label>
+                                            <a class="console-button console-button-green console-button-tiny addParams" style="width: 85px">
+                                                <i ng-if="!!icon" class="icon-add"></i>
+                                                <span>
+                                                    <span class="ng-scope ng-binding">增加一条</span>
+                                                </span>
+                                            </a>
+                                        </span>
                                     </div>
                                     <div class="pagination-gird-container request-param-setter-errormessage ng-binding ng-hide">
                                         <i class="icon-no-2 console-mr1 console-inline-block"></i>
@@ -673,7 +679,7 @@
 					                    		<tr class="ng-scope">
 			                                        <td><input value="${item.apiParamName!}" class="console-textbox console-width-12 ng-pristine ng-valid ng-valid-pattern"></td>
 			                                        <td>
-			                                            <select class="console-selectbox console-width-12 ng-pristine ng-valid">
+			                                            <select class="console-selectbox console-width-12 ng-pristine ng-valid isPassSelectBody">
 				                                            <option value="QUERY" <#if item.apiParamPosition =="QUERY">selected="selected"</#if>>QUERY</option> 
 				                                            <option value="PATH" <#if item.apiParamPosition =="PATH">selected="selected"</#if>>PATH</option> 
 				                                            <option value="HEADER" <#if item.apiParamPosition =="HEADER">selected="selected"</#if>>HEADER</option>
@@ -681,7 +687,7 @@
 			                                        </td>
 			                                        <td><input value="${item.serParamName!}" class="console-textbox console-width-12 ng-pristine ng-valid"></td>
 			                                        <td>
-			                                        	<select class="console-selectbox console-width-12 ng-pristine ng-valid">
+			                                        	<select class="console-selectbox console-width-12 ng-pristine ng-valid isPassSelectBody">
 				                                        	<option value="QUERY" <#if item.serParamPosition =="QUERY">selected="selected"</#if>>QUERY</option> 
 				                                            <option value="PATH" <#if item.serParamPosition =="PATH">selected="selected"</#if>>PATH</option> 
 				                                            <option value="HEADER" <#if item.serParamPosition =="HEADER">selected="selected"</#if>>HEADER</option>
@@ -735,7 +741,7 @@
 										          <td><input value="${item.serParamName!}" class="console-textbox console-width-12 ng-pristine ng-valid ng-valid-pattern"></td>
 										          <td><input value="${item.paramValue!}" class="console-textbox console-width-12 ng-pristine ng-valid"></td>
 										          <td>
-										            <select class="console-selectbox console-width-12 ng-pristine ng-valid">
+										            <select class="console-selectbox console-width-12 ng-pristine ng-valid isPassSelectBody">
 										         	    <option value="QUERY" <#if item.serParamPosition =="QUERY">selected="selected"</#if>>QUERY</option> 
 			                                            <option value="PATH" <#if item.serParamPosition =="PATH">selected="selected"</#if>>PATH</option> 
 			                                            <option value="HEADER" <#if item.serParamPosition =="HEADER">selected="selected"</#if>>HEADER</option>
@@ -807,7 +813,7 @@
 										          </td>
 										          <td><input value="${item.serParamName!}" class="console-textbox console-width-12" type="text"></td>         
 										          <td>
-										          	<select class="console-selectbox console-width-12 ng-valid">
+										          	<select class="console-selectbox console-width-12 ng-valid isPassSelectBody">
 										            	<option value="QUERY" <#if item.serParamPosition =="QUERY">selected="selected"</#if>>QUERY</option> 
 			                                            <option value="PATH" <#if item.serParamPosition =="PATH">selected="selected"</#if>>PATH</option> 
 			                                            <option value="HEADER" <#if item.serParamPosition =="HEADER">selected="selected"</#if>>HEADER</option>

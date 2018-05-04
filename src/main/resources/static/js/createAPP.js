@@ -217,6 +217,14 @@ function appConfigCheck() {
             data.serverOptions.custom=$("#custom").val();
         }
     }
+    if($("#webClientCustom").val() != ''){
+    	if(!isJSON($("#webClientCustom").val())){
+    		alert("WebClient拓展配置必须为JSON格式");
+    		return false;
+    	}else{
+    		data.webClientCustom=$("#webClientCustom").val();
+    	}
+    }
     if ($("#contentLength").val() != '') {
         data.contentLength = parseInt($("#contentLength").val());
     }

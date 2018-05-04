@@ -17,21 +17,22 @@ import io.vertx.core.json.JsonObject;
  *
  */
 public class VxApiServerEntranceHttpOptions {
-	/**
-	 * 默认的请求超时时间
-	 */
+	/** 默认的请求超时时间 */
 	private final long DEFAULT_TIME_OUT = 6000L;
-	/**
-	 * 默认的请求超时时间
-	 */
+	/** 默认的请求超时时间 */
 	private final long DEFAULT_RETRY_TIME = 30000L;
-
-	private LoadBalanceEnum balanceType;// 负载均衡类型
-	private List<VxApiServerURL> serverUrls;// 服务器的服务路径
-	private HttpMethod method;// 请求的方式
-	private long timeOut = DEFAULT_TIME_OUT;// 连接超时时间默认6000ms
-	private long retryTime = DEFAULT_RETRY_TIME;// 当服务连接不可用时,重试连接服务的间隔时间,默认30000ms
-	private List<VxApiParamOptions> params;// 参数集
+	/** 负载均衡类型 */
+	private LoadBalanceEnum balanceType;
+	/** 服务器的服务路径 */
+	private List<VxApiServerURL> serverUrls;
+	/** 请求的方式 */
+	private HttpMethod method;
+	/** 连接超时时间默认6000ms */
+	private long timeOut = DEFAULT_TIME_OUT;
+	/** 当服务连接不可用时,重试连接服务的间隔时间,默认30000ms */
+	private long retryTime = DEFAULT_RETRY_TIME;
+	/** 参数集 */
+	private List<VxApiParamOptions> params;
 
 	/**
 	 * 将对象转换为JsonObject

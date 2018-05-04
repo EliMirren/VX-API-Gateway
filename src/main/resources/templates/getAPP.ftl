@@ -121,14 +121,18 @@ span {
 	</div>
 	<div class="list-group">
 		<a class="list-group-item" style="background-color: #eee"> 服务器参数配置
-		</a> <a class="list-group-item">请求主体的最大长度 : <span>${context.app.contentLength?c}</span></a>
+		</a> <a class="list-group-item">请求主体(Content-Length)最大长度限制: <span>${context.app.contentLength?c}</span></a>
 		<a class="list-group-item">会话超时时间 : <span>${context.app.sessionTimeOut?c} ms</span></a> 
 		<a class="list-group-item">会话的cookie名称 : <span>${context.app.sessionCookieName}</span></a>
 		<a class="list-group-item">HTTP对象解码器缓冲区大小 : <span>${context.app.decoderInitialBufferSize?c}</span></a>
 		<a class="list-group-item">API与后台服务器是否使用keepAlive : <span>${context.app.keepAlive?c}</span>
 		</a> <a class="list-group-item">API与后台服务器交互线程数 : <span>${context.app.maxPoolSize?c}</span></a>
-		<a class="list-group-item">参数值最大长度 : <span>${context.app.maxInitialLineLength?c}</span></a>
-		<a class="list-group-item">Header参数值最大长度 : <span>${context.app.maxHeaderSize?c}</span></a>
+		<a class="list-group-item">请求后端URL参数值最大总长度: <span>${context.app.maxInitialLineLength?c}</span></a>
+		<a class="list-group-item">请求后端Header参数值最大总长度: <span>${context.app.maxHeaderSize?c}</span></a>
+	</div>
+	<div class="list-group">
+		<a class="list-group-item" style="background-color: #eee"> 业务处理HttpClient拓展配置 </a> 
+		<a class="list-group-item">拓展配置 : <span>${context.app.webClientCustom!}</span></a>
 	</div>
 	<div class="list-group">
 		<a class="list-group-item" style="background-color: #eee"> 应用服务拓展配置 </a> 
