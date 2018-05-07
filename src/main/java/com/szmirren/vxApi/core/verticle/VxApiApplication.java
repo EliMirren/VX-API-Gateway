@@ -58,7 +58,6 @@ import io.vertx.core.net.PfxOptions;
 import io.vertx.ext.web.Route;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
-import io.vertx.ext.web.handler.BodyHandler;
 import io.vertx.ext.web.handler.CookieHandler;
 import io.vertx.ext.web.handler.CorsHandler;
 import io.vertx.ext.web.handler.SessionHandler;
@@ -210,7 +209,6 @@ public class VxApiApplication extends AbstractVerticle {
 		sessionHandler.setSessionCookieName(appOption.getSessionCookieName());
 		sessionHandler.setSessionTimeout(appOption.getSessionTimeOut());
 		httpRouter.route().handler(sessionHandler);
-		httpRouter.route().handler(BodyHandler.create().setUploadsDirectory("../temp/file-uploads").setBodyLimit(appOption.getContentLength()));
 		// 跨域处理
 		if (corsOptions != null) {
 			CorsHandler corsHandler = CorsHandler.create(corsOptions.getAllowedOrigin());
@@ -274,8 +272,6 @@ public class VxApiApplication extends AbstractVerticle {
 		sessionHandler.setSessionCookieName(appOption.getSessionCookieName());
 		sessionHandler.setSessionTimeout(appOption.getSessionTimeOut());
 		httpsRouter.route().handler(sessionHandler);
-		httpsRouter.route()
-				.handler(BodyHandler.create().setUploadsDirectory("../temp/file-uploads").setBodyLimit(appOption.getContentLength()));
 		// 跨域处理
 		if (corsOptions != null) {
 			CorsHandler corsHandler = CorsHandler.create(corsOptions.getAllowedOrigin());
@@ -493,13 +489,6 @@ public class VxApiApplication extends AbstractVerticle {
 				initApiLimit(api, limitRoute);
 				routes.add(limitRoute);
 			}
-			// 入口参数检查
-			if (api.getEnterParam() != null) {
-				Route checkRoute = router.route();// 权限认证的route;
-				initParamCheck(api, checkRoute);
-				routes.add(checkRoute);
-			}
-
 			// 认证处理器
 			if (api.getAuthOptions() != null) {
 				Route authRoute = router.route();// 权限认证的route;
@@ -682,11 +671,12 @@ public class VxApiApplication extends AbstractVerticle {
 	}
 
 	/**
-	 * 初始化参数检查
+	 * 初始化参数检查,参数检查已经交给处理器做了
 	 * 
 	 * @param api
 	 * @param route
 	 */
+	@Deprecated
 	public void initParamCheck(VxApis api, Route route) {
 		route.path(api.getPath());
 		if (api.getMethod() != HttpMethodEnum.ALL) {
@@ -807,7 +797,8 @@ public class VxApiApplication extends AbstractVerticle {
 	 * @throws MalformedURLException
 	 */
 	public void serverHttpTypeHandler(boolean isNext, VxApis api, Route route) throws NullPointerException, MalformedURLException {
-		VxApiRouteHandlerHttpService httpTypeHandler = VxApiRouteHandlerHttpService.create(appName, isNext, api, httpClient);
+		VxApiRouteHandlerHttpService httpTypeHandler = VxApiRouteHandlerHttpService.create(appName, appOption.getContentLength(), isNext, api,
+				httpClient);
 		route.handler(httpTypeHandler);
 	}
 

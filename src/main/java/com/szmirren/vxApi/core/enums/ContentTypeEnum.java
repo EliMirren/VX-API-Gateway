@@ -33,9 +33,7 @@ public enum ContentTypeEnum {
 	/** 内容: application/x-www-form-urlencoded;charset=UTF-8 */
 	FORM_UTF8("application/x-www-form-urlencoded;charset=UTF-8"),
 	/** 内容: application/octet-stream;charset=UTF-8 */
-	BINARY_UTF8("application/octet-stream;charset=UTF-8"),
-	/** 内容: Content-Type */
-	CONTENT_TYPE("Content-Type");
+	BINARY_UTF8("application/octet-stream;charset=UTF-8");
 
 	private String type;
 

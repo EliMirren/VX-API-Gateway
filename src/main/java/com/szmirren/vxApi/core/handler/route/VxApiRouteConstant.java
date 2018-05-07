@@ -7,12 +7,15 @@ package com.szmirren.vxApi.core.handler.route;
  *
  */
 public interface VxApiRouteConstant {
-	/**
-	 * 返回类型
-	 */
+	/** 返回类型 Content-Type */
 	public final static String CONTENT_TYPE = "Content-Type";
-	/**
-	 * 服务器类型
-	 */
+	/** 时间 Content-Length */
+	public final static String CONTENT_LENGTH = "Content-Length";
+	/** 服务器类型 Server */
 	public final static String SERVER = "Server";
+	/** 服务器类型 User-Agent */
+	public final static String USER_AGENT = "User-Agent";
+	/** 时间 Date */
+	public final static String DATE = "Date";
+
 }

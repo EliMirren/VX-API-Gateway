@@ -132,10 +132,10 @@
                 <#if context.api.passBody?exists>
                 	<tr>
 	                    <td width="50%" class="">
-	                        <span class="console-grey console-mr3">透传Body : </span>${context.api.passBody}
+	                        <span class="console-grey console-mr3">透传Body : </span>${context.api.passBody?c}
 	                    </td>
 	                    <td class="">
-	                        <span class="console-grey console-mr3 ">Body参数可以被Query获取  : </span><#if context.api.bodyAsQuery?exists>${context.api.bodyAsQuery}</#if>
+	                        <span class="console-grey console-mr3 ">Body参数可以被Query获取  : </span><#if context.api.bodyAsQuery?exists>${context.api.bodyAsQuery?c}</#if>
 	                    </td>
                		</tr>
                 </#if>
