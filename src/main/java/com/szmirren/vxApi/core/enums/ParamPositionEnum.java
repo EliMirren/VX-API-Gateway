@@ -7,5 +7,5 @@ package com.szmirren.vxApi.core.enums;
  *
  */
 public enum ParamPositionEnum {
-	PATH, QUERY, FROM, HEADER;
+	PATH, QUERY, BODY, HEADER;
 }

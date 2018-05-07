@@ -59,6 +59,8 @@ public class VxApiApplicationDTO {
 	private VxApiServerOptions serverOptions = new VxApiServerOptions();
 	/** 跨域处理 */
 	private VxApiCorsOptions corsOptions;
+	/** WebClient拓展配置 */
+	private String webClientCustom;
 	private Instant time;
 
 	private VxApiApplicationDTO() {
@@ -91,6 +93,7 @@ public class VxApiApplicationDTO {
 		this.blacklistIpCode = options.getBlacklistIpCode();
 		this.blacklistIpContentType = options.getBlacklistIpContentType();
 		this.blacklistIpResult = options.getBlacklistIpResult();
+		this.webClientCustom = options.getWebClientCustom();
 	}
 
 	/**
@@ -121,6 +124,9 @@ public class VxApiApplicationDTO {
 		json.put("serverOptions", this.serverOptions.toJson());
 		if (this.corsOptions != null) {
 			json.put("corsOptions", this.corsOptions.toJson());
+		}
+		if (this.webClientCustom != null) {
+			json.put("webClientCustom", this.webClientCustom);
 		}
 		if (time != null) {
 			json.put("time", time);
@@ -203,6 +209,10 @@ public class VxApiApplicationDTO {
 			if (obj.getValue("corsOptions") instanceof JsonObject) {
 				options.setCorsOptions(VxApiCorsOptions.fromJson(obj.getJsonObject("corsOptions")));
 			}
+			if (obj.getValue("webClientCustom") instanceof String) {
+				options.setWebClientCustom(obj.getString("webClientCustom"));
+			}
+
 			if (obj.getValue("time") instanceof Instant) {
 				options.setTime(obj.getInstant("time"));
 			} else if (obj.getValue("time") instanceof String) {
@@ -360,6 +370,14 @@ public class VxApiApplicationDTO {
 		this.notFoundResult = notFoundResult;
 	}
 
+	public String getWebClientCustom() {
+		return webClientCustom;
+	}
+
+	public void setWebClientCustom(String webClientCustom) {
+		this.webClientCustom = webClientCustom;
+	}
+
 	public Instant getTime() {
 		return time;
 	}
@@ -374,7 +392,9 @@ public class VxApiApplicationDTO {
 				+ ", sessionTimeOut=" + sessionTimeOut + ", sessionCookieName=" + sessionCookieName + ", decoderInitialBufferSize="
 				+ decoderInitialBufferSize + ", maxPoolSize=" + maxPoolSize + ", maxInitialLineLength=" + maxInitialLineLength + ", maxHeaderSize="
 				+ maxHeaderSize + ", keepAlive=" + keepAlive + ", notFoundContentType=" + notFoundContentType + ", notFoundResult=" + notFoundResult
-				+ ", serverOptions=" + serverOptions + ", corsOptions=" + corsOptions + ", time=" + time + "]";
+				+ ", blacklistIpCode=" + blacklistIpCode + ", blacklistIpContentType=" + blacklistIpContentType + ", blacklistIpResult="
+				+ blacklistIpResult + ", serverOptions=" + serverOptions + ", corsOptions=" + corsOptions + ", webClientCustom=" + webClientCustom
+				+ ", time=" + time + "]";
 	}
 
 }

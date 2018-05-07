@@ -351,15 +351,16 @@
                                         </tbody>
                                     </table>
                                     <div class="pagination-gird-container console-clearfix">
-                                            <span class="console-mr1 console-button-wrap ng-isolate-scope" icon="add"
-                                                  size="tiny" theme="green">
-                                                <a class="console-button console-button-green console-button-tiny addParams">
-                                                    <i ng-if="!!icon" class="icon-add"></i>
-                                                    <span>
-                                                        <span class="ng-scope ng-binding">增加一行</span>
-                                                    </span>
-                                                </a>
-                                            </span>
+                                        <span class=" console-button-wrap ng-isolate-scope" icon="add" size="tiny" theme="green" style="width: 100%;">
+                                           	<label style="float: left;cursor: pointer;font-weight: normal;margin: 5px 0 0 10px;"><input type="checkbox" id="passBody"  onclick="passBodyFun()"> 透传Body</label>
+                                            <label style="float: left;cursor: pointer;font-weight: normal;margin: 5px 0 0 10px;" title="Body参数可以被Query获取,当Content-Type=application/x-www-form-urlencoded时有效,既query可以获取URL中的参数也可以获取body里面的参数"><input type="checkbox" id="bodyAsQuery" checked="checked"> Body参数可以被Query获取</label>
+                                            <a class="console-button console-button-green console-button-tiny addParams" style="width: 85px">
+                                                <i ng-if="!!icon" class="icon-add"></i>
+                                                <span>
+                                                    <span class="ng-scope ng-binding">增加一条</span>
+                                                </span>
+                                            </a>
+                                        </span>
                                     </div>
                                     <div class="pagination-gird-container request-param-setter-errormessage ng-binding ng-hide">
                                         <i class="icon-no-2 console-mr1 console-inline-block"></i>

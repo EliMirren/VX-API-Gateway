@@ -234,7 +234,7 @@ public class ClientVerticle extends AbstractVerticle {
 	public void sysReplaceIpList(RoutingContext rct) {
 		LOG.info(MessageFormat.format("[user : {0}] 执行添加IP黑名单...", rct.session().<String>get("userName")));
 		JsonArray array = new JsonArray();
-		if (rct.getBody() != null || !"".equals(rct.getBodyAsString().equals(""))) {
+		if (rct.getBody() != null || !"".equals(rct.getBodyAsString())) {
 			array = new JsonArray(rct.getBodyAsString());
 		}
 		HttpServerResponse response = rct.response().putHeader(CONTENT_TYPE, CONTENT_VALUE_JSON_UTF8);

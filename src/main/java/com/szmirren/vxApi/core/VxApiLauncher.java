@@ -32,6 +32,7 @@ public class VxApiLauncher extends Launcher {
 		System.setProperty("thisVertxName", thisVertxName);
 		InternalLoggerFactory.setDefaultFactory(Log4J2LoggerFactory.INSTANCE);
 		System.setProperty("vertx.logger-delegate-factory-class-name", "io.vertx.core.logging.Log4j2LogDelegateFactory");
+		System.setProperty("vertx.disableDnsResolver", "true");
 		new VxApiLauncher().dispatch(args);
 	}
 

@@ -150,24 +150,38 @@ function testServerURL(ev) {
 
 // 添加透传参数
 function passParam() {
+	var bodySelect = isPassBody == true ? "" : "<option value='BODY'>BODY</option>";
     var html = `<tr  class="ng-scope">
           <td><input class="console-textbox console-width-12 ng-pristine ng-valid ng-valid-pattern" ></td>
            <td>
-            <select class="console-selectbox console-width-12 ng-pristine ng-valid" ><option value="QUERY" selected="selected">QUERY</option> <option value="PATH">PATH</option> <option value="HEADER">HEADER</option></select>
+            <select class="console-selectbox console-width-12 ng-pristine ng-valid isPassSelectBody" >
+            <option value="QUERY" selected="selected">QUERY</option> 
+            ${bodySelect}
+    		<option value="PATH">PATH</option> 
+            <option value="HEADER">HEADER</option></select>
           </td>
           <td ><input class="console-textbox console-width-12 ng-pristine ng-valid" ></td>
-          <td><select class="console-selectbox console-width-12 ng-pristine ng-valid" ><option value="QUERY" selected="selected">QUERY</option> <option value="PATH">PATH</option> <option value="HEADER">HEADER</option></select></td>
+          <td><select class="console-selectbox console-width-12 ng-pristine ng-valid isPassSelectBody" >
+          <option value="QUERY" selected="selected">QUERY</option> 
+          ${bodySelect}
+    	  <option value="PATH">PATH</option> 
+          <option value="HEADER">HEADER</option></select></td>
           <td style='text-align:center;'><a style="white-space:nowrap" ><span style='cursor:pointer;'  class="" onclick='delParam(this)'>移除</span></a></td>
         </tr>`;
     $('.passParamBody tbody').append(html);
 }
 // 添加常量参数
 function constantParam() {
+	var bodySelect = isPassBody == true ? "" : "<option value='BODY'>BODY</option>";
     var html = `<tr  class="ng-scope">
           <td><input class="console-textbox console-width-12 ng-pristine ng-valid ng-valid-pattern" ></td>
           <td ><input class="console-textbox console-width-12 ng-pristine ng-valid" ></td>
           <td>
-            <select class="console-selectbox console-width-12 ng-pristine ng-valid" ><option value="QUERY" selected="selected">QUERY</option> <option value="PATH">PATH</option> <option value="HEADER">HEADER</option></select>
+            <select class="console-selectbox console-width-12 ng-pristine ng-valid isPassSelectBody" >
+            <option value="QUERY" selected="selected">QUERY</option> 
+            ${bodySelect}
+    		<option value="PATH">PATH</option> 
+            <option value="HEADER">HEADER</option></select>
           </td>
           <td><input class="console-textbox console-width-12 ng-pristine ng-valid"></td>
           <td style='text-align:center;'><a style="white-space:nowrap" ><span style='cursor:pointer;'  class="" onclick='delParam(this)'>移除</span></a></td>
@@ -176,6 +190,7 @@ function constantParam() {
 }
 // 添加一行系统参数
 function systemParam() {
+	var bodySelect = isPassBody == true ? "" : "<option value='BODY'>BODY</option>";
     var html = `<tr  class="ng-scope">
           <td>
             <select class="console-selectbox console-width-12 ng-valid ng-dirty sysPN" onchange='sysParamChange(this)'>
@@ -192,7 +207,11 @@ function systemParam() {
           </td>
           <td ><input type='text' class="console-textbox console-width-12" ></td>         
           <td>
-            <select class="console-selectbox console-width-12 ng-valid" ><option value="QUERY" selected="selected">QUERY</option> <option value="PATH">PATH</option> <option value="HEADER">HEADER</option></select>
+            <select class="console-selectbox console-width-12 ng-valid isPassSelectBody" >
+            <option value="QUERY" selected="selected">QUERY</option> 
+            ${bodySelect}
+    		<option value="PATH">PATH</option> 
+            <option value="HEADER">HEADER</option></select>
           </td>
           <td class=" sysDescribe" style='text-align:center;' >请求客服端的ip地址</td>
           <td><a href="javascript:;" class=""><span onclick='delParam(this)'>移除</span></a></td>
@@ -261,6 +280,34 @@ function sysParamChange(ev) {
 function delParam(ev) {
     $(ev).parent().parent().parent().remove();
 }
+//是否透传body
+function passBodyFun() {
+    var isSelect=document.getElementById("passBody").checked;
+    isPassBody=isSelect;
+    isNeedClearSelect=true;
+}
+//标记是否需要清除select中的body
+var isNeedClearSelect=false;
+//当透传body是清除所有body选项
+function clearSelectBodyOption() {
+    var bodySelect=isPassBody==true?"":"<option value='BODY' >BODY</option>";
+    var selects = $(".isPassSelectBody");
+    for (var i = 0; i < selects.length; i++) {
+        var $select=$(selects[i]);
+        var option=$(selects[i]).val();
+        $select.html("");
+        var txt=bodySelect+"<option value='QUERY'>QUERY</option> <option value='PATH'>PATH</option> <option value='HEADER'>HEADER</option>";
+        $select.html($(txt));
+        var options =$select.find('option');
+        for(var j = 0; j < options.length; j++) {
+          if(options[j].value == option){
+              options[j].selected = true;
+              break;
+          }
+        }
+    }
+}
+
 // API信息定义
 var apiInfo = new Object();
 // 下一页
@@ -309,17 +356,21 @@ function apiNextPage(ev) {
     }
 
     if (cur === 3) {
+        if(isNeedClearSelect){
+            clearSelectBodyOption();
+        }
         $('.bParam-config tbody tr').not(':first').remove();
         let $nps = $('.newParam-setter table tr');
+        var bodySelect = isPassBody == true ? "" : "<option value='BODY'>BODY</option>";
         $nps.each(function (index, e) {
             if (index !== 0) {
                 let $parName = $(this).find('.paramName').val(),
                     $paramChange = $(this).find('.paramChange option:selected').text(),
                     $paramChange2 = $(this).find('.paramChange2 option:selected').text(),
-                    serPosition = '<option value="PATH" >PATH</option><option value="HEADER" >HEADER</option><option value="QUERY" selected="selected">QUERY</option>';
+                    serPosition = '<option value="QUERY">QUERY</option><option value="PATH" >PATH</option><option value="HEADER" >HEADER</option>';
                 html = `<tr class="ng-scope">
                     <td ><input maxlength="99" value="${$parName}"  class="console-textbox console-width-12 ng-pristine ng-valid ng-valid-pattern" type="text"></td>
-                    <td><select class="console-selectbox console-width-12 ng-pristine ng-valid" >${serPosition}</select></td>
+                    <td><select class="console-selectbox console-width-12 ng-pristine ng-valid" isPassSelectBody" >${bodySelect}${serPosition}</select></td>
                     <td class="" style="text-align: center;">${$parName}</td>
                     <td class="" style="text-align: center;">${$paramChange}</td>
                     <td class="" style="text-align: center;">${$paramChange2}</td>
@@ -577,6 +628,9 @@ function apiEnterInfo() {
         apiInfo.enterParam = [];
         apiInfo.enterParam = enterParam;
     }
+    isPassBody = document.getElementById("passBody").checked;
+    apiInfo.passBody = document.getElementById("passBody").checked;
+    apiInfo.bodyAsQuery = document.getElementById("bodyAsQuery").checked;
     return checkIsTrue;
 }
 // 入口参数编辑更多

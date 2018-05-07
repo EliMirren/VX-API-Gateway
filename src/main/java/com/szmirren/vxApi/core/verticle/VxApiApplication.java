@@ -106,7 +106,12 @@ public class VxApiApplication extends AbstractVerticle {
 			}
 			thisVertxName = System.getProperty("thisVertxName", "VX-API");
 			VxApiApplicationDTO app = VxApiApplicationDTO.fromJson(config().getJsonObject("appConfig"));
-			this.appOption = new VxApiApplicationOptions(app);
+			if (app.getWebClientCustom() != null) {
+				JsonObject custom = new JsonObject(app.getWebClientCustom());
+				this.appOption = new VxApiApplicationOptions(app, custom);
+			} else {
+				this.appOption = new VxApiApplicationOptions(app);
+			}
 			appName = appOption.getAppName();
 			this.serverOptions = appOption.getServerOptions();
 			if (LOG.isDebugEnabled()) {

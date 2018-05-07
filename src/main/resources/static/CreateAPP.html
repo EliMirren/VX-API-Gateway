@@ -289,10 +289,10 @@
                         <div class="console-panel-body console-p4 console-pt6 console-pb6">
                             <table width="100%" class="descriptionTable">
                                 <tr>
-                                    <td class="t-r" style="width: 30%">请求主体的最大长度既上传文件等大小限制:</td>
+                                    <td class="t-r" style="width: 30%">请求主体(Content-Length)的最大长度限制:</td>
                                     <td><input type="text" id="contentLength"
                                                class="console-textbox console-width-4 ng-pristine ng-valid"
-                                               placeholder="请求主体的最大长度既上传文件等大小限制,默认:-1无限制"></td>
+                                               placeholder="请求主体(Content-Length),默认:-1无限制"></td>
                                 </tr>
                                 <tr>
                                     <td class="t-r">会话超时时间(毫秒):</td>
@@ -322,27 +322,39 @@
                                                placeholder="API与后台服务器 既你自己的服务器 交互的连接池数量 默认:5"></td>
                                 </tr>
                                 <tr>
-                                    <td class="t-r" title="maxInitialLineLength">参数值最大总长度:</td>
+                                    <td class="t-r" title="maxInitialLineLength">请求后端URLURL参数值最大总长度:</td>
                                     <td><input type="text" id="maxInitialLineLength"
                                                class="console-textbox console-width-4 ng-pristine ng-valid"
-                                               placeholder="参数值最大总长度 默认:4096"></td>
+                                               placeholder="请求后端URL参数值最大长度限制 默认:4096"></td>
                                 </tr>
                                 <tr>
-                                    <td class="t-r" title="maxHeaderSize">header参数值最大总长度:</td>
+                                    <td class="t-r" title="maxHeaderSize">后端Header参数值最大总长度:</td>
                                     <td><input type="text" id="maxHeaderSize"
                                                class="console-textbox console-width-4 ng-pristine ng-valid"
-                                               placeholder="header参数值最大总长度 默认:4096"></td>
+                                               placeholder="请求后端Header参数值最大总长度 默认:4096"></td>
+                                </tr>
+                                <tr>
+                                    <td class="t-r" title="请求后端业务处理HttpClient拓展配置">HttpClient拓展配置:</td>
+                                    <td>
+                                        <div>
+                                            <a href="https://vertx.io/docs/apidocs/io/vertx/core/http/HttpClientOptions.html"
+                                               target="_blank">参考vert.x的HttpClient配置</a></div>
+                                        <textarea id="webClientCustom"
+                                                  class="console-textarea console-width-6 ng-pristine ng-valid"
+                                                  style="resize: none;" rows="4"
+                                                  placeholder="参考Vert.x中的HttpClientOptions服务配置,该配置作用于VX-API与后端服务交互的业务逻辑处理"></textarea>
+                                    </td>
                                 </tr>
                                 <tr>
                                     <td class="t-r" title="应用服务拓展配置">应用服务拓展配置:</td>
                                     <td>
                                         <div>
                                             <a href="http://vertx.io/docs/apidocs/io/vertx/core/http/HttpServerOptions.html"
-                                               target="_blank">参考vert.x服务配置</a></div>
+                                               target="_blank">参考vert.x的HttpServer服务配置</a></div>
                                         <textarea id="custom"
                                                   class="console-textarea console-width-6 ng-pristine ng-valid"
                                                   style="resize: none;" rows="4"
-                                                  placeholder="参考Vert.x中的HttpServerOptions服务配置"></textarea>
+                                                  placeholder="参考Vert.x中的HttpServerOptions服务配置,该配置作用于用户与VX-API交互"></textarea>
                                     </td>
                                 </tr>
                             </table>

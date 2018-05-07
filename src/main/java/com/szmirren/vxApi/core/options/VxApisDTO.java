@@ -25,23 +25,44 @@ import io.vertx.core.json.JsonObject;
  *
  */
 public class VxApisDTO {
-	private String appName;// 网关应用的名字
-	private String apiName;// API的名字
-	private String apiDescribe;// API的描述
-	private String path;// 接口路径
-	private String contentType;// 返回contentType值
-	private Instant apiCreateTime;// API的创建时间
-	private HttpMethodEnum method;// 请求采用的方式
-	private TimeUnitEnum limitUnit;// 流量限制的策略
-	private long apiLimit = -1;// API访问限制次数
-	private long ipLimit = -1;// IP访问限制次数
-	private Set<String> consumes;// 处理的请求类型consumes
-	private VxApiAuthOptions authOptions;// 权限认证配置信息
-	private VxApiBeforeHandlerOptions beforeHandlerOptions;// 前置处理器配置信息
-	private VxApiAfterHandlerOptions afterHandlerOptions;// 后置处理器配置信息
-	private List<VxApiEntranceParam> enterParam;// 参数的配置
-	private VxApiServerEntrance serverEntrance;// API 服务端入口
-	private VxApiResult result;// API返回结果
+	/** 网关应用的名字 */
+	private String appName;
+	/** API的名字 */
+	private String apiName;
+	/** API的描述 */
+	private String apiDescribe;
+	/** 接口路径 */
+	private String path;
+	/** 返回contentType值 */
+	private String contentType;
+	/** API的创建时间 */
+	private Instant apiCreateTime;
+	/** 请求采用的方式 */
+	private HttpMethodEnum method;
+	/** 流量限制的策略 */
+	private TimeUnitEnum limitUnit;
+	/** API访问限制次数 */
+	private long apiLimit = -1;
+	/** IP访问限制次数 */
+	private long ipLimit = -1;
+	/** 是否透传body */
+	private boolean passBody;
+	/** 是否将body的参数映射到query允许被query访问 */
+	private boolean bodyAsQuery = true;
+	/** 处理的请求类型consumes */
+	private Set<String> consumes;
+	/** 权限认证配置信息 */
+	private VxApiAuthOptions authOptions;
+	/** 前置处理器配置信息 */
+	private VxApiBeforeHandlerOptions beforeHandlerOptions;
+	/** 后置处理器配置信息 */
+	private VxApiAfterHandlerOptions afterHandlerOptions;
+	/** 参数的配置 */
+	private List<VxApiEntranceParam> enterParam;
+	/** API 服务端入口 */
+	private VxApiServerEntrance serverEntrance;
+	/** API返回结果 */
+	private VxApiResult result;
 
 	/**
 	 * 将对象转换为JsonObject
@@ -73,6 +94,8 @@ public class VxApisDTO {
 		}
 		json.put("apiLimit", this.apiLimit);
 		json.put("ipLimit", this.ipLimit);
+		json.put("passBody", passBody);
+		json.put("bodyAsQuery", bodyAsQuery);
 		if (authOptions != null) {
 			json.put("authOptions", authOptions.toJson());
 		}
@@ -138,6 +161,12 @@ public class VxApisDTO {
 		if (obj.getValue("ipLimit") instanceof Number) {
 			option.setIpLimit(((Number) obj.getValue("ipLimit")).longValue());
 		}
+		if (obj.getValue("passBody") instanceof Boolean) {
+			option.setPassBody(obj.getBoolean("passBody"));
+		}
+		if (obj.getValue("bodyAsQuery") instanceof Boolean) {
+			option.setBodyAsQuery(obj.getBoolean("bodyAsQuery"));
+		}
 		if (obj.getValue("method") instanceof String) {
 			option.setMethod(HttpMethodEnum.valueOf(obj.getString("method").trim()));
 		}
@@ -154,8 +183,7 @@ public class VxApisDTO {
 			option.setAuthOptions(VxApiAuthOptions.fromJson(obj.getJsonObject("authOptions")));
 		}
 		if (obj.getValue("beforeHandlerOptions") instanceof JsonObject) {
-			option.setBeforeHandlerOptions(
-					VxApiBeforeHandlerOptions.fromJson(obj.getJsonObject("beforeHandlerOptions")));
+			option.setBeforeHandlerOptions(VxApiBeforeHandlerOptions.fromJson(obj.getJsonObject("beforeHandlerOptions")));
 		}
 		if (obj.getValue("afterHandlerOptions") instanceof JsonObject) {
 			option.setAfterHandlerOptions(VxApiAfterHandlerOptions.fromJson(obj.getJsonObject("afterHandlerOptions")));
@@ -242,6 +270,22 @@ public class VxApisDTO {
 		return ipLimit;
 	}
 
+	public boolean isPassBody() {
+		return passBody;
+	}
+
+	public void setPassBody(boolean passBody) {
+		this.passBody = passBody;
+	}
+
+	public boolean isBodyAsQuery() {
+		return bodyAsQuery;
+	}
+
+	public void setBodyAsQuery(boolean bodyAsQuery) {
+		this.bodyAsQuery = bodyAsQuery;
+	}
+
 	public HttpMethodEnum getMethod() {
 		return method;
 	}
@@ -316,12 +360,11 @@ public class VxApisDTO {
 
 	@Override
 	public String toString() {
-		return "VxApisDTO [appName=" + appName + ", apiName=" + apiName + ", apiDescribe=" + apiDescribe + ", path="
-				+ path + ", contentType=" + contentType + ", apiCreateTime=" + apiCreateTime + ", method=" + method
-				+ ", limitUnit=" + limitUnit + ", apiLimit=" + apiLimit + ", ipLimit=" + ipLimit + ", consumes="
-				+ consumes + ", authOptions=" + authOptions + ", beforeHandlerOptions=" + beforeHandlerOptions
-				+ ", afterHandlerOptions=" + afterHandlerOptions + ", enterParam=" + enterParam + ", serverEntrance="
-				+ serverEntrance + ", result=" + result + "]";
+		return "VxApisDTO [appName=" + appName + ", apiName=" + apiName + ", apiDescribe=" + apiDescribe + ", path=" + path + ", contentType="
+				+ contentType + ", apiCreateTime=" + apiCreateTime + ", method=" + method + ", limitUnit=" + limitUnit + ", apiLimit=" + apiLimit
+				+ ", ipLimit=" + ipLimit + ", passBody=" + passBody + ", bodyAsQuery=" + bodyAsQuery + ", consumes=" + consumes + ", authOptions="
+				+ authOptions + ", beforeHandlerOptions=" + beforeHandlerOptions + ", afterHandlerOptions=" + afterHandlerOptions + ", enterParam="
+				+ enterParam + ", serverEntrance=" + serverEntrance + ", result=" + result + "]";
 	}
 
 }

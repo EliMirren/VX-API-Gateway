@@ -25,7 +25,7 @@
 <div class="container">
     <ol class="breadcrumb">
         <li>
-            <a href="javascript:history.go(-1);">应用列表</a>
+            <a href="javascript:history.go(-1);">应用详情</a>
         </li>
         <li>修改网关应用</li>
     </ol>
@@ -355,10 +355,10 @@
                         <div class="console-panel-body console-p4 console-pt6 console-pb6">
                             <table width="100%" class="descriptionTable">
                                 <tr>
-                                    <td class="t-r" style="width: 30%">请求主体的最大长度既上传文件等大小限制:</td>
+                                    <td class="t-r" style="width: 30%">请求主体(Content-Length)最大长度限制:</td>
                                     <td><input type="text" id="contentLength"
                                                class="console-textbox console-width-4 ng-pristine ng-valid"
-                                               placeholder="请求主体的最大长度既上传文件等大小限制,默认:-1无限制"
+                                               placeholder="请求主体(Content-Length)最大长度限制,默认:-1无限制"
                                                value="${context.app.contentLength?c}"
                                                ></td>
                                 </tr>
@@ -400,26 +400,38 @@
                                                ></td>
                                 </tr>
                                 <tr>
-                                    <td class="t-r" title="maxInitialLineLength">参数值最大总长度:</td>
+                                    <td class="t-r" title="maxInitialLineLength">请求后端URL参数值最大总长度:</td>
                                     <td><input type="text" id="maxInitialLineLength"
                                                class="console-textbox console-width-4 ng-pristine ng-valid"
-                                               placeholder="参数值最大总长度 默认:4096"
+                                               placeholder="请求后端URL参数值最大总长度 默认:4096"
                                                value="${context.app.maxInitialLineLength?c}"
                                                ></td>
                                 </tr>
                                 <tr>
-                                    <td class="t-r" title="maxHeaderSize">header参数值最大总长度:</td>
+                                    <td class="t-r" title="maxHeaderSize">请求后端Header参数值最大总长度:</td>
                                     <td><input type="text" id="maxHeaderSize"
                                                class="console-textbox console-width-4 ng-pristine ng-valid"
-                                               placeholder="header参数值最大总长度 默认:4096"
+                                               placeholder="请求后端Header参数值最大总长度 默认:4096"
                                                value="${context.app.maxHeaderSize?c}"
                                                ></td>
+                                </tr>
+                                <tr>
+                                    <td class="t-r" title="请求后端业务处理HttpClient拓展配置">HttpClient拓展配置:</td>
+                                    <td>
+                                        <div>
+                                            <a href="https://vertx.io/docs/apidocs/io/vertx/core/http/HttpClientOptions.html"
+                                               target="_blank">参考vert.x的HttpClient配置</a></div>
+                                        <textarea id="webClientCustom"
+                                                  class="console-textarea console-width-6 ng-pristine ng-valid"
+                                                  style="resize: none;" rows="4"
+                                                  placeholder="参考Vert.x中的HttpClientOptions服务配置,该配置作用于VX-API与后端服务交互的业务逻辑处理"><#t>${context.app.webClientCustom!}<#t></textarea>
+                                    </td>
                                 </tr>
                                 <tr>
                                     <td class="t-r" title="应用服务拓展配置">应用服务拓展配置:</td>
                                     <td>
                                         <div>
-                                            <a href="http://vertx.io/docs/apidocs/io/vertx/core/http/HttpServerOptions.html" target="_blank">参考vert.x服务配置</a></div>
+                                            <a href="http://vertx.io/docs/apidocs/io/vertx/core/http/HttpServerOptions.html" target="_blank">参考vert.x的HttpServer服务配置</a></div>
                                         <textarea id="custom" class="console-textarea console-width-6 ng-pristine ng-valid" style="resize: none;" rows="4" placeholder="参考Vert.x中的HttpServerOptions服务配置"><#t>${context.app.serverOptions.custom!}<#t></textarea>
                                     </td>
                                 </tr>

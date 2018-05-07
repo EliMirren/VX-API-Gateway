@@ -40,13 +40,32 @@ public class VxApiApplicationOptions extends WebClientOptions {
 	private String blacklistIpContentType;
 	/** 黑名单列表返回结果,默认you can't access this service */
 	private String blacklistIpResult;
-
+	/** WebClient拓展配置 */
+	private String webClientCustom;
 	/**
-	 * 通过VxApiApplicationDTO实例化一个网关应用配置
+	 * 通过VxApiApplicationDTO实例化一个带拓展配置的网关应用配置
+	 */
+	public VxApiApplicationOptions(VxApiApplicationDTO option, JsonObject custom) {
+		super(custom);
+		init(option);
+	}
+	/**
+	 * 通过VxApiApplicationDTO实例化一个不带拓展配置的网关应用配置
+	 * @param option
 	 */
 	public VxApiApplicationOptions(VxApiApplicationDTO option) {
 		super();
+		init(option);
+	}
+
+	/**
+	 * 初始化配置
+	 * 
+	 * @param option
+	 */
+	public void init(VxApiApplicationDTO option) {
 		super.setUserAgent(VxApiGatewayAttribute.VX_API_USER_AGENT);
+		this.webClientCustom = option.getWebClientCustom();
 		this.appName = option.getAppName();
 		this.describe = option.getDescribe();
 		this.serverOptions = option.getServerOptions();
@@ -335,6 +354,22 @@ public class VxApiApplicationOptions extends WebClientOptions {
 	 */
 	public void setBlacklistIpResult(String blacklistIpResult) {
 		this.blacklistIpResult = blacklistIpResult;
+	}
+	/**
+	 * 获得客户端拓展配置
+	 * 
+	 * @return
+	 */
+	public String getWebClientCustom() {
+		return webClientCustom;
+	}
+	/**
+	 * 设置客户端拓展配置
+	 * 
+	 * @param webClientCustom
+	 */
+	public void setWebClientCustom(String webClientCustom) {
+		this.webClientCustom = webClientCustom;
 	}
 
 }
