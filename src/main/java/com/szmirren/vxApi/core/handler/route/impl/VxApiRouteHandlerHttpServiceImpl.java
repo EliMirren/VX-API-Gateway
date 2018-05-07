@@ -2,6 +2,7 @@ package com.szmirren.vxApi.core.handler.route.impl;
 
 import java.net.ConnectException;
 import java.net.MalformedURLException;
+import java.nio.charset.Charset;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -11,6 +12,7 @@ import java.util.concurrent.TimeoutException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.szmirren.vxApi.core.common.HttpUtils;
 import com.szmirren.vxApi.core.common.StrUtil;
 import com.szmirren.vxApi.core.common.VxApiEventBusAddressConstant;
 import com.szmirren.vxApi.core.common.VxApiGatewayAttribute;
@@ -36,12 +38,14 @@ import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.CaseInsensitiveHeaders;
 import io.vertx.core.http.HttpClient;
+import io.vertx.core.http.HttpClientOptions;
 import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.streams.Pump;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.client.WebClient;
+
 /**
  * VxApiRoute HTTP/HTTPS服务类型的处理器
  * 
@@ -94,8 +98,7 @@ public class VxApiRouteHandlerHttpServiceImpl implements VxApiRouteHandlerHttpSe
 	 * @throws NullPointerException
 	 *           少了参数
 	 */
-	public VxApiRouteHandlerHttpServiceImpl(String appName, boolean isNext, VxApis api, HttpClient httpClient)
-			throws NullPointerException, MalformedURLException {
+	public VxApiRouteHandlerHttpServiceImpl(String appName, boolean isNext, VxApis api, HttpClient httpClient) throws NullPointerException, MalformedURLException {
 		super();
 		this.thisVertxName = System.getProperty("thisVertxName", "VX-API");
 		this.appName = appName;
@@ -121,8 +124,7 @@ public class VxApiRouteHandlerHttpServiceImpl implements VxApiRouteHandlerHttpSe
 	@Override
 	public void handle(RoutingContext rct) {
 		// 当前服务的response
-		HttpServerResponse rctResponse = rct.response().putHeader(VxApiRouteConstant.SERVER, VxApiGatewayAttribute.FULL_NAME)
-				.putHeader(VxApiRouteConstant.CONTENT_TYPE, api.getContentType());
+		HttpServerResponse rctResponse = rct.response().putHeader(VxApiRouteConstant.SERVER, VxApiGatewayAttribute.FULL_NAME).putHeader(VxApiRouteConstant.CONTENT_TYPE, api.getContentType());
 		// 判断后台服务是否有可用连接,有可用连接进行请求,如果没有可用连接进行重试
 		if (policy.isHaveService()) {
 			// 后台服务连接信息
@@ -144,11 +146,27 @@ public class VxApiRouteHandlerHttpServiceImpl implements VxApiRouteHandlerHttpSe
 			MultiMap rctHeaders = rctRequest.headers();
 			MultiMap rctQuery = rctRequest.params();
 			// 用户请求的Content-Type类型
-			int uctype = getHeaderContentTypeAndJudge(rctRequest);
-			if (uctype == 0 || uctype == 1) {
-				if (api.isBodyAsQuery()) {
-
+			if (!api.isPassBody()) {
+				MultiMap rctBody = new CaseInsensitiveHeaders();
+				ContentType uctype = loadContentType(rctRequest);
+				if (uctype.isNullOrUrlencoded()) {
+					if (contentLength != null) {
+						rctRequest.bodyHandler(body -> {
+							bodyUrlParamToBodyParams(body, rctBody, uctype.getCharset());
+						});
+					} else {
+						rctRequest.handler(body -> {
+							bodyUrlParamToBodyParams(body, rctBody, uctype.getCharset());
+						});
+					}
 				}
+				if (api.isBodyAsQuery()) {
+					rctQuery.addAll(rctBody);
+				}
+				MultiMap reqHeader = new CaseInsensitiveHeaders();
+
+			} else {
+
 			}
 
 		} else {
@@ -159,45 +177,38 @@ public class VxApiRouteHandlerHttpServiceImpl implements VxApiRouteHandlerHttpSe
 			} else {
 				rctResponse.setStatusCode(api.getResult().getCantConnServerStatus()).end(api.getResult().getCantConnServerExample());
 			}
-			LOG.warn(
-					String.format("应用:%s -> API:%s,后台服务已不存在可用的后台服务URL,VX将以设定的重试时间:%d进行重试", appName, api.getApiName(), serOptions.getRetryTime()));
+			LOG.warn(String.format("应用:%s -> API:%s,后台服务已不存在可用的后台服务URL,VX将以设定的重试时间:%d进行重试", appName, api.getApiName(), serOptions.getRetryTime()));
 			// 进入重试连接后台服务
 			retryConnServer(rct.vertx());
 		}
 	}
+
 	/**
-	 * 获得Content-Type并判断Content-Type是什么类型,<br>
-	 * 0=Content-Type=null<br>
-	 * 1=application/x-www-form-urlencoded<br>
-	 * 2=multipart/form-data<br>
+	 * 加载Content-Type类型
 	 * 
-	 * @param headers
+	 * @param request
 	 * @return
 	 */
-	public int getHeaderContentTypeAndJudge(HttpServerRequest request) {
+	public ContentType loadContentType(HttpServerRequest request) {
 		String contentType = request.headers().get(ContentTypeEnum.CONTENT_TYPE.val());
 		if (contentType == null) {
 			if (request.headers().get(ContentTypeEnum.CONTENT_TYPE.val().toLowerCase()) == null) {
-				return 0;
+				return new ContentType(null);
 			} else {
 				contentType = request.headers().get(ContentTypeEnum.CONTENT_TYPE.val().toLowerCase());
 			}
 		}
-		if (contentType.toLowerCase().startsWith(ContentTypeEnum.MULTIPART_FORM_DATA.val())) {
-			return 1;
-		}
-		if (contentType.toLowerCase().startsWith(ContentTypeEnum.APPLICATION_X_WWW_FORM_URLENCODED.val())) {
-			return 2;
-		}
-		return 0;
+		return new ContentType(contentType);
 	}
+
 	/**
 	 * 加载body中url参数
 	 * 
 	 * @param request
 	 */
-	public void bodyUrlParamToParams(Buffer body, MultiMap params) {
-			
+	public void bodyUrlParamToBodyParams(Buffer body, MultiMap params, Charset charset) {
+		String data = body.toString();
+		params.addAll(HttpUtils.decoderUriParams(data, charset));
 	}
 
 	public void oldhandle(RoutingContext rct) {
@@ -273,8 +284,8 @@ public class VxApiRouteHandlerHttpServiceImpl implements VxApiRouteHandlerHttpSe
 			request.handler(resp -> {
 				// 设置请求响应时间
 				trackInfo.setResponseTime(Instant.now());
-				HttpServerResponse response = rct.response().putHeader(VxApiRouteConstant.SERVER, VxApiGatewayAttribute.FULL_NAME)
-						.putHeader(VxApiRouteConstant.CONTENT_TYPE, api.getContentType()).setChunked(true);
+				HttpServerResponse response = rct.response().putHeader(VxApiRouteConstant.SERVER, VxApiGatewayAttribute.FULL_NAME).putHeader(VxApiRouteConstant.CONTENT_TYPE, api.getContentType())
+						.setChunked(true);
 				Pump.pump(resp, response).start();
 				resp.endHandler(end -> {
 					// 透传header
@@ -303,8 +314,7 @@ public class VxApiRouteHandlerHttpServiceImpl implements VxApiRouteHandlerHttpSe
 					rct.put(VxApiAfterHandler.PREV_IS_SUCCESS_KEY, Future.<Boolean>failedFuture(e));// 告诉后置处理器当前操作成功执行
 					rct.next();
 				} else {
-					HttpServerResponse response = rct.response().putHeader(VxApiRouteConstant.SERVER, VxApiGatewayAttribute.FULL_NAME)
-							.putHeader(VxApiRouteConstant.CONTENT_TYPE, api.getContentType());
+					HttpServerResponse response = rct.response().putHeader(VxApiRouteConstant.SERVER, VxApiGatewayAttribute.FULL_NAME).putHeader(VxApiRouteConstant.CONTENT_TYPE, api.getContentType());
 					// 如果是连接异常返回无法连接的错误信息,其他异常返回相应的异常
 					if (e instanceof ConnectException || e instanceof TimeoutException) {
 						response.setStatusCode(api.getResult().getCantConnServerStatus()).end(api.getResult().getCantConnServerExample());
@@ -364,9 +374,8 @@ public class VxApiRouteHandlerHttpServiceImpl implements VxApiRouteHandlerHttpSe
 				rct.put(VxApiAfterHandler.PREV_IS_SUCCESS_KEY, Future.<Boolean>failedFuture(new ConnectException("无法连接上后台交互的服务器")));
 				rct.next();
 			} else {
-				rct.response().putHeader(VxApiRouteConstant.SERVER, VxApiGatewayAttribute.FULL_NAME)
-						.putHeader(VxApiRouteConstant.CONTENT_TYPE, api.getContentType()).setStatusCode(api.getResult().getCantConnServerStatus())
-						.end(api.getResult().getCantConnServerExample());
+				rct.response().putHeader(VxApiRouteConstant.SERVER, VxApiGatewayAttribute.FULL_NAME).putHeader(VxApiRouteConstant.CONTENT_TYPE, api.getContentType())
+						.setStatusCode(api.getResult().getCantConnServerStatus()).end(api.getResult().getCantConnServerExample());
 			}
 			if (!policy.isCheckWaiting()) {
 				if (webClient == null) {
@@ -438,7 +447,14 @@ public class VxApiRouteHandlerHttpServiceImpl implements VxApiRouteHandlerHttpSe
 		}
 	}
 
-	private boolean checkAndLoadHeader() {
+	/**
+	 * 检查Header并加载请求所需要的参数
+	 * 
+	 * @param request
+	 * @param header
+	 * @return
+	 */
+	private boolean checkAndLoadHeader(HttpServerRequest request, MultiMap header) {
 		return false;
 	}
 
@@ -471,6 +487,115 @@ public class VxApiRouteHandlerHttpServiceImpl implements VxApiRouteHandlerHttpSe
 				policy.setCheckWaiting(false);
 			});
 		}
+	}
+
+	/**
+	 * 用户请求的ContentType
+	 * 
+	 * @author <a href="http://szmirren.com">Mirren</a>
+	 *
+	 */
+	class ContentType {
+		private String contentType;
+		private String boundary;
+		private Charset charset;
+
+		/**
+		 * 
+		 * @param contentType
+		 */
+		public ContentType(String contentType) {
+			super();
+			if (contentType != null) {
+				init(contentType);
+			}
+		}
+
+		/**
+		 * 初始化
+		 * 
+		 * @param contentType
+		 */
+		public void init(String contentType) {
+			String[] item = contentType.split(";");
+			this.contentType = item[0];
+			if (item.length > 1) {
+				if (item[1].indexOf("=") != -1) {
+					String[] split = item[1].split("=");
+					initVar(split[0].trim(), split[1].trim());
+				}
+			}
+			if (item.length > 2) {
+				if (item[2].indexOf("=") != -1) {
+					String[] split = item[1].split("=");
+					initVar(split[0].trim(), split[1].trim());
+				}
+			}
+		}
+
+		/**
+		 * 根据类型进行初始化数据
+		 * 
+		 * @param type
+		 * @param value
+		 */
+		public void initVar(String type, String value) {
+			if ("charset".equalsIgnoreCase(type)) {
+				try {
+					this.charset = Charset.forName(value);
+				} catch (Exception e) {
+					LOG.error("解析ContentType中的charset并转化为响应解码器-->失败:", e);
+				}
+			} else if ("boundary".equalsIgnoreCase(type)) {
+				this.boundary = value;
+			}
+		}
+
+		/**
+		 * Content-Type是否为:null或者application/x-www-form-urlencoded
+		 * 
+		 * @return
+		 */
+		public boolean isNullOrUrlencoded() {
+			return contentType == null || "application/x-www-form-urlencoded".equalsIgnoreCase(contentType);
+		}
+
+		/**
+		 * Content-Type是否为:multipart/form-data
+		 * 
+		 * @return
+		 */
+		public boolean isFormData() {
+			return "multipart/form-data".equalsIgnoreCase(contentType);
+		}
+
+		/**
+		 * 获得content类型
+		 * 
+		 * @return
+		 */
+		public String getContentType() {
+			return contentType;
+		}
+
+		/**
+		 * 获得Boundary
+		 * 
+		 * @return
+		 */
+		public String getBoundary() {
+			return boundary;
+		}
+
+		/**
+		 * 获得字符编码
+		 * 
+		 * @return
+		 */
+		public Charset getCharset() {
+			return charset;
+		}
+
 	}
 
 }
