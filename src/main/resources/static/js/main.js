@@ -370,7 +370,7 @@ function apiNextPage(ev) {
                     serPosition = '<option value="QUERY">QUERY</option><option value="PATH" >PATH</option><option value="HEADER" >HEADER</option>';
                 html = `<tr class="ng-scope">
                     <td ><input maxlength="99" value="${$parName}"  class="console-textbox console-width-12 ng-pristine ng-valid ng-valid-pattern" type="text"></td>
-                    <td><select class="console-selectbox console-width-12 ng-pristine ng-valid" isPassSelectBody" >${bodySelect}${serPosition}</select></td>
+                    <td><select class="console-selectbox console-width-12 ng-pristine ng-valid" isPassSelectBody" >${serPosition}${bodySelect}</select></td>
                     <td class="" style="text-align: center;">${$parName}</td>
                     <td class="" style="text-align: center;">${$paramChange}</td>
                     <td class="" style="text-align: center;">${$paramChange2}</td>

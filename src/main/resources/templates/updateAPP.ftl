@@ -358,7 +358,7 @@
                                     <td class="t-r" style="width: 30%">请求主体(Content-Length)最大长度限制:</td>
                                     <td><input type="text" id="contentLength"
                                                class="console-textbox console-width-4 ng-pristine ng-valid"
-                                               placeholder="请求主体(Content-Length)最大长度限制,默认:-1无限制"
+                                               placeholder="请求主体(Content-Length)最大长度限制,默认:-1无限制,透传body无效"
                                                value="${context.app.contentLength?c}"
                                                ></td>
                                 </tr>

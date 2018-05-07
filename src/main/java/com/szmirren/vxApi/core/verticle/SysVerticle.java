@@ -216,8 +216,8 @@ public class SysVerticle extends AbstractVerticle {
 		String apiName = msg.body().getString("apiName");
 		String key = appName + "-" + apiName;
 		JsonObject result = new JsonObject();
-		result.put("rc", requstCount.get(key) == null ? 0 : requstCount.get(key));
-		result.put("ec", requstFailedCount.get(key) == null ? 0 : requstFailedCount.get(key));
+		result.put("rc", requstCount.get(key) == null ? 0L : requstCount.get(key));
+		result.put("ec", requstFailedCount.get(key) == null ? 0L : requstFailedCount.get(key));
 		result.put("track", trackSucceededMap.get(key) == null ? new JsonObject() : trackSucceededMap.get(key));
 		msg.reply(result);
 	}

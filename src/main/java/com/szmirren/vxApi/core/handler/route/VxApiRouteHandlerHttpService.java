@@ -23,8 +23,8 @@ public interface VxApiRouteHandlerHttpService extends Handler<RoutingContext> {
 	 * @param appName
 	 * @return
 	 */
-	static VxApiRouteHandlerHttpService create(String appName, boolean isNext, VxApis api, HttpClient httpClient)
+	static VxApiRouteHandlerHttpService create(String appName, long maxContentLength, boolean isNext, VxApis api, HttpClient httpClient)
 			throws NullPointerException, MalformedURLException {
-		return new VxApiRouteHandlerHttpServiceImpl(appName, isNext, api, httpClient);
+		return new VxApiRouteHandlerHttpServiceImpl(appName, maxContentLength, isNext, api, httpClient);
 	}
 }

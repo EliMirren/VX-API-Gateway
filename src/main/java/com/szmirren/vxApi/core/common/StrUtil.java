@@ -1,9 +1,12 @@
 package com.szmirren.vxApi.core.common;
 
+import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.format.DateTimeParseException;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
+import java.util.SimpleTimeZone;
 
 import com.szmirren.vxApi.core.enums.ParamTypeEnum;
 
@@ -195,6 +198,17 @@ public class StrUtil {
 	 */
 	public static String[] asStrArray(String... str) {
 		return str;
+	}
+	/**
+	 * 获得RFC822规范的Date
+	 * 
+	 * @param date
+	 * @return
+	 */
+	public static String getRfc822DateFormat(Date date) {
+		SimpleDateFormat rfc822DateFormat = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z", Locale.US);
+		rfc822DateFormat.setTimeZone(new SimpleTimeZone(0, "GMT"));
+		return rfc822DateFormat.format(date);
 	}
 
 	/**
@@ -393,6 +407,22 @@ public class StrUtil {
 		}
 		return new Long(str);
 	}
+	/**
+	 * 将一个字符串转换为long,如果字符串为null或者""返回0
+	 * 
+	 * @param str
+	 */
+	public static long getlongTry(String str) {
+		if (isNullOrEmpty(str)) {
+			return 0l;
+		}
+		try {
+			return new Long(str);
+		} catch (NumberFormatException e) {
+			return 0l;
+		}
+	}
+
 	/**
 	 * 将一个字符串转换为Long,如果字符串为null或者""返回null
 	 * 

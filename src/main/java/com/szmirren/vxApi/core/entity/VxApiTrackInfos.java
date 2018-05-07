@@ -17,8 +17,8 @@ public class VxApiTrackInfos {
 	private Instant endTime;// 主业务处理结束时间
 	private Instant requestTime;// 与后端服务器交互开始时间
 	private Instant responseTime;// 与后端服务器交互相应时间
-	private int requestBufferLen;// 用户请求的的主体buffer长度
-	private int responseBufferLen;// 服务端响应的主体buffer长度
+	private long requestBufferLen;// 用户请求的的主体buffer长度
+	private long responseBufferLen;// 服务端响应的主体buffer长度
 	private boolean successful = true;// 是否成功
 	private String errMsg;// 异常信息
 	private String errStackTrace;// 异常信息
@@ -208,7 +208,7 @@ public class VxApiTrackInfos {
 	 * 
 	 * @return
 	 */
-	public int getRequestBufferLen() {
+	public long getRequestBufferLen() {
 		return requestBufferLen;
 	}
 
@@ -217,7 +217,7 @@ public class VxApiTrackInfos {
 	 * 
 	 * @param requestBufferLen
 	 */
-	public void setRequestBufferLen(int requestBufferLen) {
+	public void setRequestBufferLen(long requestBufferLen) {
 		this.requestBufferLen = requestBufferLen;
 	}
 
@@ -226,7 +226,7 @@ public class VxApiTrackInfos {
 	 * 
 	 * @return
 	 */
-	public int getResponseBufferLen() {
+	public long getResponseBufferLen() {
 		return responseBufferLen;
 	}
 
@@ -235,7 +235,7 @@ public class VxApiTrackInfos {
 	 * 
 	 * @param responseBufferLen
 	 */
-	public void setResponseBufferLen(int responseBufferLen) {
+	public void setResponseBufferLen(long responseBufferLen) {
 		this.responseBufferLen = responseBufferLen;
 	}
 
