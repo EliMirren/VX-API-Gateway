@@ -280,15 +280,20 @@ function sysParamChange(ev) {
 function delParam(ev) {
     $(ev).parent().parent().parent().remove();
 }
-//是否透传body
+// 是否透传body
 function passBodyFun() {
     var isSelect=document.getElementById("passBody").checked;
     isPassBody=isSelect;
+    var serverMethodOptions = document.getElementById("serverMethod").children;
+    // 如果透传Body则默认请求后端服务为post
+    if(isPassBody){
+    	serverMethodOptions[1].selected=true;
+    }
     isNeedClearSelect=true;
 }
-//标记是否需要清除select中的body
+// 标记是否需要清除select中的body
 var isNeedClearSelect=false;
-//当透传body是清除所有body选项
+// 当透传body是清除所有body选项
 function clearSelectBodyOption() {
     var bodySelect=isPassBody==true?"":"<option value='BODY' >BODY</option>";
     var selects = $(".isPassSelectBody");
