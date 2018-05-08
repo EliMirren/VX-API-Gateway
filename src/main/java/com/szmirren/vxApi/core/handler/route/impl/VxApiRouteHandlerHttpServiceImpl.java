@@ -2,7 +2,6 @@ package com.szmirren.vxApi.core.handler.route.impl;
 
 import java.net.ConnectException;
 import java.net.MalformedURLException;
-import java.nio.charset.Charset;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
@@ -15,10 +14,11 @@ import java.util.concurrent.TimeoutException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.szmirren.vxApi.core.common.HttpUtils;
 import com.szmirren.vxApi.core.common.StrUtil;
 import com.szmirren.vxApi.core.common.VxApiEventBusAddressConstant;
 import com.szmirren.vxApi.core.common.VxApiGatewayAttribute;
+import com.szmirren.vxApi.core.common.VxApiRequestBodyHandler;
+import com.szmirren.vxApi.core.entity.VxApiContentType;
 import com.szmirren.vxApi.core.entity.VxApiEntranceParam;
 import com.szmirren.vxApi.core.entity.VxApiServerURL;
 import com.szmirren.vxApi.core.entity.VxApiServerURLInfo;
@@ -39,7 +39,6 @@ import io.netty.handler.codec.http.QueryStringEncoder;
 import io.vertx.core.Future;
 import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
-import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.CaseInsensitiveHeaders;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientRequest;
@@ -139,7 +138,10 @@ public class VxApiRouteHandlerHttpServiceImpl implements VxApiRouteHandlerHttpSe
 					? 0L
 					: StrUtil.getlongTry(rct.request().getHeader(VxApiRouteConstant.CONTENT_LENGTH));
 			if (maxContentLength > 0 && contentLength > maxContentLength) {
-				rct.fail(413);
+				if (LOG.isDebugEnabled()) {
+					LOG.info("API:" + api.getApiName() + "接收到请求Content-Length:" + contentLength + ",规定的最大值为:" + maxContentLength);
+				}
+				rctResponse.setStatusCode(413).setStatusMessage("Request Entity Too Large").end();
 				return;
 			}
 			trackInfo.setRequestBufferLen(contentLength);
@@ -155,161 +157,190 @@ public class VxApiRouteHandlerHttpServiceImpl implements VxApiRouteHandlerHttpSe
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("API:" + api.getApiName() + "接收到Querys:" + rctQuerys.entries());
 			}
+			// 请求后端服务的Future
+			Future<Void> requstFuture = Future.future();
 			// 用户请求的Content-Type类型
-			ContentType uctype = loadContentType(rctRequest);
+			VxApiContentType uctype = loadContentType(rctRequest);
 			// 如果不透传body则判断是否需要将用户的body加载到Query中
 			if (!api.isPassBody()) {
 				if (api.isBodyAsQuery()) {
 					if (uctype.isNullOrUrlencoded()) {
-						MultiMap rctBody = new CaseInsensitiveHeaders();
-						rctRequest.bodyHandler(body -> {
-							maxContentLength += body.length();
-							if (maxContentLength > 0 && contentLength > maxContentLength) {
-								rct.fail(413);
-								return;
+						// 解析用户请求的主体
+						VxApiRequestBodyHandler bodyHandler = new VxApiRequestBodyHandler(uctype, maxContentLength);
+						rctRequest.handler(body -> {
+							if (!bodyHandler.isExceededMaxLen()) {
+								bodyHandler.handle(body);
 							}
-							bodyUrlParamToBodyParams(body, rctBody, uctype.getCharset());
 						});
-						if (LOG.isDebugEnabled()) {
-							LOG.debug("API:" + api.getApiName() + "接收到Bodys:" + rctBody.entries());
-						}
-						rctQuerys.addAll(rctBody);
-						if (LOG.isDebugEnabled()) {
-							LOG.debug("API:" + api.getApiName() + "将body的参数添加到Query后:" + rctQuerys.entries());
-						}
+						rctRequest.endHandler(end -> {
+							if (bodyHandler.isExceededMaxLen()) {
+								if (LOG.isDebugEnabled()) {
+									LOG.info(
+											"API:" + api.getApiName() + "接收到请求Content-Length大于:" + bodyHandler.getBodyLength() + ",规定的最大值为:" + maxContentLength);
+								}
+								rctResponse.setStatusCode(413).setStatusMessage("Request Entity Too Large").end();
+								return;
+							} else {
+								if (LOG.isDebugEnabled()) {
+									LOG.debug("API:" + api.getApiName() + "接收到Bodys:" + bodyHandler.getBody().entries());
+								}
+								rctQuerys.addAll(bodyHandler.getBody());
+								if (LOG.isDebugEnabled()) {
+									LOG.debug("API:" + api.getApiName() + "将body的参数添加到Query后:" + rctQuerys.entries());
+								}
+								requstFuture.complete();
+							}
+						});
 					}
 				}
-			}
-			// 后台服务连接信息
-			VxApiServerURLInfo urlInfo;
-			if (serOptions.getBalanceType() == LoadBalanceEnum.IP_HASH) {
-				String ip = rct.request().remoteAddress().host();
-				urlInfo = policy.getUrl(ip);
 			} else {
-				urlInfo = policy.getUrl();
+				requstFuture.complete();
 			}
-			// 获得请求服务连接
-			String reqURL = urlInfo.getUrl();
-			// 请求服务的Header
-			MultiMap reqHeaderParam = new CaseInsensitiveHeaders();
-			// 请求服务的Query参数
-			QueryStringEncoder reqQueryParam = new QueryStringEncoder("");
-			// 请求服务的Body参数
-			QueryStringEncoder reqBodyParam = new QueryStringEncoder("");
-			// 该参数为mapParam的copy,用于参数检查时将已经检查的参数添加请求服务的Query参数中,可以省去两次装载参数
-			Map<String, VxApiParamOptions> thisMapParam = new HashMap<>(mapParam);
-			// 检查入口参数是否符合要求
-			boolean checkResult = checkEnterParamAndLoadRequestMapParam(rctHeaders, rctQuerys, thisMapParam, reqURL, reqHeaderParam,
-					reqQueryParam, reqBodyParam);
-			if (!checkResult) {
-				// 参数检查不符合要求,结束请求
-				if (LOG.isDebugEnabled()) {
-					LOG.debug("API:" + api.getApiName() + "执行参数检查-->结果:检查不通过!");
-				}
-				rctResponse.putHeader(VxApiRouteConstant.DATE, StrUtil.getRfc822DateFormat(new Date()))
-						.setStatusCode(api.getResult().getApiEnterCheckFailureStatus()).end(api.getResult().getApiEnterCheckFailureExample());
-				return;
-			}
-			if (thisMapParam != null && !thisMapParam.isEmpty()) {
-				loadRequestMapParams(thisMapParam, rctHeaders, rctQuerys, reqURL, reqHeaderParam, reqQueryParam, reqBodyParam);
-			}
-			if (otherReqParam != null && !otherReqParam.isEmpty()) {
-				loadOtherRequestParams(rct, rctHeaders, rctQuerys, reqURL, reqHeaderParam, reqQueryParam, reqBodyParam);
-			}
-			reqURL += reqQueryParam.toString();
-			// 请求处理器
-			HttpClientRequest request = httpClient.requestAbs(serOptions.getMethod(), reqURL).setTimeout(serOptions.getTimeOut());
-			request.putHeader(VxApiRouteConstant.USER_AGENT, VxApiGatewayAttribute.VX_API_USER_AGENT);
-			// 设置请求时间
-			trackInfo.setRequestTime(Instant.now());
-			if (reqHeaderParam != null && reqHeaderParam.size() > 0) {
-				request.headers().addAll(reqHeaderParam);
-			}
-			// 异常处理器
-			request.exceptionHandler(e -> {
-				if (isNext) {
-					rct.put(VxApiAfterHandler.PREV_IS_SUCCESS_KEY, Future.<Boolean>failedFuture(e));// 告诉后置处理器当前操作成功执行
-					rct.next();
+			// 请求后端服务的Future处理器
+			requstFuture.setHandler(future -> {
+				// 后台服务连接信息
+				VxApiServerURLInfo urlInfo;
+				if (serOptions.getBalanceType() == LoadBalanceEnum.IP_HASH) {
+					String ip = rct.request().remoteAddress().host();
+					urlInfo = policy.getUrl(ip);
 				} else {
-					// 如果是连接异常返回无法连接的错误信息,其他异常返回相应的异常
-					if (e instanceof ConnectException || e instanceof TimeoutException) {
+					urlInfo = policy.getUrl();
+				}
+				// 获得请求服务连接
+				String reqURL = urlInfo.getUrl();
+				// 请求服务的Header
+				MultiMap reqHeaderParam = new CaseInsensitiveHeaders();
+				// 请求服务的Query参数
+				QueryStringEncoder reqQueryParam = new QueryStringEncoder("");
+				// 请求服务的Body参数
+				QueryStringEncoder reqBodyParam = new QueryStringEncoder("");
+				// 该参数为mapParam的copy,用于参数检查时将已经检查的参数添加请求服务的Query参数中,可以省去两次装载参数
+				if (mapParam != null) {
+					Map<String, VxApiParamOptions> thisMapParam = new HashMap<>(mapParam);
+					// 检查入口参数是否符合要求
+					boolean checkResult = checkEnterParamAndLoadRequestMapParam(rctHeaders, rctQuerys, thisMapParam, reqURL, reqHeaderParam,
+							reqQueryParam, reqBodyParam);
+					if (!checkResult) {
+						// 参数检查不符合要求,结束请求
+						if (LOG.isDebugEnabled()) {
+							LOG.debug("API:" + api.getApiName() + "执行参数检查-->结果:检查不通过!");
+						}
 						rctResponse.putHeader(VxApiRouteConstant.DATE, StrUtil.getRfc822DateFormat(new Date()))
-								.setStatusCode(api.getResult().getCantConnServerStatus()).end(api.getResult().getCantConnServerExample());
-					} else {
-						rctResponse.putHeader(VxApiRouteConstant.DATE, StrUtil.getRfc822DateFormat(new Date()))
-								.setStatusCode(api.getResult().getFailureStatus()).end(api.getResult().getFailureExample());
+								.setStatusCode(api.getResult().getApiEnterCheckFailureStatus()).end(api.getResult().getApiEnterCheckFailureExample());
+						return;
+					}
+					if (thisMapParam != null && !thisMapParam.isEmpty()) {
+						loadRequestMapParams(thisMapParam, rctHeaders, rctQuerys, reqURL, reqHeaderParam, reqQueryParam, reqBodyParam);
 					}
 				}
-				// 提交连接请求失败
-				policy.reportBadService(urlInfo.getIndex());
-				trackInfo.setEndTime(Instant.now());
-				// 记录与后台交互发生错误
-				trackInfo.setSuccessful(false);
-				trackInfo.setErrMsg(e.getMessage());
-				trackInfo.setErrStackTrace(e.getStackTrace());
-				rct.vertx().eventBus().send(thisVertxName + VxApiEventBusAddressConstant.SYSTEM_PLUS_TRACK_INFO, trackInfo.toJson());
-			});
-			request.handler(resp -> {
-				// 设置请求响应时间
-				trackInfo.setResponseTime(Instant.now());
-				rctResponse.putHeader(VxApiRouteConstant.DATE, StrUtil.getRfc822DateFormat(new Date())).setChunked(true);
-				// 透传header
-				Set<String> tranHeaders = api.getResult().getTranHeaders();
-				if (tranHeaders != null && tranHeaders.size() > 0) {
-					tranHeaders.forEach(h -> {
-						rctResponse.putHeader(h, resp.getHeader(h) == null ? "" : resp.getHeader(h));
-					});
+				if (otherReqParam != null && !otherReqParam.isEmpty()) {
+					loadOtherRequestParams(rct, rctHeaders, rctQuerys, reqURL, reqHeaderParam, reqQueryParam, reqBodyParam);
 				}
-				Pump respPump = Pump.pump(resp, rctResponse);
-				respPump.start();
-				resp.endHandler(end -> {
+				reqURL += reqQueryParam.toString();
+				// 请求处理器
+				HttpClientRequest request = httpClient.requestAbs(serOptions.getMethod(), reqURL).setTimeout(serOptions.getTimeOut());
+				request.putHeader(VxApiRouteConstant.USER_AGENT, VxApiGatewayAttribute.VX_API_USER_AGENT);
+				// 设置请求时间
+				trackInfo.setRequestTime(Instant.now());
+				if (reqHeaderParam != null && reqHeaderParam.size() > 0) {
+					request.headers().addAll(reqHeaderParam);
+				}
+				// 异常处理器
+				request.exceptionHandler(e -> {
 					if (isNext) {
-						rct.put(VxApiAfterHandler.PREV_IS_SUCCESS_KEY, Future.<Boolean>succeededFuture(true));// 告诉后置处理器当前操作成功执行
+						rct.put(VxApiAfterHandler.PREV_IS_SUCCESS_KEY, Future.<Boolean>failedFuture(e));// 告诉后置处理器当前操作成功执行
 						rct.next();
 					} else {
-						rctResponse.end();
+						// 提交连接请求失败
+						if (LOG.isDebugEnabled()) {
+							LOG.debug("URL:" + urlInfo.getUrl() + ",下标:" + urlInfo.getIndex() + " 请求失败,已经提交给连接策略");
+						}
+						policy.reportBadService(urlInfo.getIndex());
+						trackInfo.setEndTime(Instant.now());
+						// 记录与后台交互发生错误
+						trackInfo.setSuccessful(false);
+						trackInfo.setErrMsg(e.getMessage());
+						trackInfo.setErrStackTrace(e.getStackTrace());
+						rct.vertx().eventBus().send(thisVertxName + VxApiEventBusAddressConstant.SYSTEM_PLUS_TRACK_INFO, trackInfo.toJson());
+						// 如果是连接异常返回无法连接的错误信息,其他异常返回相应的异常
+						try {
+							if (e instanceof ConnectException || e instanceof TimeoutException) {
+								rctResponse.putHeader(VxApiRouteConstant.DATE, StrUtil.getRfc822DateFormat(new Date()))
+										.setStatusCode(api.getResult().getCantConnServerStatus()).end(api.getResult().getCantConnServerExample());
+							} else {
+								rctResponse.putHeader(VxApiRouteConstant.DATE, StrUtil.getRfc822DateFormat(new Date()))
+										.setStatusCode(api.getResult().getFailureStatus()).end(api.getResult().getFailureExample());
+							}
+						} catch (Exception e1) {
+							LOG.error("在请求后台服务的异常处理器中响应用户请求-->异常:", e1);
+						}
 					}
-					// 统计响应长度
-					String repLen = resp.getHeader(VxApiRouteConstant.CONTENT_LENGTH);
-					trackInfo.setResponseBufferLen(repLen == null ? 0 : StrUtil.getintTry(repLen));
-					trackInfo.setEndTime(Instant.now());
-					rct.vertx().eventBus().send(thisVertxName + VxApiEventBusAddressConstant.SYSTEM_PLUS_TRACK_INFO, trackInfo.toJson());
 				});
-				resp.exceptionHandler(e -> {
-					LOG.error("API:" + api.getApiName() + ",pump在收到后端服务响应中发生了异常:" + e);
-					respPump.stop();
+				request.handler(resp -> {
+					// 设置请求响应时间
+					trackInfo.setResponseTime(Instant.now());
+					rctResponse.putHeader(VxApiRouteConstant.DATE, StrUtil.getRfc822DateFormat(new Date())).setChunked(true);
+					// 透传header
+					Set<String> tranHeaders = api.getResult().getTranHeaders();
+					if (tranHeaders != null && tranHeaders.size() > 0) {
+						tranHeaders.forEach(h -> {
+							rctResponse.putHeader(h, resp.getHeader(h) == null ? "" : resp.getHeader(h));
+						});
+					}
+					Pump respPump = Pump.pump(resp, rctResponse);
+					respPump.start();
+					resp.endHandler(end -> {
+						if (isNext) {
+							rct.put(VxApiAfterHandler.PREV_IS_SUCCESS_KEY, Future.<Boolean>succeededFuture(true));// 告诉后置处理器当前操作成功执行
+							rct.next();
+						} else {
+							rctResponse.end();
+						}
+						// 统计响应长度
+						String repLen = resp.getHeader(VxApiRouteConstant.CONTENT_LENGTH);
+						trackInfo.setResponseBufferLen(repLen == null ? 0 : StrUtil.getintTry(repLen));
+						trackInfo.setEndTime(Instant.now());
+						rct.vertx().eventBus().send(thisVertxName + VxApiEventBusAddressConstant.SYSTEM_PLUS_TRACK_INFO, trackInfo.toJson());
+					});
+					resp.exceptionHandler(e -> {
+						LOG.error("API:" + api.getApiName() + ",pump在收到后端服务响应中发生了异常:" + e);
+						respPump.stop();
+					});
 				});
-			});
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("请求后台服务的Headers参数:" + reqHeaderParam);
-				LOG.debug("请求后台服务的Query参数:" + reqQueryParam);
-				LOG.debug("请求后台服务的URL:" + reqURL);
-				LOG.debug("请求后台服务的Body参数:" + reqBodyParam);
-			}
-			// 判断是否透传Body
-			if (api.isPassBody()) {
-				if (rctHeaders.get(VxApiRouteConstant.CONTENT_TYPE) != null) {
-					request.putHeader(VxApiRouteConstant.CONTENT_TYPE, rctHeaders.get(VxApiRouteConstant.CONTENT_TYPE));
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("请求后台服务的Headers参数:" + reqHeaderParam + ";");
+					LOG.debug("请求后台服务的Query参数:" + reqQueryParam + ";");
+					LOG.debug("请求后台服务的URL:" + reqURL + ";");
+					LOG.debug("请求后台服务的Body参数:" + reqBodyParam + ";");
+
 				}
-				request.setChunked(true);
-				Pump reqPump = Pump.pump(rctRequest, request);
-				reqPump.start();
-				rctRequest.exceptionHandler(e -> {
-					LOG.error("API:" + api.getApiName() + ",pump在请求后端服务中发生了异常:" + e);
-					reqPump.stop();
-				});
-				rctRequest.endHandler(end -> {
-					request.end();
-				});
-			} else {
-				request.end(reqBodyParam.toString().replace("?", ""));
-			}
-			if (policy.isHaveBadService()) {
-				LOG.warn(
-						String.format("应用:%s -> API:%s,后台服务存在不可用的后台服务URL,VX将以设定的重试时间:%d进行重试", appName, api.getApiName(), serOptions.getRetryTime()));
-				// 进入重试连接后台服务
-				retryConnServer(rct.vertx());
-			}
+				// 判断是否透传Body
+				if (api.isPassBody()) {
+					if (rctHeaders.get(VxApiRouteConstant.CONTENT_TYPE) != null) {
+						request.putHeader(VxApiRouteConstant.CONTENT_TYPE, rctHeaders.get(VxApiRouteConstant.CONTENT_TYPE));
+					} else if (rctHeaders.get(VxApiRouteConstant.CONTENT_TYPE_LOWER_CASE) != null) {
+						request.putHeader(VxApiRouteConstant.CONTENT_TYPE_LOWER_CASE, rctHeaders.get(VxApiRouteConstant.CONTENT_TYPE_LOWER_CASE));
+					}
+					request.setChunked(true);
+					Pump reqPump = Pump.pump(rctRequest, request);
+					reqPump.start();
+					rctRequest.exceptionHandler(e -> {
+						LOG.error("API:" + api.getApiName() + ",pump在请求后端服务中发生了异常:" + e);
+						reqPump.stop();
+					});
+					rctRequest.endHandler(end -> {
+						request.end();
+					});
+				} else {
+					request.end(reqBodyParam.toString().replace("?", ""));
+				}
+				if (policy.isHaveBadService()) {
+					LOG.warn(
+							String.format("应用:%s -> API:%s,后台服务存在不可用的后台服务URL,VX将以设定的重试时间:%d进行重试", appName, api.getApiName(), serOptions.getRetryTime()));
+					// 进入重试连接后台服务
+					retryConnServer(rct.vertx());
+				}
+			});
 		} else {
 			// 进入该地方证明没有可用链接,结束当前处理器并尝试重新尝试连接是否可用
 			if (isNext) {
@@ -374,33 +405,16 @@ public class VxApiRouteHandlerHttpServiceImpl implements VxApiRouteHandlerHttpSe
 	 * @param request
 	 * @return
 	 */
-	private ContentType loadContentType(HttpServerRequest request) {
+	private VxApiContentType loadContentType(HttpServerRequest request) {
 		String contentType = request.headers().get(VxApiRouteConstant.CONTENT_TYPE);
 		if (contentType == null) {
 			if (request.headers().get(VxApiRouteConstant.CONTENT_TYPE.toLowerCase()) == null) {
-				return new ContentType(null);
+				return new VxApiContentType(null);
 			} else {
 				contentType = request.headers().get(VxApiRouteConstant.CONTENT_TYPE.toLowerCase());
 			}
 		}
-		return new ContentType(contentType);
-	}
-	/**
-	 * 加载body中参数到query中
-	 * 
-	 * @param body
-	 *          body的内容
-	 * @param params
-	 *          query参数
-	 * @param charset
-	 *          body参数的字符编码
-	 */
-	private void bodyUrlParamToBodyParams(Buffer body, MultiMap params, Charset charset) {
-		String data = body.toString();
-		if (params == null) {
-			params = new CaseInsensitiveHeaders();
-		}
-		params.addAll(HttpUtils.decoderUriParams(data, charset));
+		return new VxApiContentType(contentType);
 	}
 	/**
 	 * 检查API入口参数并加载服务入口参数
@@ -657,113 +671,4 @@ public class VxApiRouteHandlerHttpServiceImpl implements VxApiRouteHandlerHttpSe
 			});
 		}
 	}
-	/**
-	 * 用户请求的ContentType
-	 * 
-	 * @author <a href="http://szmirren.com">Mirren</a>
-	 *
-	 */
-	class ContentType {
-		private String contentType;
-		private String boundary;
-		private Charset charset;
-
-		/**
-		 * 
-		 * @param contentType
-		 */
-		public ContentType(String contentType) {
-			super();
-			if (contentType != null) {
-				init(contentType);
-			}
-		}
-
-		/**
-		 * 初始化
-		 * 
-		 * @param contentType
-		 */
-		public void init(String contentType) {
-			String[] item = contentType.split(";");
-			this.contentType = item[0];
-			if (item.length > 1) {
-				if (item[1].indexOf("=") != -1) {
-					String[] split = item[1].split("=");
-					initVar(split[0].trim(), split[1].trim());
-				}
-			}
-			if (item.length > 2) {
-				if (item[2].indexOf("=") != -1) {
-					String[] split = item[1].split("=");
-					initVar(split[0].trim(), split[1].trim());
-				}
-			}
-		}
-
-		/**
-		 * 根据类型进行初始化数据
-		 * 
-		 * @param type
-		 * @param value
-		 */
-		public void initVar(String type, String value) {
-			if ("charset".equalsIgnoreCase(type)) {
-				try {
-					this.charset = Charset.forName(value);
-				} catch (Exception e) {
-					LOG.error("解析ContentType中的charset并转化为响应解码器-->失败:", e);
-				}
-			} else if ("boundary".equalsIgnoreCase(type)) {
-				this.boundary = value;
-			}
-		}
-
-		/**
-		 * Content-Type是否为:null或者application/x-www-form-urlencoded
-		 * 
-		 * @return
-		 */
-		public boolean isNullOrUrlencoded() {
-			return contentType == null || "application/x-www-form-urlencoded".equalsIgnoreCase(contentType);
-		}
-
-		/**
-		 * Content-Type是否为:multipart/form-data
-		 * 
-		 * @return
-		 */
-		public boolean isFormData() {
-			return "multipart/form-data".equalsIgnoreCase(contentType);
-		}
-
-		/**
-		 * 获得content类型
-		 * 
-		 * @return
-		 */
-		public String getContentType() {
-			return contentType;
-		}
-
-		/**
-		 * 获得Boundary
-		 * 
-		 * @return
-		 */
-		public String getBoundary() {
-			return boundary;
-		}
-
-		/**
-		 * 获得字符编码
-		 * 
-		 * @return
-		 */
-		public Charset getCharset() {
-			return charset;
-		}
-
-	}
-
 }

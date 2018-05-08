@@ -745,8 +745,12 @@ public class VxApiApplication extends AbstractVerticle {
 			rct.response().putHeader(SERVER, VxApiGatewayAttribute.FULL_NAME).putHeader(CONTENT_TYPE, api.getContentType())
 					.setStatusCode(api.getResult().getFailureStatus()).end(api.getResult().getFailureExample());
 			VxApiTrackInfos infos = new VxApiTrackInfos(appName, api.getApiName());
-			infos.setErrMsg(rct.failure().getMessage());
-			infos.setErrStackTrace(rct.failure().getStackTrace());
+			if (rct.failure() != null) {
+				infos.setErrMsg(rct.failure().getMessage());
+				infos.setErrStackTrace(rct.failure().getStackTrace());
+			} else {
+				infos.setErrMsg("没有进一步信息 failure 为 null");
+			}
 			vertx.eventBus().send(thisVertxName + VxApiEventBusAddressConstant.SYSTEM_PLUS_ERROR, infos.toJson());
 		});
 	}
