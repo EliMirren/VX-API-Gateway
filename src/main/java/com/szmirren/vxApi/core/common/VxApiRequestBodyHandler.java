@@ -1,0 +1,85 @@
+package com.szmirren.vxApi.core.common;
+
+import com.szmirren.vxApi.core.entity.VxApiContentType;
+
+import io.vertx.core.Handler;
+import io.vertx.core.MultiMap;
+import io.vertx.core.buffer.Buffer;
+import io.vertx.core.http.CaseInsensitiveHeaders;
+/**
+ * 用户请求的body主体解析工具<br>
+ * 当前只解析Content-type=Null或者Urlencoded
+ * 
+ * @author <a href="http://szmirren.com">Mirren</a>
+ *
+ */
+public class VxApiRequestBodyHandler implements Handler<Buffer> {
+	/** 用户请求的body参数 */
+	private MultiMap body = new CaseInsensitiveHeaders();
+	/** 用户请求的body长度 */
+	private long bodyLength;
+	/** 用户请求的contentType */
+	private VxApiContentType contentType;
+	/** 请求体的最大限制长度小于=0代表无限 */
+	private long maxContentLength;
+
+	/**
+	 * 实例化一个用户请求bodyhandler
+	 * 
+	 * @param contentType
+	 * @param maxContentLength
+	 */
+	public VxApiRequestBodyHandler(VxApiContentType contentType, long maxContentLength) {
+		super();
+		this.contentType = contentType;
+		this.maxContentLength = maxContentLength;
+	}
+
+	@Override
+	public void handle(Buffer buffer) {
+		// 如果buffer为null或者非URLencode则返回
+		if (buffer == null || !contentType.isNullOrUrlencoded()) {
+			return;
+		}
+		String data = buffer.toString();
+		bodyLength += data.length();
+		if (maxContentLength > 0 && bodyLength > maxContentLength) {
+			return;
+		}
+		MultiMap decoderUriParams = HttpUtils.decoderUriParams(data, contentType.getCharset());
+		if (decoderUriParams != null) {
+			body.addAll(decoderUriParams);
+		}
+	}
+	/**
+	 * 获得body的参数
+	 * 
+	 * @return 返回一个不为null的MultiMap
+	 */
+	public MultiMap getBody() {
+		return body;
+	}
+	/**
+	 * 获得body的长度
+	 * 
+	 * @return
+	 */
+	public long getBodyLength() {
+		return bodyLength;
+	}
+	/**
+	 * 获得是否超过最大Content-Length限定
+	 * 
+	 * @return 超过返回true , 不超过返回false
+	 */
+	public boolean isExceededMaxLen() {
+		return maxContentLength > 0 && bodyLength > maxContentLength;
+	}
+
+	@Override
+	public String toString() {
+		return "VxApiRequestBodyHandler [body=" + body + ", bodyLength=" + bodyLength + ", contentType=" + contentType + ", maxContentLength="
+				+ maxContentLength + "]";
+	}
+
+}
