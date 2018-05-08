@@ -156,7 +156,6 @@ function passParam() {
            <td>
             <select class="console-selectbox console-width-12 ng-pristine ng-valid isPassSelectBody" >
             <option value="QUERY" selected="selected">QUERY</option> 
-            ${bodySelect}
     		<option value="PATH">PATH</option> 
             <option value="HEADER">HEADER</option></select>
           </td>
@@ -278,7 +277,9 @@ function sysParamChange(ev) {
 }
 // 删除tr td tag tag
 function delParam(ev) {
-    $(ev).parent().parent().parent().remove();
+	if (confirm("确定移除该条定义吗?")) {
+    	$(ev).parent().parent().parent().remove();
+    }
 }
 // 是否透传body
 function passBodyFun() {
