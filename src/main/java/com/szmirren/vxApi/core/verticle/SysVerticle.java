@@ -31,45 +31,32 @@ import io.vertx.core.json.JsonObject;
 public class SysVerticle extends AbstractVerticle {
 	private static final Logger LOG = LogManager.getLogger(SysVerticle.class);
 
-	/**
-	 * VX-API的启动时间
-	 */
+	/** VX-API的启动时间 */
 	private LocalDateTime startVxApiTime = LocalDateTime.now();
-	/**
-	 * 线程数量
-	 */
+	/** 线程数量 */
 	private int availableProcessors = 0;
-	/**
-	 * JVM总的内存量
-	 */
+	/** JVM总的内存量 */
 	private long totalMemory = 0;
-	/**
-	 * JVM的空闲内存量
-	 */
+	/** JVM的空闲内存量 */
 	private long freeMemory = 0;
-	/**
-	 * JVM最大内存量
-	 */
+	/** JVM最大内存量 */
 	private long maxMemory = 0;
-	/**
-	 * 异常次数
-	 */
+	/** 异常次数 */
 	private int errorCount = 0;
-	/**
-	 * 存储API的监控记录信息
-	 */
+	/** 请求到达VX的次数 */
+	private long requestVxApiCount = 0;
+	/** 请求到达核心处理器(HTTP/HTTPS)的次数 */
+	private long requestHttpApiCount = 0;
+	/** 核心处理器(HTTP/HTTPS)当前正在处理API的数量 */
+	private long currentHttpApiProcessingCount = 0;
+
+	/** 存储API的监控记录信息 */
 	private Map<String, Deque<JsonObject>> trackSucceededMap = new HashMap<>();
-	/**
-	 * 存储API请求失败的数数
-	 */
+	/** 存储API请求失败的数数 */
 	private Map<String, Long> requstFailedCount = new HashMap<>();
-	/**
-	 * 存储API请求的数量
-	 */
+	/** 存储API请求的数量 */
 	private Map<String, Long> requstCount = new HashMap<>();
-	/**
-	 * 当前Vertx的唯一标识
-	 */
+	/** 当前Vertx的唯一标识 */
 	private String thisVertxName;
 
 	@Override
@@ -82,6 +69,17 @@ public class SysVerticle extends AbstractVerticle {
 		vertx.eventBus().consumer(thisVertxName + VxApiEventBusAddressConstant.SYSTEM_GET_TRACK_INFO, this::getTrackInfo);
 		vertx.eventBus().consumer(thisVertxName + VxApiEventBusAddressConstant.SYSTEM_BLACK_IP_FIND, this::findIpList);
 		vertx.eventBus().consumer(thisVertxName + VxApiEventBusAddressConstant.SYSTEM_BLACK_IP_REPLACE, this::replaceIpList);
+		vertx.eventBus().consumer(thisVertxName + VxApiEventBusAddressConstant.SYSTEM_PLUS_VX_REQUEST, msg -> requestVxApiCount++);
+		vertx.eventBus().consumer(thisVertxName + VxApiEventBusAddressConstant.SYSTEM_PLUS_HTTP_API_REQUEST, msg -> {
+			requestHttpApiCount++;
+			currentHttpApiProcessingCount++;
+		});
+		vertx.eventBus().consumer(thisVertxName + VxApiEventBusAddressConstant.SYSTEM_MINUS_CURRENT_PROCESSING, msg -> {
+			if (currentHttpApiProcessingCount > 0) {
+				currentHttpApiProcessingCount--;
+			}
+		});
+
 		LOG.info("start System Verticle successful");
 		super.start(startFuture);
 	}
@@ -121,6 +119,9 @@ public class SysVerticle extends AbstractVerticle {
 			result.put("appCount", res.result().getInteger("app", 0));
 			result.put("apiCount", res.result().getInteger("api", 0));
 			result.put("errorCount", errorCount);
+			result.put("requestVxApiCount", requestVxApiCount);
+			result.put("requestHttpApiCount", requestHttpApiCount);
+			result.put("currentHttpApiProcessingCount", currentHttpApiProcessingCount);
 			vertx.eventBus().<JsonObject>send(thisVertxName + VxApiEventBusAddressConstant.FIND_BLACKLIST, null, balckList -> {
 				if (res.succeeded()) {
 					JsonObject body = balckList.result().body();

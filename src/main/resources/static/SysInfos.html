@@ -34,7 +34,14 @@
 
     <div class="rightP col-xs-8 col-md-8">
         <div class="panel panel-default">
-            <div class="panel-heading">系统运行状态</div>
+            <div class="panel-heading">
+     			<div class="row">
+                    <div class="col-md-11" style="line-height: 30px;"> 系统运行状态</div>
+                    <div class="col-md-1">
+                        <button type="button" class="btn btn-primary right black-ip-update" style="margin-top: 1px" onclick="get(0)">刷新</button>
+                    </div>
+                </div>       
+            </div>
             <div class="panel-body">
                 <div class="row">
                     <div class="col-lg-3 col-sm-12">
@@ -59,6 +66,26 @@
                         <div class="sys-info-block">
                             <h3><span class="errorCount">0</span></h3>
                             <h3>异常发生次数</h3>
+                        </div>
+                    </div>
+                </div>
+                 <div class="row">
+                    <div class="col-lg-4 col-sm-12">
+                        <div class="sys-info-block">
+                            <h3><span class="requestVxApiCount">0</span></h3>
+                            <h3>全局请求次数</h3>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 col-sm-12">
+                        <div class="sys-info-block">
+                            <h3><span class="requestHttpApiCount">0</span></h3>
+                            <h3>HTTP处理器请求次数</h3>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 col-sm-12">
+                        <div class="sys-info-block">
+                            <h3><span class="currentHttpApiProcessingCount">0</span></h3>
+                            <h3>HTTP处理器正在处理数</h3>
                         </div>
                     </div>
                 </div>
@@ -211,6 +238,7 @@ function submitIpUpdate() {
 $(function(){
 	get(0);
 });
+
 function get(id) {
     $.ajax({
         type: "get",
@@ -226,6 +254,9 @@ function get(id) {
                 $(".appCount").text(res.appCount);
                 $(".apiCount").text(res.apiCount);
                 $(".errorCount").text(res.errorCount);
+                $(".requestVxApiCount").text(res.requestVxApiCount);
+                $(".requestHttpApiCount").text(res.requestHttpApiCount);
+                $(".currentHttpApiProcessingCount").text(res.currentHttpApiProcessingCount);
                 $(".availableProcessors").text(res.availableProcessors);
                 $(".totalMemory").text(res.totalMemory + "M");
                 $(".freeMemory").text(res.freeMemory + "M");

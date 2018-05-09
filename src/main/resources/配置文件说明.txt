@@ -72,7 +72,7 @@ min_pool_size = 连接池最小连接数
 max_statements = 预处理SQL语句最小缓存数, 默认 0
 max_statements_per_connection = 每个数据库连接的最大预处理SQL缓存数, 默认0
 max_idle_time = 空闲连接保留时间, 默认0 (代表一直保留)
-
+validation_query = druid的validationQuery语句,默认select 1
 =============================================
 =============clientConfig: 客户端配置 ==========
 =============================================

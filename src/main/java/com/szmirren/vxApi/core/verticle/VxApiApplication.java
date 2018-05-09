@@ -348,6 +348,8 @@ public class VxApiApplication extends AbstractVerticle {
 	 * @param rct
 	 */
 	public void filterBlackIP(RoutingContext rct) {
+		// 添加请求到达VX-API的数量
+		vertx.eventBus().send(thisVertxName + VxApiEventBusAddressConstant.SYSTEM_PLUS_VX_REQUEST, null);
 		String host = rct.request().remoteAddress().host();
 		if (blackIpSet.contains(host)) {
 			HttpServerResponse response = rct.response();

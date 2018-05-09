@@ -29,6 +29,7 @@ public class DataSourceProviderOfDruid extends DruidDataSource implements DataSo
 		ds.setMinIdle(config.getInteger("min_pool_size", 1));
 		ds.setInitialSize(config.getInteger("initial_pool_size", 1));
 		ds.setMinEvictableIdleTimeMillis(config.getLong("max_idle_time", 60000L));
+		ds.setValidationQuery(config.getValue("validation_query", "select 1").toString());
 		return ds;
 	}
 

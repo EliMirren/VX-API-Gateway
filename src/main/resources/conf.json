@@ -1,4 +1,7 @@
 {
+	"cliConfig": {
+		"startEverything": true
+	},
 	"cluster": {
 		"clusterType": "NONE",
 		"getVxApiConfFromCluster": false,

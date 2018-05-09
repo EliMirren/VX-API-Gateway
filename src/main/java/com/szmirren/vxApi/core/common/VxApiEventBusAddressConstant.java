@@ -71,6 +71,19 @@ public interface VxApiEventBusAddressConstant {
 	 */
 	final static String SYSTEM_BLACK_IP_REPLACE = "sys:replaceBlackIP";
 	/**
+	 * 添加请求到达VX的数量,无需参数,无返回
+	 */
+	final static String SYSTEM_PLUS_VX_REQUEST = "sys:requestVxApiCountPlus";
+	/**
+	 * 添加请求到达到达核心处理器(HTTP/HTTPS)的数量,无需参数,无返回
+	 */
+	final static String SYSTEM_PLUS_HTTP_API_REQUEST = "sys:requestHttpApiCountAndProcessingPlus";
+	/**
+	 * 减少核心处理器(HTTP/HTTPS)当前正在处理的数量,无需参数,无返回
+	 */
+	final static String SYSTEM_MINUS_CURRENT_PROCESSING = "sys:currentHttpApiProcessingCountMinus";
+
+	/**
 	 * 获取应用网关的数量,无需参数<br>
 	 * 返回结果:JsonObject:app:网关应用的数量,api:API的数量
 	 */

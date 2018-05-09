@@ -127,6 +127,19 @@ public class VxApiRouteHandlerHttpServiceImpl implements VxApiRouteHandlerHttpSe
 
 	@Override
 	public void handle(RoutingContext rct) {
+		// 添加请求到达核心处理器的数量与当前API正在处理的数量
+		rct.vertx().eventBus().send(thisVertxName + VxApiEventBusAddressConstant.SYSTEM_PLUS_HTTP_API_REQUEST, null);
+		// 响应用户请求结束时间,响应后检查是否有坏的服务,报告当前API已经处理完毕
+		rct.response().endHandler(end -> {
+			if (policy.isHaveBadService()) {
+				LOG.warn(
+						String.format("应用:%s -> API:%s,后台服务存在不可用的后台服务URL,VX将以设定的重试时间:%d进行重试", appName, api.getApiName(), serOptions.getRetryTime()));
+				// 进入重试连接后台服务
+				retryConnServer(rct.vertx());
+			}
+			// 减少当前正在处理的数量
+			rct.vertx().eventBus().send(thisVertxName + VxApiEventBusAddressConstant.SYSTEM_MINUS_CURRENT_PROCESSING, null);
+		});
 		// 当前服务的response
 		HttpServerResponse rctResponse = rct.response().putHeader(VxApiRouteConstant.SERVER, VxApiGatewayAttribute.FULL_NAME)
 				.putHeader(VxApiRouteConstant.CONTENT_TYPE, api.getContentType());
@@ -163,35 +176,35 @@ public class VxApiRouteHandlerHttpServiceImpl implements VxApiRouteHandlerHttpSe
 			VxApiContentType uctype = loadContentType(rctRequest);
 			// 如果不透传body则判断是否需要将用户的body加载到Query中
 			if (!api.isPassBody()) {
-				if (api.isBodyAsQuery()) {
-					if (uctype.isNullOrUrlencoded()) {
-						// 解析用户请求的主体
-						VxApiRequestBodyHandler bodyHandler = new VxApiRequestBodyHandler(uctype, maxContentLength);
-						rctRequest.handler(body -> {
-							if (!bodyHandler.isExceededMaxLen()) {
-								bodyHandler.handle(body);
+				if (api.isBodyAsQuery() && uctype.isNullOrUrlencoded()) {
+					// 解析用户请求的主体
+					VxApiRequestBodyHandler bodyHandler = new VxApiRequestBodyHandler(uctype, maxContentLength);
+					rctRequest.handler(body -> {
+						if (!bodyHandler.isExceededMaxLen()) {
+							bodyHandler.handle(body);
+						}
+					});
+					rctRequest.endHandler(end -> {
+						if (bodyHandler.isExceededMaxLen()) {
+							if (LOG.isDebugEnabled()) {
+								LOG.info(
+										"API:" + api.getApiName() + "接收到请求Content-Length大于:" + bodyHandler.getBodyLength() + ",规定的最大值为:" + maxContentLength);
 							}
-						});
-						rctRequest.endHandler(end -> {
-							if (bodyHandler.isExceededMaxLen()) {
-								if (LOG.isDebugEnabled()) {
-									LOG.info(
-											"API:" + api.getApiName() + "接收到请求Content-Length大于:" + bodyHandler.getBodyLength() + ",规定的最大值为:" + maxContentLength);
-								}
-								rctResponse.setStatusCode(413).setStatusMessage("Request Entity Too Large").end();
-								return;
-							} else {
-								if (LOG.isDebugEnabled()) {
-									LOG.debug("API:" + api.getApiName() + "接收到Bodys:" + bodyHandler.getBody().entries());
-								}
-								rctQuerys.addAll(bodyHandler.getBody());
-								if (LOG.isDebugEnabled()) {
-									LOG.debug("API:" + api.getApiName() + "将body的参数添加到Query后:" + rctQuerys.entries());
-								}
-								requstFuture.complete();
+							rctResponse.setStatusCode(413).setStatusMessage("Request Entity Too Large").end();
+							return;
+						} else {
+							if (LOG.isDebugEnabled()) {
+								LOG.debug("API:" + api.getApiName() + "接收到Bodys:" + bodyHandler.getBody().entries());
 							}
-						});
-					}
+							rctQuerys.addAll(bodyHandler.getBody());
+							if (LOG.isDebugEnabled()) {
+								LOG.debug("API:" + api.getApiName() + "将body的参数添加到Query后:" + rctQuerys.entries());
+							}
+							requstFuture.complete();
+						}
+					});
+				} else {
+					requstFuture.complete();
 				}
 			} else {
 				requstFuture.complete();
@@ -251,20 +264,33 @@ public class VxApiRouteHandlerHttpServiceImpl implements VxApiRouteHandlerHttpSe
 						rct.put(VxApiAfterHandler.PREV_IS_SUCCESS_KEY, Future.<Boolean>failedFuture(e));// 告诉后置处理器当前操作成功执行
 						rct.next();
 					} else {
-						// 提交连接请求失败
-						if (LOG.isDebugEnabled()) {
-							LOG.debug("URL:" + urlInfo.getUrl() + ",下标:" + urlInfo.getIndex() + " 请求失败,已经提交给连接策略");
-						}
-						policy.reportBadService(urlInfo.getIndex());
+						// 请求结束
 						trackInfo.setEndTime(Instant.now());
-						// 记录与后台交互发生错误
-						trackInfo.setSuccessful(false);
-						trackInfo.setErrMsg(e.getMessage());
-						trackInfo.setErrStackTrace(e.getStackTrace());
-						rct.vertx().eventBus().send(thisVertxName + VxApiEventBusAddressConstant.SYSTEM_PLUS_TRACK_INFO, trackInfo.toJson());
+						// 如果是用户已经关闭了请求连接给予warn提示并结束执行
+						if (e != null && e.getMessage().contains("Response is closed")) {
+							trackInfo.setEndTime(Instant.now());
+							// 记录与后台交互发生错误
+							trackInfo.setSuccessful(false);
+							trackInfo.setErrMsg("执行请求后端服务的异常:Response is closed,可能是用户关闭了请求");
+							trackInfo.setErrStackTrace(null);
+							rct.vertx().eventBus().send(thisVertxName + VxApiEventBusAddressConstant.SYSTEM_PLUS_TRACK_INFO, trackInfo.toJson());
+						} else {
+							// 记录与后台交互发生错误
+							trackInfo.setSuccessful(false);
+							if (e != null) {
+								trackInfo.setErrMsg(e.getMessage());
+								trackInfo.setErrStackTrace(e.getStackTrace());
+							}
+							rct.vertx().eventBus().send(thisVertxName + VxApiEventBusAddressConstant.SYSTEM_PLUS_TRACK_INFO, trackInfo.toJson());
+						}
 						// 如果是连接异常返回无法连接的错误信息,其他异常返回相应的异常
 						try {
 							if (e instanceof ConnectException || e instanceof TimeoutException) {
+								// 提交连接请求失败
+								if (LOG.isDebugEnabled()) {
+									LOG.error("URL:" + urlInfo.getUrl() + ",下标:" + urlInfo.getIndex() + " 请求后端服务连接失败或者连接超时,已经提交给连接策略");
+								}
+								policy.reportBadService(urlInfo.getIndex());
 								rctResponse.putHeader(VxApiRouteConstant.DATE, StrUtil.getRfc822DateFormat(new Date()))
 										.setStatusCode(api.getResult().getCantConnServerStatus()).end(api.getResult().getCantConnServerExample());
 							} else {
@@ -272,7 +298,10 @@ public class VxApiRouteHandlerHttpServiceImpl implements VxApiRouteHandlerHttpSe
 										.setStatusCode(api.getResult().getFailureStatus()).end(api.getResult().getFailureExample());
 							}
 						} catch (Exception e1) {
-							LOG.error("在请求后台服务的异常处理器中响应用户请求-->异常:", e1);
+							// 如果是用户已经关闭了请求连接给予warn提示并结束执行
+							if (e != null && !e.getMessage().contains("Response is closed")) {
+								LOG.error("在请求后端服务的异常处理器中响应用户请求-->异常:", e1);
+							}
 						}
 					}
 				});
@@ -333,12 +362,6 @@ public class VxApiRouteHandlerHttpServiceImpl implements VxApiRouteHandlerHttpSe
 					});
 				} else {
 					request.end(reqBodyParam.toString().replace("?", ""));
-				}
-				if (policy.isHaveBadService()) {
-					LOG.warn(
-							String.format("应用:%s -> API:%s,后台服务存在不可用的后台服务URL,VX将以设定的重试时间:%d进行重试", appName, api.getApiName(), serOptions.getRetryTime()));
-					// 进入重试连接后台服务
-					retryConnServer(rct.vertx());
 				}
 			});
 		} else {
