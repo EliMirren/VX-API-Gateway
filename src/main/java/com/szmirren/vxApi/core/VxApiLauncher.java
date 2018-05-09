@@ -25,6 +25,18 @@ import io.vertx.core.spi.cluster.ClusterManager;
  */
 public class VxApiLauncher extends Launcher {
 	private final String CLUSTER_TYPE = "NONE";
+	/**
+	 * 启动VX-API-Gateway
+	 */
+	public static void start() {
+		VxApiLauncher.main(new String[]{"run", "com.szmirren.vxApi.core.VxApiMain"});
+	}
+	/**
+	 * 停止VX-API-Gateway
+	 */
+	public static void stop() {
+		executeCommand("stop", System.getProperty("thisVertxName"));
+	}
 
 	public static void main(String[] args) {
 		String thisVertxName = UUID.randomUUID().toString() + LocalTime.now().getNano();
