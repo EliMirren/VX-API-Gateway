@@ -46,7 +46,6 @@ import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.streams.Pump;
 import io.vertx.ext.web.RoutingContext;
-import io.vertx.ext.web.client.WebClient;
 
 /**
  * VxApiRoute HTTP/HTTPS服务类型的处理器
@@ -80,8 +79,6 @@ public class VxApiRouteHandlerHttpServiceImpl implements VxApiRouteHandlerHttpSe
 
 	/** HTTP客户端 */
 	private HttpClient httpClient;
-	/** 简化HTTP请求的WebClient */
-	private WebClient webClient;
 
 	/**
 	 * 初始化一个服务器
@@ -667,27 +664,29 @@ public class VxApiRouteHandlerHttpServiceImpl implements VxApiRouteHandlerHttpSe
 	 */
 	public void retryConnServer(Vertx vertx) {
 		if (!policy.isCheckWaiting()) {
-			if (webClient == null) {
-				webClient = WebClient.create(vertx);
-			}
 			policy.setCheckWaiting(true);
 			vertx.setTimer(serOptions.getRetryTime(), testConn -> {
+				if (LOG.isDebugEnabled()) {
+					LOG.debug(String.format("应用:%s -> API:%s重试连接后台服务URL...", appName, api.getApiName()));
+				}
 				List<VxApiServerURLInfo> service = policy.getBadService();
 				if (service != null) {
 					for (VxApiServerURLInfo urlinfo : service) {
-						webClient.requestAbs(serOptions.getMethod(), urlinfo.getUrl()).timeout(serOptions.getTimeOut()).send(res -> {
-							if (res.succeeded()) {
-								int statusCode = res.result().statusCode();
-								if (statusCode != 200) {
-									LOG.warn(String.format("应用:%s -> API:%s重试连接后台服务URL,连接成功但得到一个%d状态码,", appName, api.getApiName(), statusCode));
-								} else {
-									if (LOG.isDebugEnabled()) {
-										LOG.debug(String.format("应用:%s -> API:%s重试连接后台服务URL,连接成功 !", appName, api.getApiName()));
-									}
+						httpClient.requestAbs(serOptions.getMethod(), urlinfo.getUrl()).setTimeout(serOptions.getTimeOut()).handler(resp -> {
+							int statusCode = resp.statusCode();
+							if (statusCode != 200) {
+								LOG.warn(String.format("应用:%s -> API:%s重试连接后台服务URL,连接成功但得到一个%d状态码,", appName, api.getApiName(), statusCode));
+							} else {
+								if (LOG.isDebugEnabled()) {
+									LOG.debug(String.format("应用:%s -> API:%s重试连接后台服务URL,连接成功 !", appName, api.getApiName()));
 								}
-								policy.reportGreatService(urlinfo.getIndex());
 							}
-						});
+							policy.reportGreatService(urlinfo.getIndex());
+						}).exceptionHandler(e -> {
+							if (LOG.isDebugEnabled()) {
+								LOG.debug(String.format("应用:%s -> API:%s重试连接后台服务URL->失败:", appName, api.getApiName()), e);
+							}
+						}).end();
 					}
 				}
 				policy.setCheckWaiting(false);

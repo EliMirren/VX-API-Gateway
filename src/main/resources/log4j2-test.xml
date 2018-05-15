@@ -18,9 +18,11 @@
 			<ThresholdFilter level="${LOG_CONSOLE_LEVEL}"
 				onMatch="ACCEPT" onMismatch="DENY" />
 			<!--输出日志的格式 -->
-			<PatternLayout pattern="[%p] [%d{yyyy-MM-dd HH:mm:ss}] %l %msg%n" />
+			<PatternLayout
+				pattern="[%p] [%d{yyyy-MM-dd HH:mm:ss}] %l %msg%n" />
 		</console>
-		<RollingFile name="RollingFileInfo" fileName="${LOG_HOME}/info.log"
+		<RollingFile name="RollingFileInfo"
+			fileName="${LOG_HOME}/info.log"
 			filePattern="${LOG_HOME}/${LOG_HOME_HISTORY}/info/$${date:yyyy-MM}/%d{yyyy-MM-dd}-%i.log">
 			<!--控制台只输出level及以上级别的信息（onMatch），其他的直接拒绝（onMismatch） -->
 			<Filters>
@@ -29,7 +31,8 @@
 				<ThresholdFilter level="info" onMatch="ACCEPT"
 					onMismatch="DENY" />
 			</Filters>
-			<PatternLayout pattern="[%p] [%d{yyyy-MM-dd HH:mm:ss}] %l  %msg%n" />
+			<PatternLayout
+				pattern="[%p] [%d{yyyy-MM-dd HH:mm:ss}] %l  %msg%n" />
 			<Policies>
 				<TimeBasedTriggeringPolicy interval="1" />
 				<SizeBasedTriggeringPolicy size="100 MB" />
@@ -37,7 +40,8 @@
 			<!-- 默认7个可以指定最大保存多少个<DefaultRolloverStrategy max="10" /> -->
 		</RollingFile>
 
-		<RollingFile name="RollingFileWarn" fileName="${LOG_HOME}/warn.log"
+		<RollingFile name="RollingFileWarn"
+			fileName="${LOG_HOME}/warn.log"
 			filePattern="${LOG_HOME}/${LOG_HOME_HISTORY}/warn/$${date:yyyy-MM}/%d{yyyy-MM-dd}-%i.log">
 			<Filters>
 				<ThresholdFilter level="error" onMatch="DENY"
@@ -45,17 +49,20 @@
 				<ThresholdFilter level="warn" onMatch="ACCEPT"
 					onMismatch="DENY" />
 			</Filters>
-			<PatternLayout pattern="[%p] [%d{yyyy-MM-dd HH:mm:ss}] %l  %msg%n" />
+			<PatternLayout
+				pattern="[%p] [%d{yyyy-MM-dd HH:mm:ss}] %l  %msg%n" />
 			<Policies>
 				<TimeBasedTriggeringPolicy interval="1" />
 				<SizeBasedTriggeringPolicy size="100 MB" />
 			</Policies>
 		</RollingFile>
-		<RollingFile name="RollingFileError" fileName="${LOG_HOME}/error.log"
+		<RollingFile name="RollingFileError"
+			fileName="${LOG_HOME}/error.log"
 			filePattern="${LOG_HOME}/${LOG_HOME_HISTORY}/error/$${date:yyyy-MM}/%d{yyyy-MM-dd}-%i.log">
 			<ThresholdFilter level="error" onMatch="ACCEPT"
 				onMismatch="DENY" />
-			<PatternLayout pattern="[%p] [%d{yyyy-MM-dd HH:mm:ss}] %l  %msg%n" />
+			<PatternLayout
+				pattern="[%p] [%d{yyyy-MM-dd HH:mm:ss}] %l  %msg%n" />
 			<Policies>
 				<TimeBasedTriggeringPolicy interval="1" />
 				<SizeBasedTriggeringPolicy size="100 MB" />
@@ -65,16 +72,18 @@
 
 	<loggers>
 		<!--过滤掉一些无用的DEBUG信息 <logger name="org.mybatis" level="INFO"></logger> -->
-		<!-- 异步输出日志 如果需要显示所在行数可以加上 includeLocation="true"  -->
-		<AsyncLogger name="${CODE_PACKAGE}" level="${LOG_LEVEL}" 
-			additivity="false" includeLocation="true">
+		<!-- 异步输出日志 如果需要显示所在行数可以加上 includeLocation="true" -->
+		<logger name="io.vertx.core.net.impl.ConnectionBase"
+			level="fatal"></logger>
+		<AsyncLogger name="${CODE_PACKAGE}" level="${LOG_LEVEL}"
+			
 			<appender-ref ref="Console" level="${LOG_CONSOLE_LEVEL}" />
 			<appender-ref ref="RollingFileInfo" />
 			<appender-ref ref="RollingFileWarn" />
 			<appender-ref ref="RollingFileError" />
 		</AsyncLogger>
-		<AsyncLogger name="druid.sql.Statement" level="${LOG_LEVEL}"
-			additivity="false" includeLocation="true">
+		<AsyncLogger name="druid.sql.Statement"
+			level="${LOG_LEVEL}" additivity="false" includeLocation="true">
 			<appender-ref ref="Console" level="${LOG_CONSOLE_LEVEL}" />
 			<appender-ref ref="RollingFileInfo" />
 			<appender-ref ref="RollingFileWarn" />
