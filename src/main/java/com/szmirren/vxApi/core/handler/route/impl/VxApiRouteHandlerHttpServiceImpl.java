@@ -682,7 +682,7 @@ public class VxApiRouteHandlerHttpServiceImpl implements VxApiRouteHandlerHttpSe
 									LOG.warn(String.format("应用:%s -> API:%s重试连接后台服务URL,连接成功但得到一个%d状态码,", appName, api.getApiName(), statusCode));
 								} else {
 									if (LOG.isDebugEnabled()) {
-										LOG.debug(String.format("应用:%s -> API:%s重试连接后台服务URL,连接成功!", appName, api.getApiName()));
+										LOG.debug(String.format("应用:%s -> API:%s重试连接后台服务URL,连接成功 !", appName, api.getApiName()));
 									}
 								}
 								policy.reportGreatService(urlinfo.getIndex());

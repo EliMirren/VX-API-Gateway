@@ -65,8 +65,8 @@
 
 	<loggers>
 		<!--过滤掉一些无用的DEBUG信息 <logger name="org.mybatis" level="INFO"></logger> -->
-		<!-- 异步输出日志 如果需要显示所在行数可以加上 includeLocation="true" -->
-		<AsyncLogger name="${CODE_PACKAGE}" level="${LOG_LEVEL}"
+		<!-- 异步输出日志 如果需要显示所在行数可以加上 includeLocation="true"  -->
+		<AsyncLogger name="${CODE_PACKAGE}" level="${LOG_LEVEL}" 
 			additivity="false" includeLocation="true">
 			<appender-ref ref="Console" level="${LOG_CONSOLE_LEVEL}" />
 			<appender-ref ref="RollingFileInfo" />
