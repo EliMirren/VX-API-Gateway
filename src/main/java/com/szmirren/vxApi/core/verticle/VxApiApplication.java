@@ -487,10 +487,22 @@ public class VxApiApplication extends AbstractVerticle {
 			List<Route> routes = new ArrayList<>();// 存储部署的路由
 			// 流量限制处理器
 			if (api.getLimitUnit() != null) {
-				Route limitRoute = router.route();// 权限认证的route;
+				Route limitRoute = router.route();// 流量限制的route;
 				initApiLimit(api, limitRoute);
 				routes.add(limitRoute);
 			}
+			Route checkRoute = router.route();// 参数检查的的route;
+			try {
+				initParamCheck(api, checkRoute);
+				routes.add(checkRoute);
+			} catch (Exception e) {
+				checkRoute.remove();
+				routes.forEach(r -> r.remove());// 清空已经成功的路由
+				LOG.error(appName + ":API:" + api.getApiName() + "添加参数检查-->失败:" + e);
+				fut.fail(e);
+				return;
+			}
+
 			// 认证处理器
 			if (api.getAuthOptions() != null) {
 				Route authRoute = router.route();// 权限认证的route;
@@ -678,7 +690,6 @@ public class VxApiApplication extends AbstractVerticle {
 	 * @param api
 	 * @param route
 	 */
-	@Deprecated
 	public void initParamCheck(VxApis api, Route route) {
 		route.path(api.getPath());
 		if (api.getMethod() != HttpMethodEnum.ALL) {
@@ -688,7 +699,7 @@ public class VxApiApplication extends AbstractVerticle {
 		if (api.getConsumes() != null) {
 			api.getConsumes().forEach(va -> route.consumes(va));
 		}
-		VxApiRouteHandlerParamCheck paramCheckHandler = VxApiRouteHandlerParamCheck.create(api);
+		VxApiRouteHandlerParamCheck paramCheckHandler = VxApiRouteHandlerParamCheck.create(api, appOption.getContentLength());
 		route.handler(paramCheckHandler);
 
 	}
@@ -803,8 +814,7 @@ public class VxApiApplication extends AbstractVerticle {
 	 * @throws MalformedURLException
 	 */
 	public void serverHttpTypeHandler(boolean isNext, VxApis api, Route route) throws NullPointerException, MalformedURLException {
-		VxApiRouteHandlerHttpService httpTypeHandler = VxApiRouteHandlerHttpService.create(appName, appOption.getContentLength(), isNext, api,
-				httpClient);
+		VxApiRouteHandlerHttpService httpTypeHandler = VxApiRouteHandlerHttpService.create(appName, isNext, api, httpClient);
 		route.handler(httpTypeHandler);
 	}
 

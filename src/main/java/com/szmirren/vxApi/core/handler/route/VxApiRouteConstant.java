@@ -21,5 +21,15 @@ public interface VxApiRouteConstant {
 	public final static String USER_AGENT = "User-Agent";
 	/** 时间 Date */
 	public final static String DATE = "Date";
+	/** 从RoutingContext获取用户请求长度的key */
+	public final static String BODY_KEY_CONTENT_LENGTH = "VxApiBodyContentLength";
+	/** 从RoutingContext获取用户请求PATH参数的key */
+	public final static String BODY_KEY_PATH_TYPE_MultiMap = "VxApiBodyPathParams";
+	/** 从RoutingContext获取用户请求HEADER参数的key */
+	public final static String BODY_KEY_HEADER_TYPE_MultiMap = "VxApiBodyHeaderParams";
+	/** 从RoutingContext获取用户请求QUERY参数的key */
+	public final static String BODY_KEY_QUERY_TYPE_QueryStringEncoder = "VxApiBodyQueryPathParams";
+	/** 从RoutingContext获取用户请求BODY参数的key */
+	public final static String BODY_KEY_BODY_TYPE_QueryStringEncoder = "VxApiBodyBodyPathParams";
 
 }
