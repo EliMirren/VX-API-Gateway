@@ -22,7 +22,8 @@ public class VxApiRequestBodyHandler implements Handler<Buffer> {
 	private VxApiContentType contentType;
 	/** 请求体的最大限制长度小于=0代表无限 */
 	private long maxContentLength;
-
+	/** 用户请求的数据Buffer */
+	private Buffer bodyBuffer = Buffer.buffer();
 	/**
 	 * 实例化一个用户请求bodyhandler
 	 * 
@@ -41,15 +42,11 @@ public class VxApiRequestBodyHandler implements Handler<Buffer> {
 		if (buffer == null || !contentType.isNullOrUrlencoded()) {
 			return;
 		}
-		String data = buffer.toString();
-		bodyLength += data.length();
+		bodyLength += buffer.length();
 		if (maxContentLength > 0 && bodyLength > maxContentLength) {
 			return;
 		}
-		MultiMap decoderUriParams = HttpUtils.decoderUriParams(data, contentType.getCharset());
-		if (decoderUriParams != null) {
-			body.addAll(decoderUriParams);
-		}
+		bodyBuffer.appendBuffer(buffer);
 	}
 	/**
 	 * 获得body的参数
@@ -57,6 +54,10 @@ public class VxApiRequestBodyHandler implements Handler<Buffer> {
 	 * @return 返回一个不为null的MultiMap
 	 */
 	public MultiMap getBody() {
+		MultiMap decoderUriParams = HttpUtils.decoderUriParams(bodyBuffer.toString(), contentType.getCharset());
+		if (decoderUriParams != null) {
+			body.addAll(decoderUriParams);
+		}
 		return body;
 	}
 	/**
