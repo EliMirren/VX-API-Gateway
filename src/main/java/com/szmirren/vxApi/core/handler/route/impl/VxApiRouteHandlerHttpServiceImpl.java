@@ -140,7 +140,7 @@ public class VxApiRouteHandlerHttpServiceImpl implements VxApiRouteHandlerHttpSe
 			MultiMap reqPathParam = rct.get(VxApiRouteConstant.BODY_KEY_PATH_TYPE_MultiMap);
 			if (reqPathParam.entries() != null) {
 				for (Entry<String, String> entry : reqPathParam.entries()) {
-					reqURL.replace(":" + entry.getKey(), entry.getValue());
+					reqURL = reqURL.replace(":" + entry.getKey(), entry.getValue());
 				}
 			}
 			// 请求服务的Header
