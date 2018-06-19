@@ -162,8 +162,7 @@ public class VxApiLauncher extends Launcher {
 	 * @return
 	 */
 	public JsonObject getDefaultVertxConfig() {
-		// return new JsonObject().put("preferNativeTransport", true);
-		return new JsonObject();
+		return new JsonObject().put("preferNativeTransport", true);
 	}
 
 	/**
