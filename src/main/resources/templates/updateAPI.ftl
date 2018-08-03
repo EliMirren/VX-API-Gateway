@@ -163,6 +163,7 @@
                                                 </#if>
                                             <option value="none" class="ng-binding">不认证</option>
                                             <option value="sessionTokenAuth" class="ng-binding">session-token</option>
+                                            <option value="jwtTokenAuth" class="ng-binding">JWT-token</option>
                                         </select>
                                     </div>
                                 </div>
