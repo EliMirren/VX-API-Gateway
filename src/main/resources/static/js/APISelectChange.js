@@ -9,6 +9,8 @@ $("#auth-options-name").change(function () {
         $("#auth-options-config").val('{\n"apiTokenName":"vxApiSessionToken",\n"userTokenName":"vxApiUserToken",\n"userTokenScope":"HEADER",\n"authFailContentType":"HTML_UTF8",\n"authFailResult":"Unauthorized"\n}');
         $(".auth-hide-show").show();
     } else {
+    	$("#auth-options-config").val('');
+    	$("#auth-options-config").val('{\n"apiTokenName":"apiToken",\n"userTokenName":"apiName",\n"secretKeys":[{"admin":"secret"},{"test":"123456"}]}');
         $(".auth-hide-show").show();
     }
 });

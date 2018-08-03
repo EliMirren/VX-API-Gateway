@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.szmirren.vxApi.core.common.StrUtil;
 import com.szmirren.vxApi.core.entity.VxApis;
+import com.szmirren.vxApi.spi.auth.impl.VxApiAuthJwtTokenImpl;
 import com.szmirren.vxApi.spi.auth.impl.VxApiAuthSessionTokenImpl;
 
 import io.vertx.core.http.HttpClient;
@@ -21,6 +22,8 @@ public class VxApiAuthFactory {
 	 * sessionToken的实现类名称
 	 */
 	public final static String SESSION_TOKEN_AUTH = "sessionTokenAuth";
+	
+	public final static String JWT_TOKEN_AUTH = "jwtTokenAuth";
 
 	/**
 	 * 获得所有实现类的名字
@@ -50,6 +53,9 @@ public class VxApiAuthFactory {
 		}
 		if (SESSION_TOKEN_AUTH.equalsIgnoreCase(name)) {
 			return new VxApiAuthSessionTokenImpl(options);
+		}
+		if (JWT_TOKEN_AUTH.equalsIgnoreCase(name)) {
+			return new VxApiAuthJwtTokenImpl(options);
 		}
 		throw new ClassNotFoundException("没有找到名字为 : " + name + " 的API权限验证实现类");
 	}
