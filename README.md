@@ -1,3 +1,6 @@
+# 2.0升级说明
+VX-API已经在本人公司运行了236天(2018-11-23),核心处理器处理了9000多万次,网关对于我们这种访问量不大的公司来说基本不是问题,但是VX-API当前1.0版本性能还有很大的控件没有压榨出来,部分设计也不是很人性化,所以本人已经在安排时间做2.0版,2.0版性能将大大提升,也会更人性化,推荐大家先加入群里或者关注该项目后等2.0版再使用,2.0版不打算兼容1.0版,但是会出工具将1.0的接口迁移到2.0
+
 # VX-API-Gateway
 ![logo](https://raw.githubusercontent.com/shenzhenMirren/MyGithubResources/master/image/VX-API-Gateway-Logo_small.png)<br/>
 VX-API-Gateway是基于Vert.x(java)开发的API网关,是一个分布式,全异步,高性能,可扩展 ,轻量级的API网关<br/>
