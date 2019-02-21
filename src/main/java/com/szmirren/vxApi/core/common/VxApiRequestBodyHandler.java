@@ -6,6 +6,7 @@ import io.vertx.core.Handler;
 import io.vertx.core.MultiMap;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.CaseInsensitiveHeaders;
+import io.vertx.core.json.JsonObject;
 /**
  * 用户请求的body主体解析工具<br>
  * 当前只解析Content-type=Null或者Urlencoded
@@ -38,8 +39,8 @@ public class VxApiRequestBodyHandler implements Handler<Buffer> {
 
 	@Override
 	public void handle(Buffer buffer) {
-		// 如果buffer为null或者非URLencode则返回
-		if (buffer == null || !contentType.isNullOrUrlencoded()) {
+		// 如果buffer为null或者不是支持解析的类型则返回
+		if (buffer == null || !contentType.isDecodedSupport()) {
 			return;
 		}
 		bodyLength += buffer.length();
@@ -54,12 +55,25 @@ public class VxApiRequestBodyHandler implements Handler<Buffer> {
 	 * @return 返回一个不为null的MultiMap
 	 */
 	public MultiMap getBody() {
-		MultiMap decoderUriParams = HttpUtils.decoderUriParams(bodyBuffer.toString(), contentType.getCharset());
-		if (decoderUriParams != null) {
-			body.addAll(decoderUriParams);
+		if (contentType.isApplicationJson()) {
+			try {
+				JsonObject object = new JsonObject(bodyBuffer);
+				if (object.getMap() != null) {
+					object.getMap().forEach((k, v) -> {
+						body.add(k, v.toString());
+					});
+				}
+			} catch (Exception e) {
+			}
+		} else if (contentType.isUrlencoded()) {
+			MultiMap decoderUriParams = HttpUtils.decoderUriParams(bodyBuffer.toString(), contentType.getCharset());
+			if (decoderUriParams != null) {
+				body.addAll(decoderUriParams);
+			}
 		}
 		return body;
 	}
+
 	/**
 	 * 获得body的长度
 	 * 

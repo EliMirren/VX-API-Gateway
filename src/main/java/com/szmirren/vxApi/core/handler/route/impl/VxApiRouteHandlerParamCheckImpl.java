@@ -106,7 +106,7 @@ public class VxApiRouteHandlerParamCheckImpl implements VxApiRouteHandlerParamCh
 		VxApiContentType uctype = loadContentType(rctRequest);
 		// 如果不透传body则判断是否需要将用户的body加载到Query中
 		if (!api.isPassBody()) {
-			if (api.isBodyAsQuery() && uctype.isNullOrUrlencoded()) {
+			if (api.isBodyAsQuery() && uctype.isDecodedSupport()) {
 				// 解析用户请求的主体
 				VxApiRequestBodyHandler bodyHandler = new VxApiRequestBodyHandler(uctype, maxContentLength);
 				rctRequest.handler(body -> {

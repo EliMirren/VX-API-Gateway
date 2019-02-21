@@ -61,6 +61,15 @@ public class VxApiContentType {
 	}
 
 	/**
+	 * 判断Content-Type类型是否支持解析
+	 * 
+	 * @return
+	 */
+	public boolean isDecodedSupport() {
+		return (isUrlencoded() || isApplicationJson());
+	}
+
+	/**
 	 * Content-Type是否为:null或者application/x-www-form-urlencoded
 	 * 
 	 * @return
@@ -70,12 +79,30 @@ public class VxApiContentType {
 	}
 
 	/**
+	 * Content-Type是否为:application/x-www-form-urlencoded
+	 * 
+	 * @return
+	 */
+	public boolean isUrlencoded() {
+		return "application/x-www-form-urlencoded".equalsIgnoreCase(contentType);
+	}
+
+	/**
 	 * Content-Type是否为:multipart/form-data
 	 * 
 	 * @return
 	 */
 	public boolean isFormData() {
 		return "multipart/form-data".equalsIgnoreCase(contentType);
+	}
+
+	/**
+	 * Content-Type是否为:application/json
+	 * 
+	 * @return
+	 */
+	public boolean isApplicationJson() {
+		return "application/json".equalsIgnoreCase(contentType);
 	}
 
 	/**
