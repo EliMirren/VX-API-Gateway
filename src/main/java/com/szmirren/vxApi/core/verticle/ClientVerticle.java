@@ -17,22 +17,23 @@ import com.szmirren.vxApi.core.common.VxApiEventBusAddressConstant;
 import com.szmirren.vxApi.core.common.VxApiGatewayAttribute;
 import com.szmirren.vxApi.core.enums.ContentTypeEnum;
 import com.szmirren.vxApi.core.enums.HTTPStatusCodeMsgEnum;
-import com.szmirren.vxApi.core.handler.freemarker.VxApiFreeMarkerTemplateEngine;
 import com.szmirren.vxApi.core.options.VxApiApplicationDTO;
 import com.szmirren.vxApi.core.options.VxApisDTO;
 
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
+import io.vertx.core.Promise;
 import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.eventbus.ReplyException;
+import io.vertx.core.file.impl.FileResolver;
 import io.vertx.core.http.HttpServerResponse;
-import io.vertx.core.impl.FileResolver;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.auth.User;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
+import io.vertx.ext.web.common.template.TemplateEngine;
 import io.vertx.ext.web.handler.BodyHandler;
 import io.vertx.ext.web.handler.CookieHandler;
 import io.vertx.ext.web.handler.FaviconHandler;
@@ -41,7 +42,7 @@ import io.vertx.ext.web.handler.StaticHandler;
 import io.vertx.ext.web.handler.TemplateHandler;
 import io.vertx.ext.web.sstore.ClusteredSessionStore;
 import io.vertx.ext.web.sstore.LocalSessionStore;
-import io.vertx.ext.web.templ.TemplateEngine;
+import io.vertx.ext.web.templ.freemarker.FreeMarkerTemplateEngine;
 
 /**
  * VX-API页面客户端Verticle
@@ -78,13 +79,12 @@ public class ClientVerticle extends AbstractVerticle {
 	private String thisVertxName;
 
 	@Override
-	public void start(Future<Void> fut) throws Exception {
+	public void start(Promise<Void> fut) throws Exception {
 		LOG.info("start Client Verticle ...");
 		thisVertxName = System.getProperty("thisVertxName", "VX-API");
 		Router router = Router.router(vertx);
 		router.route().handler(FaviconHandler.create(getFaviconPath()));
 		router.route().handler(BodyHandler.create().setUploadsDirectory(getUploadsDirectory()));
-		router.route().handler(CookieHandler.create());
 		if (vertx.isClustered()) {
 			router.route().handler(
 					SessionHandler.create(ClusteredSessionStore.create(vertx)).setSessionCookieName(VxApiGatewayAttribute.SESSION_COOKIE_NAME));
@@ -93,8 +93,9 @@ public class ClientVerticle extends AbstractVerticle {
 					.handler(SessionHandler.create(LocalSessionStore.create(vertx)).setSessionCookieName(VxApiGatewayAttribute.SESSION_COOKIE_NAME));
 		}
 		// 通过html的方式管理应用网关
-		TemplateEngine engine = VxApiFreeMarkerTemplateEngine.create(getTemplateRoot());
-		TemplateHandler tempHandler = TemplateHandler.create(engine, getTemplateRoot(), CONTENT_VALUE_HTML_UTF8);
+		TemplateEngine create = FreeMarkerTemplateEngine.create(vertx);
+		TemplateHandler tempHandler = TemplateHandler.create(create, getTemplateRoot(), CONTENT_VALUE_HTML_UTF8);
+		
 		router.getWithRegex(".+\\.ftl").handler(tempHandler);
 		// 权限相关
 		router.route("/static/*").handler(VxApiClientStaticAuth.create());
@@ -132,7 +133,7 @@ public class ClientVerticle extends AbstractVerticle {
 		router.route("/static/trackInfo/:appName/:apiName").handler(this::getTrackInfo);
 		// 欢迎页
 		router.route("/").handler(this::welcome);
-		vertx.createHttpServer().requestHandler(router::accept).listen(config().getInteger("clientPort", 5256), res -> {
+		vertx.createHttpServer().requestHandler(router).listen(config().getInteger("clientPort", 5256), res -> {
 			if (res.succeeded()) {
 				LOG.info("start Clinet Verticle successful");
 				fut.complete();
@@ -321,7 +322,9 @@ public class ClientVerticle extends AbstractVerticle {
 					if (dep.succeeded()) {
 						JsonObject body = new JsonObject(res.result().getString("content"));
 						body.put("online", dep.result().body());
-						rct.put("app", body);
+						JsonObject context = new JsonObject();
+						context.put("app", body);
+						rct.put("context", context);
 						rct.reroute("/getAPP.ftl");
 					} else {
 						response.end(dep.cause().toString());
@@ -405,7 +408,9 @@ public class ClientVerticle extends AbstractVerticle {
 					if (app.isEmpty()) {
 						response.setStatusCode(404).end(_404);
 					} else {
-						rct.put("app", app);
+						JsonObject context = new JsonObject();
+						context.put("app", app);
+						rct.put("context", context);
 						rct.reroute("/updateAPP.ftl");
 					}
 				} else {
@@ -672,7 +677,9 @@ public class ClientVerticle extends AbstractVerticle {
 									}
 								}
 							}
-							rct.put("api", api);
+							JsonObject context = new JsonObject();
+							context.put("api", api);
+							rct.put("context", context);
 							rct.reroute("/getAPI.ftl");
 						} else {
 							LOG.error(
@@ -772,7 +779,9 @@ public class ClientVerticle extends AbstractVerticle {
 								}
 							}
 						}
-						rct.put("api", api);
+						JsonObject context = new JsonObject();
+						context.put("api", api);
+						rct.put("context", context);
 						rct.reroute("/updateAPI.ftl");
 					}
 				} else {
@@ -1078,8 +1087,8 @@ public class ClientVerticle extends AbstractVerticle {
 	 */
 	public String getTemplateRoot() {
 		if (PathUtil.isJarEnv()) {
-			FileResolver resolver = new FileResolver(vertx);
-			File file = resolver.resolveFile(new File(PathUtil.getPathString("templates")).getPath());
+			FileResolver fileResolver = new FileResolver();
+			File file = fileResolver.resolveFile(new File(PathUtil.getPathString("templates")).getPath());
 			return "/" + file.getPath();
 		} else {
 			return "target/classes/templates";

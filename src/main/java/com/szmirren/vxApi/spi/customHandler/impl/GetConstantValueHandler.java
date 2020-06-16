@@ -42,8 +42,10 @@ public class GetConstantValueHandler implements VxApiCustomHandler {
 			rct.put(VxApiAfterHandler.PREV_IS_SUCCESS_KEY, Future.<Boolean>succeededFuture(true));// 告诉后置处理器当前操作成功执行
 			rct.next();
 		} else {
-			rct.response().putHeader(HttpHeaderConstant.SERVER, VxApiGatewayAttribute.FULL_NAME)
-					.putHeader(HttpHeaderConstant.CONTENT_TYPE, contentType).end(result);
+			if (!rct.response().ended()) {
+				rct.response().putHeader(HttpHeaderConstant.SERVER, VxApiGatewayAttribute.FULL_NAME)
+						.putHeader(HttpHeaderConstant.CONTENT_TYPE, contentType).end(result);
+			}
 		}
 
 	}

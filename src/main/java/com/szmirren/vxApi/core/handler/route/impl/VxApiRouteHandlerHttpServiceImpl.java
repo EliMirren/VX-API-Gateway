@@ -223,7 +223,9 @@ public class VxApiRouteHandlerHttpServiceImpl implements VxApiRouteHandlerHttpSe
 						rct.put(VxApiAfterHandler.PREV_IS_SUCCESS_KEY, Future.<Boolean>succeededFuture(true));// 告诉后置处理器当前操作成功执行
 						rct.next();
 					} else {
-						rctResponse.end();
+						if (!rctResponse.ended()) {
+							rctResponse.end();
+						}
 					}
 					// 统计响应长度
 					String repLen = resp.getHeader(VxApiRouteConstant.CONTENT_LENGTH);

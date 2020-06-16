@@ -39,8 +39,10 @@ public class GetServerUnixTimestampHandler implements VxApiCustomHandler {
 					contentType);
 			rct.next();
 		} else {
-			rct.response().putHeader(HttpHeaderConstant.SERVER, VxApiGatewayAttribute.FULL_NAME)
-					.putHeader(HttpHeaderConstant.CONTENT_TYPE, contentType).end(result);
+			if (!rct.response().ended()) {
+				rct.response().putHeader(HttpHeaderConstant.SERVER, VxApiGatewayAttribute.FULL_NAME)
+						.putHeader(HttpHeaderConstant.CONTENT_TYPE, contentType).end(result);
+			}
 		}
 	}
 

@@ -50,9 +50,11 @@ public class VxApiRouteApiLimitImpl implements VxApiRouteHandlerApiLimit {
 						Instant oldTime = limit.getTimePoints().plusSeconds(api.getLimitUnit().getVal());
 						Duration between = Duration.between(Instant.now(), oldTime);
 						if (between.getSeconds() > 0) {
-							rct.response().putHeader(VxApiRouteConstant.SERVER, VxApiGatewayAttribute.FULL_NAME)
-									.putHeader(VxApiRouteConstant.CONTENT_TYPE, api.getContentType()).setStatusCode(api.getResult().getLimitStatus())
-									.end(api.getResult().getLimitExample());
+							if (!rct.response().ended()) {
+								rct.response().putHeader(VxApiRouteConstant.SERVER, VxApiGatewayAttribute.FULL_NAME)
+										.putHeader(VxApiRouteConstant.CONTENT_TYPE, api.getContentType()).setStatusCode(api.getResult().getLimitStatus())
+										.end(api.getResult().getLimitExample());
+							}
 							return;
 						} else {
 							VxApiAPILimit newLimit = new VxApiAPILimit(api.getIpLimit(), api.getApiLimit());
@@ -74,9 +76,11 @@ public class VxApiRouteApiLimitImpl implements VxApiRouteHandlerApiLimit {
 						Instant oldTime = limit.getTimePoints().plusSeconds(api.getLimitUnit().getVal());
 						Duration between = Duration.between(Instant.now(), oldTime);
 						if (between.getSeconds() > 0) {
-							rct.response().putHeader(VxApiRouteConstant.SERVER, VxApiGatewayAttribute.FULL_NAME)
-									.putHeader(VxApiRouteConstant.CONTENT_TYPE, api.getContentType()).setStatusCode(api.getResult().getLimitStatus())
-									.end(api.getResult().getLimitExample());
+							if (!rct.response().ended()) {
+								rct.response().putHeader(VxApiRouteConstant.SERVER, VxApiGatewayAttribute.FULL_NAME)
+										.putHeader(VxApiRouteConstant.CONTENT_TYPE, api.getContentType()).setStatusCode(api.getResult().getLimitStatus())
+										.end(api.getResult().getLimitExample());
+							}
 							return;
 						} else {
 							VxApiAPILimit newLimit = new VxApiAPILimit(api.getIpLimit(), api.getApiLimit());

@@ -37,7 +37,9 @@ public class VxApiRouteHandlerRedirectTypeImpl implements VxApiRouteHandlerRedir
 			rct.put(VxApiAfterHandler.PREV_IS_SUCCESS_KEY, Future.<Boolean>succeededFuture(true));// 告诉后置处理器当前操作成功执行
 			rct.next();
 		} else {
-			rct.response().end();
+			if (!rct.response().ended()) {
+				rct.response().end();
+			}
 		}
 
 	}

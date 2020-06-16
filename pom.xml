@@ -13,7 +13,7 @@
 		<project.builder.sourcesEncoding>UTF-8</project.builder.sourcesEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 		<maven.compiler.encoding>UTF-8</maven.compiler.encoding>
-		<vertx.version>3.5.2</vertx.version>
+		<vertx.version>3.9.1</vertx.version>
 		<main.verticle>com.szmirren.vxApi.core.VxApiMain</main.verticle><!-- 启动类 -->
 	</properties>
 	<dependencyManagement>

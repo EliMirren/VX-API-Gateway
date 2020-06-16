@@ -119,7 +119,9 @@ public class VxApiRouteHandlerParamCheckImpl implements VxApiRouteHandlerParamCh
 						if (LOG.isDebugEnabled()) {
 							LOG.info("API:" + api.getApiName() + "接收到请求Content-Length大于:" + bodyHandler.getBodyLength() + ",规定的最大值为:" + maxContentLength);
 						}
-						rctResponse.setStatusCode(413).setStatusMessage("Request Entity Too Large").end();
+						if (!rctResponse.ended()) {
+							rctResponse.setStatusCode(413).setStatusMessage("Request Entity Too Large").end();
+						}
 						return;
 					} else {
 						if (LOG.isDebugEnabled()) {

@@ -121,9 +121,11 @@ public class SessionTokenGrantAuthHandler implements VxApiCustomHandler {
 				// 检查参数是否符合
 				boolean checkResult = checkParam(rct);
 				if (!checkResult) {
-					rct.response().putHeader(VxApiRouteConstant.SERVER, VxApiGatewayAttribute.FULL_NAME)
-							.putHeader(VxApiRouteConstant.CONTENT_TYPE, api.getContentType())
-							.setStatusCode(api.getResult().getApiEnterCheckFailureStatus()).end(api.getResult().getApiEnterCheckFailureExample());
+					if (!rct.response().ended()) {
+						rct.response().putHeader(VxApiRouteConstant.SERVER, VxApiGatewayAttribute.FULL_NAME)
+								.putHeader(VxApiRouteConstant.CONTENT_TYPE, api.getContentType())
+								.setStatusCode(api.getResult().getApiEnterCheckFailureStatus()).end(api.getResult().getApiEnterCheckFailureExample());
+					}
 					return;
 				}
 				// 执行监控
@@ -162,7 +164,9 @@ public class SessionTokenGrantAuthHandler implements VxApiCustomHandler {
 							rct.put(VxApiAfterHandler.PREV_IS_SUCCESS_KEY, Future.<Boolean>succeededFuture(true));// 告诉后置处理器当前操作成功执行
 							rct.next();
 						} else {
-							response.end();
+							if (!response.ended()) {
+								response.end();
+							}
 						}
 						trackInfo.setResponseBufferLen(result.body() == null ? 0 : result.body().length());
 						trackInfo.setEndTime(Instant.now());
@@ -174,10 +178,12 @@ public class SessionTokenGrantAuthHandler implements VxApiCustomHandler {
 							HttpServerResponse response = rct.response().putHeader(HttpHeaderConstant.SERVER, VxApiGatewayAttribute.FULL_NAME)
 									.putHeader(HttpHeaderConstant.CONTENT_TYPE, api.getContentType());
 							// 如果是连接异常返回无法连接的错误信息,其他异常返回相应的异常
-							if (res.cause() instanceof ConnectException || res.cause() instanceof TimeoutException) {
-								response.setStatusCode(api.getResult().getCantConnServerStatus()).end(api.getResult().getCantConnServerExample());
-							} else {
-								response.setStatusCode(api.getResult().getFailureStatus()).end(api.getResult().getFailureExample());
+							if (!response.ended()) {
+								if (res.cause() instanceof ConnectException || res.cause() instanceof TimeoutException) {
+									response.setStatusCode(api.getResult().getCantConnServerStatus()).end(api.getResult().getCantConnServerExample());
+								} else {
+									response.setStatusCode(api.getResult().getFailureStatus()).end(api.getResult().getFailureExample());
+								}
 							}
 						}
 						// 提交连接请求失败
@@ -203,9 +209,11 @@ public class SessionTokenGrantAuthHandler implements VxApiCustomHandler {
 				rct.put(VxApiAfterHandler.PREV_IS_SUCCESS_KEY, Future.<Boolean>failedFuture(new ConnectException("无法连接上后台交互的服务器")));
 				rct.next();
 			} else {
-				rct.response().putHeader(HttpHeaderConstant.SERVER, VxApiGatewayAttribute.FULL_NAME)
-						.putHeader(HttpHeaderConstant.CONTENT_TYPE, api.getContentType()).setStatusCode(api.getResult().getCantConnServerStatus())
-						.end(api.getResult().getCantConnServerExample());
+				if (!rct.response().ended()) {
+					rct.response().putHeader(HttpHeaderConstant.SERVER, VxApiGatewayAttribute.FULL_NAME)
+							.putHeader(HttpHeaderConstant.CONTENT_TYPE, api.getContentType()).setStatusCode(api.getResult().getCantConnServerStatus())
+							.end(api.getResult().getCantConnServerExample());
+				}
 			}
 			// 重试连接服务器
 			retryConnServer(rct.vertx());

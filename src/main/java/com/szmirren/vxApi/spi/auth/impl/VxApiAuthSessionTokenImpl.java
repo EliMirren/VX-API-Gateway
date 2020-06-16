@@ -39,8 +39,10 @@ public class VxApiAuthSessionTokenImpl implements VxApiAuth {
 	public void handle(RoutingContext event) {
 		Session session = event.session();
 		if (session == null) {
-			event.response().putHeader(HttpHeaderConstant.SERVER, VxApiGatewayAttribute.FULL_NAME)
-					.putHeader(HttpHeaderConstant.CONTENT_TYPE, authFailContentType.val()).end(authFailResult);
+			if (!event.response().ended()) {
+				event.response().putHeader(HttpHeaderConstant.SERVER, VxApiGatewayAttribute.FULL_NAME)
+						.putHeader(HttpHeaderConstant.CONTENT_TYPE, authFailContentType.val()).end(authFailResult);
+			}
 		} else {
 			// session中的token
 			String apiToken = session.get(apiTokenName) == null ? null : session.get(apiTokenName).toString();
@@ -55,8 +57,10 @@ public class VxApiAuthSessionTokenImpl implements VxApiAuth {
 			if (!StrUtil.isNullOrEmpty(apiToken) && apiToken.equals(userTokoen)) {
 				event.next();
 			} else {
-				event.response().putHeader(HttpHeaderConstant.SERVER, VxApiGatewayAttribute.FULL_NAME)
-						.putHeader(HttpHeaderConstant.CONTENT_TYPE, authFailContentType.val()).end(authFailResult);
+				if (!event.response().ended()) {
+					event.response().putHeader(HttpHeaderConstant.SERVER, VxApiGatewayAttribute.FULL_NAME)
+							.putHeader(HttpHeaderConstant.CONTENT_TYPE, authFailContentType.val()).end(authFailResult);
+				}
 			}
 		}
 	}
