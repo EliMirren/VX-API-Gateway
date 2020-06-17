@@ -1,6 +1,8 @@
 package com.szmirren.vxApi.core.verticle;
 
 import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.text.MessageFormat;
 import java.time.Instant;
 
@@ -17,6 +19,7 @@ import com.szmirren.vxApi.core.common.VxApiEventBusAddressConstant;
 import com.szmirren.vxApi.core.common.VxApiGatewayAttribute;
 import com.szmirren.vxApi.core.enums.ContentTypeEnum;
 import com.szmirren.vxApi.core.enums.HTTPStatusCodeMsgEnum;
+import com.szmirren.vxApi.core.handler.FreeMarkerTemplateHander;
 import com.szmirren.vxApi.core.options.VxApiApplicationDTO;
 import com.szmirren.vxApi.core.options.VxApisDTO;
 
@@ -35,14 +38,12 @@ import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.common.template.TemplateEngine;
 import io.vertx.ext.web.handler.BodyHandler;
-import io.vertx.ext.web.handler.CookieHandler;
 import io.vertx.ext.web.handler.FaviconHandler;
 import io.vertx.ext.web.handler.SessionHandler;
 import io.vertx.ext.web.handler.StaticHandler;
 import io.vertx.ext.web.handler.TemplateHandler;
 import io.vertx.ext.web.sstore.ClusteredSessionStore;
 import io.vertx.ext.web.sstore.LocalSessionStore;
-import io.vertx.ext.web.templ.freemarker.FreeMarkerTemplateEngine;
 
 /**
  * VX-API页面客户端Verticle
@@ -93,9 +94,9 @@ public class ClientVerticle extends AbstractVerticle {
 					.handler(SessionHandler.create(LocalSessionStore.create(vertx)).setSessionCookieName(VxApiGatewayAttribute.SESSION_COOKIE_NAME));
 		}
 		// 通过html的方式管理应用网关
-		TemplateEngine create = FreeMarkerTemplateEngine.create(vertx);
-		TemplateHandler tempHandler = TemplateHandler.create(create, getTemplateRoot(), CONTENT_VALUE_HTML_UTF8);
-		
+		// TemplateEngine create = FreeMarkerTemplateEngine.create(vertx);
+		// TemplateHandler tempHandler = TemplateHandler.create(create, getTemplateRoot(), CONTENT_VALUE_HTML_UTF8);
+		TemplateHandler tempHandler = new FreeMarkerTemplateHander(vertx, getTemplateRoot(), CONTENT_VALUE_HTML_UTF8);
 		router.getWithRegex(".+\\.ftl").handler(tempHandler);
 		// 权限相关
 		router.route("/static/*").handler(VxApiClientStaticAuth.create());
@@ -1089,7 +1090,7 @@ public class ClientVerticle extends AbstractVerticle {
 		if (PathUtil.isJarEnv()) {
 			FileResolver fileResolver = new FileResolver();
 			File file = fileResolver.resolveFile(new File(PathUtil.getPathString("templates")).getPath());
-			return "/" + file.getPath();
+			return (file.getPath().startsWith("/") ? "" : "/") + file.getPath();
 		} else {
 			return "target/classes/templates";
 		}
