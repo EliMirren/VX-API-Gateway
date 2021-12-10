@@ -227,6 +227,7 @@
 							<name>start</name>
 							<jvmSettings>
 								<extraArguments>
+									<extraArgument>-Dlog4j2.formatMsgNoLookups=true</extraArgument>
 									<extraArgument>-Dfile.encoding=UTF-8</extraArgument>
 									<extraArgument>-Dvertx.cacheDirBase=../temp/file-cache</extraArgument>
 									<!-- 调整内存大小 <extraArgument>-Xmx2G</extraArgument> <extraArgument>-Xms2G</extraArgument> -->
