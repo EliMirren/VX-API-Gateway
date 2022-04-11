@@ -1,15 +1,12 @@
 package com.szmirren.vxApi.core.verticle;
 
+import io.vertx.core.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.szmirren.vxApi.core.common.StrUtil;
 import com.szmirren.vxApi.core.common.VxApiEventBusAddressConstant;
 
-import io.vertx.core.AbstractVerticle;
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
 import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.JsonArray;
@@ -29,7 +26,7 @@ public class CLIVerticle extends AbstractVerticle {
 	private String thisVertxName;
 
 	@Override
-	public void start(Future<Void> startFuture) throws Exception {
+	public void start(Promise<Void> startFuture) throws Exception {
 		LOG.info("start CLI Verticle ...");
 		thisVertxName = System.getProperty("thisVertxName", "VX-API");
 		vertx.eventBus().consumer(VxApiEventBusAddressConstant.CLI_START_EVERYTHING, this::startEverything);
@@ -47,7 +44,7 @@ public class CLIVerticle extends AbstractVerticle {
 	public void startEverything(Message<JsonObject> msg) {
 		LOG.info("cli->执行启动所有网关应用与API...");
 		vertx.executeBlocking(futrue -> {
-			vertx.eventBus().<JsonArray>send(thisVertxName + VxApiEventBusAddressConstant.FIND_APP, null, reply -> {
+			vertx.eventBus().<JsonArray>request(thisVertxName + VxApiEventBusAddressConstant.FIND_APP, null, reply -> {
 				if (reply.succeeded()) {
 					JsonArray body = reply.result().body();
 					if (body != null && body.size() > 0) {
@@ -84,7 +81,7 @@ public class CLIVerticle extends AbstractVerticle {
 	public void startAllAPP(Message<JsonObject> msg) {
 		LOG.info("cli->执行启动所有网关应用...");
 		vertx.executeBlocking(futrue -> {
-			vertx.eventBus().<JsonArray>send(thisVertxName + VxApiEventBusAddressConstant.FIND_APP, null, reply -> {
+			vertx.eventBus().<JsonArray>request(thisVertxName + VxApiEventBusAddressConstant.FIND_APP, null, reply -> {
 				if (reply.succeeded()) {
 					JsonArray body = reply.result().body();
 					if (body != null && body.size() > 0) {
@@ -129,7 +126,7 @@ public class CLIVerticle extends AbstractVerticle {
 			return;
 		}
 		vertx.executeBlocking(futrue -> {
-			vertx.eventBus().<JsonArray>send(thisVertxName + VxApiEventBusAddressConstant.FIND_APP, null, reply -> {
+			vertx.eventBus().<JsonArray>request(thisVertxName + VxApiEventBusAddressConstant.FIND_APP, null, reply -> {
 				if (reply.succeeded()) {
 					JsonArray allAPP = reply.result().body();
 					if (allAPP != null && allAPP.size() > 0) {
@@ -186,7 +183,7 @@ public class CLIVerticle extends AbstractVerticle {
 			return;
 		}
 		vertx.executeBlocking(futrue -> {
-			vertx.eventBus().<JsonArray>send(thisVertxName + VxApiEventBusAddressConstant.FIND_APP, null, reply -> {
+			vertx.eventBus().<JsonArray>request(thisVertxName + VxApiEventBusAddressConstant.FIND_APP, null, reply -> {
 				if (reply.succeeded()) {
 					JsonArray allAPP = reply.result().body();
 					if (allAPP != null && allAPP.size() > 0) {
@@ -264,7 +261,7 @@ public class CLIVerticle extends AbstractVerticle {
 		config.put("app", body);
 		config.put("appName", appName);
 		String startAppAddress = thisVertxName + VxApiEventBusAddressConstant.DEPLOY_APP_DEPLOY;
-		vertx.eventBus().send(startAppAddress, config, res -> {
+		vertx.eventBus().request(startAppAddress, config, res -> {
 			if (res.succeeded()) {
 				// 判断是否启动所有API
 				if (startAPI) {
@@ -292,7 +289,7 @@ public class CLIVerticle extends AbstractVerticle {
 		}
 		// 获取所有API
 		JsonObject message = new JsonObject().put("appName", appName);
-		vertx.eventBus().<JsonArray>send(thisVertxName + VxApiEventBusAddressConstant.FIND_API_ALL, message, reply -> {
+		vertx.eventBus().<JsonArray>request(thisVertxName + VxApiEventBusAddressConstant.FIND_API_ALL, message, reply -> {
 			if (reply.succeeded()) {
 				JsonArray apis = reply.result().body();
 				DeliveryOptions option = new DeliveryOptions();
@@ -301,7 +298,7 @@ public class CLIVerticle extends AbstractVerticle {
 				config.put("appName", appName);
 				config.put("apis", apis);
 				String startApiAddress = thisVertxName + VxApiEventBusAddressConstant.DEPLOY_API_START_ALL;
-				vertx.eventBus().<String>send(startApiAddress, config, option, res -> {
+				vertx.eventBus().<String>request(startApiAddress, config, option, res -> {
 					if (res.succeeded()) {
 						if (LOG.isDebugEnabled()) {
 							LOG.debug("cli->执行启动网关应用:" + appName + "->启动所有API-->成功");

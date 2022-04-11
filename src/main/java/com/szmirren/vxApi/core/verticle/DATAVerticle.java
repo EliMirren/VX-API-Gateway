@@ -3,6 +3,7 @@ package com.szmirren.vxApi.core.verticle;
 import java.text.MessageFormat;
 import java.util.List;
 
+import io.vertx.core.Promise;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -38,7 +39,7 @@ public class DATAVerticle extends AbstractVerticle {
 	private String thisVertxName;
 
 	@Override
-	public void start(Future<Void> fut) throws Exception {
+	public void start(Promise<Void> fut) throws Exception {
 		LOG.info("start DATA Verticle ...");
 		thisVertxName = System.getProperty("thisVertxName", "VX-API");
 		initShorthand();// 初始化简写后的常量数据
@@ -404,9 +405,9 @@ public class DATAVerticle extends AbstractVerticle {
 			JsonObject body = msg.body();
 			String appName = body.getString("appName");
 
-			Future<Void> addApiFuture = Future.future();
+			Promise<Void> addApiFuture = Promise.promise();
 			// 判断有没有存在该应用后执行
-			addApiFuture.setHandler(check -> {
+			addApiFuture.future().onComplete(check -> {
 				String sql = MessageFormat.format("insert into {0} ({1},{2},{3}) values(?,?,?)", APITN, APIIC, API_APPIC, APICC);
 				JsonArray params = new JsonArray();
 				params.add(body.getString("apiName"));

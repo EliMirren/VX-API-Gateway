@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+import io.vertx.core.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -17,11 +18,6 @@ import com.szmirren.vxApi.core.entity.VxApiDeployInfos;
 import com.szmirren.vxApi.core.enums.HTTPStatusCodeMsgEnum;
 import com.szmirren.vxApi.core.options.VxApiServerOptions;
 
-import io.vertx.core.AbstractVerticle;
-import io.vertx.core.AsyncResult;
-import io.vertx.core.DeploymentOptions;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -65,7 +61,7 @@ public class DeploymentVerticle extends AbstractVerticle {
 	private String thisVertxName;
 
 	@Override
-	public void start(Future<Void> startFuture) throws Exception {
+	public void start(Promise<Void> startFuture) throws Exception {
 		LOG.info("start Deployment Verticle ...");
 		thisVertxName = System.getProperty("thisVertxName", "VX-API");
 		if (vertx.isClustered()) {
@@ -110,7 +106,7 @@ public class DeploymentVerticle extends AbstractVerticle {
 		body.put("appConfig", application);
 
 		// 获得全局黑名单并部署应用
-		vertx.eventBus().<JsonArray>send(thisVertxName + VxApiEventBusAddressConstant.SYSTEM_BLACK_IP_FIND, null, iplist -> {
+		vertx.eventBus().<JsonArray>request(thisVertxName + VxApiEventBusAddressConstant.SYSTEM_BLACK_IP_FIND, null, iplist -> {
 			if (iplist.succeeded()) {
 				// 添加到加载配置
 				body.put("blackIpSet", iplist.result().body());
@@ -156,7 +152,7 @@ public class DeploymentVerticle extends AbstractVerticle {
 					} else {
 						LOG.error("启动应用程序:" + name + "-->失败:" + res.cause());
 						int code = 500;
-						if (res.cause() != null && res.cause().toString().indexOf("Address already in use: bind") > -1) {
+						if (res.cause() != null && res.cause().toString().contains("Address already in use: bind")) {
 							code = 1111;
 						}
 						msg.fail(code, res.cause().toString());
@@ -188,8 +184,8 @@ public class DeploymentVerticle extends AbstractVerticle {
 		}
 		String deployId = deployInfos.getDeployId();
 
-		Future<Void> undeplyFuture = Future.future();
-		undeplyFuture.setHandler(handle -> {
+		Promise<Void> undeplyFuture = Promise.promise();
+		undeplyFuture.future().onComplete(handle -> {
 			vertx.undeploy(deployId, res -> {
 				if (res.succeeded()) {
 					vertx.executeBlocking(futrue -> {
@@ -469,7 +465,7 @@ public class DeploymentVerticle extends AbstractVerticle {
 		if (serverType != null) {
 			params.put("serverType", serverType);
 		}
-		vertx.eventBus().send(address, params, reply -> {
+		vertx.eventBus().request(address, params, reply -> {
 			if (reply.succeeded()) {
 				if (successSet != null) {
 					successSet.add(api.getString("apiName"));
@@ -597,7 +593,7 @@ public class DeploymentVerticle extends AbstractVerticle {
 		if (serverType != null) {
 			params.put("serverType", serverType);
 		}
-		vertx.eventBus().<Integer>send(address, params, res -> {
+		vertx.eventBus().<Integer>request(address, params, res -> {
 			startApiService(null, null, null, null, handler, res);
 		});
 	}
@@ -692,7 +688,7 @@ public class DeploymentVerticle extends AbstractVerticle {
 			handler.handle(stopResult);
 			return;
 		}
-		vertx.eventBus().<Integer>send(thisVertxName + appName + VxApiEventBusAddressConstant.APPLICATION_DEL_API_SUFFIX, apiName, reply -> {
+		vertx.eventBus().<Integer>request(thisVertxName + appName + VxApiEventBusAddressConstant.APPLICATION_DEL_API_SUFFIX, apiName, reply -> {
 			stopApiServiceSingle(null, null, handler, reply);
 		});
 	}
@@ -720,7 +716,7 @@ public class DeploymentVerticle extends AbstractVerticle {
 		}
 		String apiName = apis.remove(0);
 		String address = thisVertxName + appName + VxApiEventBusAddressConstant.APPLICATION_DEL_API_SUFFIX;
-		vertx.eventBus().send(address, apiName, reply -> {
+		vertx.eventBus().request(address, apiName, reply -> {
 			if (reply.succeeded()) {
 				stopApiRecursion(apis, appName, success + 1, fail, handler);
 			} else {

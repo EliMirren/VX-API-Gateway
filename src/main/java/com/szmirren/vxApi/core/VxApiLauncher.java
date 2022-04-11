@@ -71,7 +71,6 @@ public class VxApiLauncher extends Launcher {
 				ClusterManager cmgr = VxApiClusterManagerFactory.getClusterManager(clusterc.getString("clusterType"),
 						clusterc.getJsonObject("clusterConf", getDefaultClusterConfig()));
 				options.setClusterManager(cmgr);
-				options.setClustered(true);
 			}
 		} catch (IOException e) {
 			throw new FileSystemException(e);
@@ -93,35 +92,12 @@ public class VxApiLauncher extends Launcher {
 		if (json.getValue("blockedThreadCheckInterval") instanceof Number) {
 			obj.setBlockedThreadCheckInterval(((Number) json.getValue("blockedThreadCheckInterval")).longValue());
 		}
-		if (json.getValue("clusterHost") instanceof String) {
-			obj.setClusterHost((String) json.getValue("clusterHost"));
-		}
-		if (json.getValue("clusterPingInterval") instanceof Number) {
-			obj.setClusterPingInterval(((Number) json.getValue("clusterPingInterval")).longValue());
-		}
-		if (json.getValue("clusterPingReplyInterval") instanceof Number) {
-			obj.setClusterPingReplyInterval(((Number) json.getValue("clusterPingReplyInterval")).longValue());
-		}
-		if (json.getValue("clusterPort") instanceof Number) {
-			obj.setClusterPort(((Number) json.getValue("clusterPort")).intValue());
-		}
-		if (json.getValue("clusterPublicHost") instanceof String) {
-			obj.setClusterPublicHost((String) json.getValue("clusterPublicHost"));
-		}
-		if (json.getValue("clusterPublicPort") instanceof Number) {
-			obj.setClusterPublicPort(((Number) json.getValue("clusterPublicPort")).intValue());
-		}
-		if (json.getValue("clustered") instanceof Boolean) {
-			obj.setClustered((Boolean) json.getValue("clustered"));
-		}
+
 		if (json.getValue("eventBusOptions") instanceof JsonObject) {
 			obj.setEventBusOptions(new io.vertx.core.eventbus.EventBusOptions((JsonObject) json.getValue("eventBusOptions")));
 		}
 		if (json.getValue("eventLoopPoolSize") instanceof Number) {
 			obj.setEventLoopPoolSize(((Number) json.getValue("eventLoopPoolSize")).intValue());
-		}
-		if (json.getValue("fileResolverCachingEnabled") instanceof Boolean) {
-			obj.setFileResolverCachingEnabled((Boolean) json.getValue("fileResolverCachingEnabled"));
 		}
 		if (json.getValue("haEnabled") instanceof Boolean) {
 			obj.setHAEnabled((Boolean) json.getValue("haEnabled"));

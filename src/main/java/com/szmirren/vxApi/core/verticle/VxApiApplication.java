@@ -1,17 +1,5 @@
 package com.szmirren.vxApi.core.verticle;
 
-import java.net.MalformedURLException;
-import java.text.MessageFormat;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import com.szmirren.vxApi.core.common.StrUtil;
 import com.szmirren.vxApi.core.common.VxApiEventBusAddressConstant;
 import com.szmirren.vxApi.core.common.VxApiGatewayAttribute;
@@ -23,30 +11,15 @@ import com.szmirren.vxApi.core.handler.route.VxApiRouteHandlerApiLimit;
 import com.szmirren.vxApi.core.handler.route.VxApiRouteHandlerHttpService;
 import com.szmirren.vxApi.core.handler.route.VxApiRouteHandlerParamCheck;
 import com.szmirren.vxApi.core.handler.route.VxApiRouteHandlerRedirectType;
-import com.szmirren.vxApi.core.options.VxApiApplicationDTO;
-import com.szmirren.vxApi.core.options.VxApiApplicationOptions;
-import com.szmirren.vxApi.core.options.VxApiCertOptions;
-import com.szmirren.vxApi.core.options.VxApiCorsOptions;
-import com.szmirren.vxApi.core.options.VxApiServerOptions;
-import com.szmirren.vxApi.core.options.VxApisDTO;
+import com.szmirren.vxApi.core.options.*;
 import com.szmirren.vxApi.spi.auth.VxApiAuth;
 import com.szmirren.vxApi.spi.auth.VxApiAuthFactory;
 import com.szmirren.vxApi.spi.auth.VxApiAuthOptions;
 import com.szmirren.vxApi.spi.customHandler.VxApiCustomHandler;
 import com.szmirren.vxApi.spi.customHandler.VxApiCustomHandlerFactory;
 import com.szmirren.vxApi.spi.customHandler.VxApiCustomHandlerOptions;
-import com.szmirren.vxApi.spi.handler.VxApiAfterHandler;
-import com.szmirren.vxApi.spi.handler.VxApiAfterHandlerFactory;
-import com.szmirren.vxApi.spi.handler.VxApiAfterHandlerOptions;
-import com.szmirren.vxApi.spi.handler.VxApiBeforeHandler;
-import com.szmirren.vxApi.spi.handler.VxApiBeforeHandlerFactory;
-import com.szmirren.vxApi.spi.handler.VxApiBeforeHandlerOptions;
-
-import io.vertx.core.AbstractVerticle;
-import io.vertx.core.AsyncResult;
-import io.vertx.core.CompositeFuture;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
+import com.szmirren.vxApi.spi.handler.*;
+import io.vertx.core.*;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpMethod;
@@ -58,12 +31,18 @@ import io.vertx.core.net.PfxOptions;
 import io.vertx.ext.web.Route;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
-import io.vertx.ext.web.handler.CookieHandler;
 import io.vertx.ext.web.handler.CorsHandler;
 import io.vertx.ext.web.handler.SessionHandler;
 import io.vertx.ext.web.sstore.ClusteredSessionStore;
 import io.vertx.ext.web.sstore.LocalSessionStore;
 import io.vertx.ext.web.sstore.SessionStore;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import java.net.CookieHandler;
+import java.net.MalformedURLException;
+import java.text.MessageFormat;
+import java.util.*;
 
 /**
  * Api网关配置信息
@@ -98,7 +77,7 @@ public class VxApiApplication extends AbstractVerticle {
 	private String thisVertxName;
 
 	@Override
-	public void start(Future<Void> startFuture) throws Exception {
+	public void start(Promise<Void> startFuture) throws Exception {
 		try {
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("加载应用配置信息...");
@@ -128,7 +107,6 @@ public class VxApiApplication extends AbstractVerticle {
 			if (appOption == null) {
 				LOG.error("创建应用程序-->失败:配置信息为空");
 				startFuture.fail("创建应用程序失败:配置信息为空");
-				return;
 			} else {
 				this.httpClient = vertx.createHttpClient(appOption);
 				Future<Void> httpFuture = Future.future(future -> {
@@ -174,7 +152,7 @@ public class VxApiApplication extends AbstractVerticle {
 					vertx.eventBus().consumer(VxApiEventBusAddressConstant.SYSTEM_PUBLISH_BLACK_IP_LIST, this::updateIpBlackList);
 					future.complete();
 				});
-				CompositeFuture.all(httpFuture, httpsFuture, eventFutrue).setHandler(res -> {
+				CompositeFuture.all(httpFuture, httpsFuture, eventFutrue).onComplete(res -> {
 					if (res.succeeded()) {
 						LOG.info("实例化应用程序-->成功");
 						startFuture.complete();
@@ -192,14 +170,12 @@ public class VxApiApplication extends AbstractVerticle {
 
 	/**
 	 * 创建http服务器
-	 * 
-	 * @param createHttp
+	 *
 	 */
 	public void createHttpServer(Handler<AsyncResult<Void>> createHttp) {
 		this.httpRouter = Router.router(vertx);
 		httpRouter.route().handler(this::filterBlackIP);
-		httpRouter.route().handler(CookieHandler.create());
-		SessionStore sessionStore = null;
+		SessionStore sessionStore;
 		if (vertx.isClustered()) {
 			sessionStore = ClusteredSessionStore.create(vertx);
 		} else {
@@ -241,7 +217,7 @@ public class VxApiApplication extends AbstractVerticle {
 			response.end(appOption.getNotFoundResult());
 		});
 		// 创建http服务器
-		vertx.createHttpServer(serverOptions).requestHandler(httpRouter::accept).listen(serverOptions.getHttpPort(), res -> {
+		vertx.createHttpServer(serverOptions).requestHandler(httpRouter).listen(serverOptions.getHttpPort(), res -> {
 			if (res.succeeded()) {
 				System.out.println(
 						MessageFormat.format("{0} Running on port {1} by HTTP", appOption.getAppName(), Integer.toString(serverOptions.getHttpPort())));
@@ -255,14 +231,12 @@ public class VxApiApplication extends AbstractVerticle {
 
 	/**
 	 * 创建https服务器
-	 * 
-	 * @param createHttp
+	 *
 	 */
 	public void createHttpsServer(Handler<AsyncResult<Void>> createHttps) {
 		this.httpsRouter = Router.router(vertx);
 		httpsRouter.route().handler(this::filterBlackIP);
-		httpsRouter.route().handler(CookieHandler.create());
-		SessionStore sessionStore = null;
+		SessionStore sessionStore ;
 		if (vertx.isClustered()) {
 			sessionStore = ClusteredSessionStore.create(vertx);
 		} else {
@@ -301,9 +275,9 @@ public class VxApiApplication extends AbstractVerticle {
 			createHttps.handle(Future.failedFuture("创建https服务器-->失败:无效的证书类型,只支持pem/pfx格式的证书"));
 			return;
 		}
-		Future<Boolean> createFuture = Future.future();
+		Promise<Boolean> createFuture =Promise.promise();
 		vertx.fileSystem().exists(certOptions.getCertPath(), createFuture);
-		createFuture.setHandler(check -> {
+		createFuture.future().onComplete(check -> {
 			if (check.succeeded()) {
 				if (check.result()) {
 					// 404页面
@@ -322,7 +296,7 @@ public class VxApiApplication extends AbstractVerticle {
 					if (vertx.isNativeTransportEnabled()) {
 						serverOptions.setTcpFastOpen(true).setTcpCork(true).setTcpQuickAck(true).setReusePort(true);
 					}
-					vertx.createHttpServer(serverOptions).requestHandler(httpsRouter::accept).listen(serverOptions.getHttpsPort(), res -> {
+					vertx.createHttpServer(serverOptions).requestHandler(httpsRouter).listen(serverOptions.getHttpsPort(), res -> {
 						if (res.succeeded()) {
 							System.out.println(appOption.getAppName() + " Running on port " + serverOptions.getHttpsPort() + " by HTTPS");
 							createHttps.handle(Future.succeededFuture());
@@ -344,12 +318,11 @@ public class VxApiApplication extends AbstractVerticle {
 
 	/**
 	 * 过滤黑名单
-	 * 
-	 * @param rct
+	 *
 	 */
 	public void filterBlackIP(RoutingContext rct) {
 		// 添加请求到达VX-API的数量
-		vertx.eventBus().send(thisVertxName + VxApiEventBusAddressConstant.SYSTEM_PLUS_VX_REQUEST, null);
+		vertx.eventBus().request(thisVertxName + VxApiEventBusAddressConstant.SYSTEM_PLUS_VX_REQUEST, null);
 		String host = rct.request().remoteAddress().host();
 		if (blackIpSet.contains(host)) {
 			HttpServerResponse response = rct.response();
@@ -371,7 +344,6 @@ public class VxApiApplication extends AbstractVerticle {
 	/**
 	 * 更新ip黑名单
 	 */
-	@SuppressWarnings("unchecked")
 	public void updateIpBlackList(Message<JsonArray> msg) {
 		if (msg.body() != null) {
 			this.blackIpSet = new LinkedHashSet<>(msg.body().getList());
@@ -420,7 +392,7 @@ public class VxApiApplication extends AbstractVerticle {
 				if (httpRouter != null && httpsRouter != null) {
 					Future<Boolean> httpFuture = Future.future(http -> addHttpRouter(api, http));
 					Future<Boolean> httpsFuture = Future.<Boolean>future(https -> addHttpsRouter(api, https));
-					CompositeFuture.all(httpFuture, httpsFuture).setHandler(res -> {
+					CompositeFuture.all(httpFuture, httpsFuture).onComplete(res -> {
 						if (res.succeeded()) {
 							msg.reply(1);
 						} else {
@@ -575,13 +547,9 @@ public class VxApiApplication extends AbstractVerticle {
 
 	/**
 	 * 初始化权限认证
-	 * 
-	 * @param path
-	 *          路径
-	 * @param method
-	 *          类型
-	 * @param consumes
-	 *          接收类型
+	 *
+	 * @param api
+	 *          API信息
 	 * @param route
 	 *          路由
 	 * @throws Exception
@@ -603,13 +571,9 @@ public class VxApiApplication extends AbstractVerticle {
 
 	/**
 	 * 初始化前置路由器
-	 * 
-	 * @param path
-	 *          路径
-	 * @param method
-	 *          类型
-	 * @param consumes
-	 *          接收类型
+	 *
+	 * @param api
+	 *          API信息
 	 * @param route
 	 *          路由
 	 * @throws Exception
@@ -632,13 +596,8 @@ public class VxApiApplication extends AbstractVerticle {
 
 	/**
 	 * 初始化后置路由器
-	 * 
-	 * @param path
-	 *          路径
-	 * @param method
-	 *          类型
-	 * @param consumes
-	 *          接收类型
+	 * @param api
+	 *          API信息
 	 * @param route
 	 *          路由
 	 * @throws Exception
@@ -764,7 +723,7 @@ public class VxApiApplication extends AbstractVerticle {
 			} else {
 				infos.setErrMsg("没有进一步信息 failure 为 null");
 			}
-			vertx.eventBus().send(thisVertxName + VxApiEventBusAddressConstant.SYSTEM_PLUS_ERROR, infos.toJson());
+			vertx.eventBus().request(thisVertxName + VxApiEventBusAddressConstant.SYSTEM_PLUS_ERROR, infos.toJson());
 		});
 	}
 

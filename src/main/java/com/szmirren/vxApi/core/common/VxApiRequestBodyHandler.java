@@ -5,7 +5,7 @@ import com.szmirren.vxApi.core.entity.VxApiContentType;
 import io.vertx.core.Handler;
 import io.vertx.core.MultiMap;
 import io.vertx.core.buffer.Buffer;
-import io.vertx.core.http.CaseInsensitiveHeaders;
+
 import io.vertx.core.json.JsonObject;
 /**
  * 用户请求的body主体解析工具<br>
@@ -16,7 +16,7 @@ import io.vertx.core.json.JsonObject;
  */
 public class VxApiRequestBodyHandler implements Handler<Buffer> {
 	/** 用户请求的body参数 */
-	private MultiMap body = new CaseInsensitiveHeaders();
+	private MultiMap body = MultiMap.caseInsensitiveMultiMap();
 	/** 用户请求的body长度 */
 	private long bodyLength;
 	/** 用户请求的contentType */

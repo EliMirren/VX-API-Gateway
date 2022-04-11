@@ -1,28 +1,17 @@
 package com.szmirren.vxApi.core;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import com.szmirren.vxApi.cluster.VxApiCluster;
 import com.szmirren.vxApi.cluster.VxApiClusterFactory;
 import com.szmirren.vxApi.core.common.PathUtil;
 import com.szmirren.vxApi.core.common.VxApiEventBusAddressConstant;
-import com.szmirren.vxApi.core.verticle.CLIVerticle;
-import com.szmirren.vxApi.core.verticle.ClientVerticle;
-import com.szmirren.vxApi.core.verticle.DATAVerticle;
-import com.szmirren.vxApi.core.verticle.DeploymentVerticle;
-import com.szmirren.vxApi.core.verticle.SysVerticle;
-
-import io.vertx.core.AbstractVerticle;
-import io.vertx.core.AsyncResult;
-import io.vertx.core.CompositeFuture;
-import io.vertx.core.DeploymentOptions;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
+import com.szmirren.vxApi.core.verticle.*;
+import io.vertx.core.*;
 import io.vertx.core.json.JsonObject;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import java.util.ArrayList;
+import java.util.List;
 /**
  * VX-API的程序入口
  * 
@@ -37,7 +26,7 @@ public class VxApiMain extends AbstractVerticle {
 	private final String CLUSTER_TYPE = "NONE";
 
 	@Override
-	public void start(Future<Void> fut) throws Exception {
+	public void start(Promise<Void> fut) throws Exception {
 
 		System.out.println("start VX-API...");
 		getConfig(conf -> {
@@ -73,7 +62,8 @@ public class VxApiMain extends AbstractVerticle {
 					futures.add(Future.<String>future(client -> {
 						vertx.deployVerticle(ClientVerticle.class.getName(), new DeploymentOptions(option).setConfig(clientConfig), client);
 					}));
-					CompositeFuture.all(futures).setHandler(res -> {
+					CompositeFuture.all(futures)
+						.onComplete(res -> {
 						if (res.succeeded()) {
 							runCLICommand(cliConfig, cliRes -> {
 								if (cliRes.succeeded()) {
@@ -112,26 +102,26 @@ public class VxApiMain extends AbstractVerticle {
 	 */
 	public void runCLICommand(JsonObject config, Handler<AsyncResult<Void>> handler) {
 		// 执行客户端
-		if (config.getBoolean("startEverything", false) != false) {
-			vertx.eventBus().send(VxApiEventBusAddressConstant.CLI_START_EVERYTHING, null, res -> {
+		if (config.getBoolean("startEverything", false)) {
+			vertx.eventBus().request(VxApiEventBusAddressConstant.CLI_START_EVERYTHING, null, res -> {
 				if (res.failed()) {
 					handler.handle(Future.failedFuture(res.cause()));
 				}
 			});
-		} else if (config.getBoolean("startAllAPP", false) != false) {
-			vertx.eventBus().send(VxApiEventBusAddressConstant.CLI_START_ALL_APP, null, res -> {
+		} else if (config.getBoolean("startAllAPP", false)) {
+			vertx.eventBus().request(VxApiEventBusAddressConstant.CLI_START_ALL_APP, null, res -> {
 				if (res.failed()) {
 					handler.handle(Future.failedFuture(res.cause()));
 				}
 			});
 		} else if (config.getJsonArray("startAPPEverything") != null) {
-			vertx.eventBus().send(VxApiEventBusAddressConstant.CLI_START_APP_EVERYTHING, config.getJsonArray("startAPPEverything"), res -> {
+			vertx.eventBus().request(VxApiEventBusAddressConstant.CLI_START_APP_EVERYTHING, config.getJsonArray("startAPPEverything"), res -> {
 				if (res.failed()) {
 					handler.handle(Future.failedFuture(res.cause()));
 				}
 			});
 		} else if (config.getJsonArray("startAPP") != null) {
-			vertx.eventBus().send(VxApiEventBusAddressConstant.CLI_START_APP, config.getJsonArray("startAPP"), res -> {
+			vertx.eventBus().request(VxApiEventBusAddressConstant.CLI_START_APP, config.getJsonArray("startAPP"), res -> {
 				if (res.failed()) {
 					handler.handle(Future.failedFuture(res.cause()));
 				}

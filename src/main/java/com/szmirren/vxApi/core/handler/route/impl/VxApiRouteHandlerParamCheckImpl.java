@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import io.vertx.core.Promise;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -27,7 +28,6 @@ import com.szmirren.vxApi.core.options.VxApiServerEntranceHttpOptions;
 import io.netty.handler.codec.http.QueryStringEncoder;
 import io.vertx.core.Future;
 import io.vertx.core.MultiMap;
-import io.vertx.core.http.CaseInsensitiveHeaders;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.ext.web.RoutingContext;
@@ -101,7 +101,7 @@ public class VxApiRouteHandlerParamCheckImpl implements VxApiRouteHandlerParamCh
 		}
 
 		// 请求后端服务的Future
-		Future<Void> nextFuture = Future.future();
+		Promise<Void> nextFuture = Promise.promise();
 		// 用户请求的Content-Type类型
 		VxApiContentType uctype = loadContentType(rctRequest);
 		// 如果不透传body则判断是否需要将用户的body加载到Query中
@@ -122,7 +122,6 @@ public class VxApiRouteHandlerParamCheckImpl implements VxApiRouteHandlerParamCh
 						if (!rctResponse.ended()) {
 							rctResponse.setStatusCode(413).setStatusMessage("Request Entity Too Large").end();
 						}
-						return;
 					} else {
 						if (LOG.isDebugEnabled()) {
 							LOG.debug("API:" + api.getApiName() + "接收到Bodys:" + bodyHandler.getBody().entries());
@@ -140,13 +139,12 @@ public class VxApiRouteHandlerParamCheckImpl implements VxApiRouteHandlerParamCh
 		} else {
 			nextFuture.complete();
 		}
-
 		// 请求后端服务的Future处理器
-		nextFuture.setHandler(future -> {
+		nextFuture.future().onComplete(future -> {
 			// 请求服务的Path参数
-			MultiMap reqPaths = new CaseInsensitiveHeaders();
+			MultiMap reqPaths = MultiMap.caseInsensitiveMultiMap();
 			// 请求服务的Header参数
-			MultiMap reqHeaderParam = new CaseInsensitiveHeaders();
+			MultiMap reqHeaderParam = MultiMap.caseInsensitiveMultiMap();
 			// 请求服务的Query参数
 			QueryStringEncoder reqQueryParam = new QueryStringEncoder("");
 			// 请求服务的Body参数
@@ -167,7 +165,7 @@ public class VxApiRouteHandlerParamCheckImpl implements VxApiRouteHandlerParamCh
 							.setStatusCode(api.getResult().getApiEnterCheckFailureStatus()).end(api.getResult().getApiEnterCheckFailureExample());
 					return;
 				}
-				if (thisMapParam != null && !thisMapParam.isEmpty()) {
+				if (!thisMapParam.isEmpty()) {
 					loadRequestMapParams(thisMapParam, rctHeaders, rctQuerys, reqPaths, reqHeaderParam, reqQueryParam, reqBodyParam);
 				}
 			}
@@ -429,8 +427,7 @@ public class VxApiRouteHandlerParamCheckImpl implements VxApiRouteHandlerParamCh
 
 	/**
 	 * 服务入口的参数检查与路径初始化
-	 * 
-	 * @param path
+	 *
 	 * @param ser
 	 */
 	private void initVxApiParamOptions(VxApiServerEntranceHttpOptions ser) {

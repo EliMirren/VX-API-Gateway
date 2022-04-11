@@ -35,7 +35,7 @@ import io.vertx.core.Future;
 import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
-import io.vertx.core.http.CaseInsensitiveHeaders;
+
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.JsonObject;
@@ -132,9 +132,9 @@ public class SessionTokenGrantAuthHandler implements VxApiCustomHandler {
 				VxApiTrackInfos trackInfo = new VxApiTrackInfos(api.getAppName(), api.getApiName());
 				trackInfo.setRequestBufferLen(rct.getBody() == null ? 0 : rct.getBody().length());
 				String requestPath = urlInfo.getUrl();
-				MultiMap headers = new CaseInsensitiveHeaders();
-				MultiMap queryParams = new CaseInsensitiveHeaders();
-				MultiMap bodyParams = new CaseInsensitiveHeaders();
+				MultiMap headers = MultiMap.caseInsensitiveMultiMap();
+				MultiMap queryParams = MultiMap.caseInsensitiveMultiMap();
+				MultiMap bodyParams = MultiMap.caseInsensitiveMultiMap();
 				if (serOptions.getParams() != null) {
 					loadParam(rct, requestPath, headers, queryParams, bodyParams);
 				}
@@ -194,7 +194,7 @@ public class SessionTokenGrantAuthHandler implements VxApiCustomHandler {
 						trackInfo.setErrMsg(res.cause().getMessage());
 						trackInfo.setErrStackTrace(res.cause().getStackTrace());
 					}
-					rct.vertx().eventBus().send(thisVertxName + VxApiEventBusAddressConstant.SYSTEM_PLUS_TRACK_INFO, trackInfo.toJson());
+					rct.vertx().eventBus().request(thisVertxName + VxApiEventBusAddressConstant.SYSTEM_PLUS_TRACK_INFO, trackInfo.toJson());
 				});
 			});
 			// 判断是否有坏的连接
@@ -423,7 +423,7 @@ public class SessionTokenGrantAuthHandler implements VxApiCustomHandler {
 	private void bodyUrlParamToBodyParams(Buffer body, MultiMap params, Charset charset) {
 		String data = body.toString();
 		if (params == null) {
-			params = new CaseInsensitiveHeaders();
+			params = MultiMap.caseInsensitiveMultiMap();
 		}
 		params.addAll(HttpUtils.decoderUriParams(data, charset));
 	}

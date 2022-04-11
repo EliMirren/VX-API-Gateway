@@ -7,7 +7,11 @@ import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.file.FileSystem;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.auth.User;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * 用于验证用户是否正确
@@ -16,6 +20,21 @@ import io.vertx.core.json.JsonObject;
  *
  */
 public class VxApiUserAuthUtil {
+	private static final Logger LOG = LogManager.getLogger(VxApiUserAuthUtil.class);
+	/**
+	 * 检查是否有权限
+	 * @param user 用户
+	 * @param authority 权限类型
+	 * @param handler 处理结果
+	 */
+	public static void isAuthorized(User user, String authority, Handler<AsyncResult<Boolean>> handler) {
+		if (user==null||user.principal()==null||user.principal().isEmpty()){
+			handler.handle(Future.succeededFuture(false));
+			return;
+		}
+		JsonArray roles = user.principal().getJsonArray("roles", new JsonArray());
+		handler.handle(Future.succeededFuture(roles.contains(authority)));
+	}
 	/**
 	 * 验证用户是否正确,如果正确返回json格式的用户如果不存在返回null
 	 * 

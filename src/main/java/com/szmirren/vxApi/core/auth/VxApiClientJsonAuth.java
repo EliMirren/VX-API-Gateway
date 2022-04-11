@@ -18,8 +18,7 @@ import io.vertx.core.json.JsonObject;
 public class VxApiClientJsonAuth {
 	/**
 	 * 验证用户是否有权限
-	 * 
-	 * @param user
+	 *
 	 * @param vertx
 	 * @param handler
 	 */

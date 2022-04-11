@@ -2,6 +2,7 @@ package com.szmirren.vxApi.core.verticle;
 
 import java.text.MessageFormat;
 
+import io.vertx.core.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -13,10 +14,6 @@ import com.szmirren.vxApi.core.common.VxApiEventBusAddressConstant;
 import com.szmirren.vxApi.core.enums.ContentTypeEnum;
 import com.szmirren.vxApi.core.enums.HTTPStatusCodeMsgEnum;
 
-import io.vertx.core.AbstractVerticle;
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
@@ -43,14 +40,14 @@ public class CURLClientVerticle extends AbstractVerticle {
 	private String thisVertxName;
 
 	@Override
-	public void start(Future<Void> fut) throws Exception {
+	public void start(Promise<Void> fut) throws Exception {
 		thisVertxName = System.getProperty("thisVertxName", "VX-API");
 		Router router = Router.router(vertx);
 		router.route().handler(BodyHandler.create());
 		router.route().handler(ResponseContentTypeHandler.create());
 		// 通过curl的方式创建网关应用
 		router.route("/curl/findAPP").produces(CONTENT_VALUE_JSON_UTF8).handler(this::findAPPbyCURL);
-		vertx.createHttpServer().requestHandler(router::accept).listen(5053, res -> {
+		vertx.createHttpServer().requestHandler(router).listen(5053, res -> {
 			if (res.succeeded()) {
 				System.out.println("The VX-API console running on port 5053");
 				fut.complete();
@@ -81,7 +78,7 @@ public class CURLClientVerticle extends AbstractVerticle {
 				LOG.info("[user: " + user + "] 访问curl模式->查看所有应用网关-->鉴权结果: " + auth);
 				// 检查用户权限并查询所有应用网关
 				if (auth) {
-					vertx.eventBus().<JsonArray>send(thisVertxName + VxApiEventBusAddressConstant.FIND_APP, null, reply -> {
+					vertx.eventBus().<JsonArray>request(thisVertxName + VxApiEventBusAddressConstant.FIND_APP, null, reply -> {
 						if (reply.succeeded()) {
 							findApp.complete(reply.result().body());
 						} else {
@@ -92,7 +89,7 @@ public class CURLClientVerticle extends AbstractVerticle {
 					rct.response().end(ResultFormat.formatAsZero(HTTPStatusCodeMsgEnum.C401));
 					findApp.fail("VX-API Manual response");
 				}
-			})).setHandler(res -> {
+			})).onComplete(res -> {
 				LOG.info("[user:" + user + "] 访问curl模式->查看所有应用网关-->执行结果: " + res.succeeded());
 				// 统一失败处理与创建文件是否成功!
 				if (res.succeeded()) {

@@ -1,14 +1,13 @@
 package com.szmirren.vxApi.core.auth;
 
 import com.szmirren.vxApi.core.common.PathUtil;
-
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.auth.AuthProvider;
 import io.vertx.ext.auth.User;
+import io.vertx.ext.auth.authentication.AuthenticationProvider;
 
 /**
  * 客户端通用权限认证的实现
@@ -16,7 +15,7 @@ import io.vertx.ext.auth.User;
  * @author <a href="http://szmirren.com">Mirren</a>
  *
  */
-public class VxApiClientAuthProviderImpl implements AuthProvider {
+public class VxApiClientAuthProviderImpl implements AuthenticationProvider {
 	private Vertx vertx;
 
 	public VxApiClientAuthProviderImpl(Vertx vertx) {
@@ -38,8 +37,7 @@ public class VxApiClientAuthProviderImpl implements AuthProvider {
 					if (users.getValue(username) instanceof JsonObject) {
 						JsonObject user = users.getJsonObject(username);
 						if (pwd != null && pwd.equals(user.getString("pwd"))) {
-							VxApiClientAuthUser authUser = new VxApiClientAuthUser();
-							authUser.setPrincipal(new JsonObject().put("roles", user.getJsonArray("roles")));
+							User authUser = User.create(new JsonObject().put("roles", user.getJsonArray("roles")));
 							resultHandler.handle(Future.<User>succeededFuture(authUser));
 						} else {
 							resultHandler.handle(Future.<User>succeededFuture(null));

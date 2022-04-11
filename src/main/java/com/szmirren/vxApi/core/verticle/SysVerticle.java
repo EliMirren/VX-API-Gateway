@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
 
+import io.vertx.core.Promise;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -60,7 +61,7 @@ public class SysVerticle extends AbstractVerticle {
 	private String thisVertxName;
 
 	@Override
-	public void start(Future<Void> startFuture) throws Exception {
+	public void start(Promise<Void> startFuture) throws Exception {
 		LOG.info("start System Verticle ... ");
 		thisVertxName = System.getProperty("thisVertxName", "VX-API");
 		vertx.eventBus().consumer(thisVertxName + VxApiEventBusAddressConstant.SYSTEM_GET_INFO, this::getSysInfo);
@@ -91,8 +92,8 @@ public class SysVerticle extends AbstractVerticle {
 	 */
 	public void getSysInfo(Message<JsonObject> msg) {
 		// 获取在线网关应用与API的数量
-		Future<JsonObject> countResult = Future.future();
-		vertx.eventBus().<JsonObject>send(thisVertxName + VxApiEventBusAddressConstant.DEPLOY_APP_COUNT, null, res -> {
+		Promise<JsonObject> countResult = Promise.promise();
+		vertx.eventBus().<JsonObject>request(thisVertxName + VxApiEventBusAddressConstant.DEPLOY_APP_COUNT, null, res -> {
 			if (res.succeeded()) {
 				JsonObject result = res.result().body();
 				if (LOG.isDebugEnabled()) {
@@ -104,7 +105,7 @@ public class SysVerticle extends AbstractVerticle {
 				LOG.error("执行获取在线应用的数量-->失败:", res.cause());
 			}
 		});
-		countResult.setHandler(res -> {
+		countResult.future().onComplete(res -> {
 			availableProcessors = Runtime.getRuntime().availableProcessors();
 			totalMemory = Runtime.getRuntime().totalMemory();
 			freeMemory = Runtime.getRuntime().freeMemory();
@@ -122,7 +123,7 @@ public class SysVerticle extends AbstractVerticle {
 			result.put("requestVxApiCount", requestVxApiCount);
 			result.put("requestHttpApiCount", requestHttpApiCount);
 			result.put("currentHttpApiProcessingCount", currentHttpApiProcessingCount);
-			vertx.eventBus().<JsonObject>send(thisVertxName + VxApiEventBusAddressConstant.FIND_BLACKLIST, null, balckList -> {
+			vertx.eventBus().<JsonObject>request(thisVertxName + VxApiEventBusAddressConstant.FIND_BLACKLIST, null, balckList -> {
 				if (res.succeeded()) {
 					JsonObject body = balckList.result().body();
 					if (body.getValue(VxApiDATAStoreConstant.BLACKLIST_CONTENT_NAME) instanceof JsonArray) {
@@ -229,7 +230,7 @@ public class SysVerticle extends AbstractVerticle {
 	 * @param msg
 	 */
 	public void findIpList(Message<JsonObject> msg) {
-		vertx.eventBus().<JsonObject>send(thisVertxName + VxApiEventBusAddressConstant.FIND_BLACKLIST, null, res -> {
+		vertx.eventBus().<JsonObject>request(thisVertxName + VxApiEventBusAddressConstant.FIND_BLACKLIST, null, res -> {
 			if (res.succeeded()) {
 				JsonObject body = res.result().body();
 				if (body.getValue(VxApiDATAStoreConstant.BLACKLIST_CONTENT_NAME) instanceof JsonArray) {
@@ -257,7 +258,7 @@ public class SysVerticle extends AbstractVerticle {
 			if (msg.body().getValue("ipList") instanceof JsonArray) {
 				JsonArray array = msg.body().getJsonArray("ipList");
 				JsonObject body = new JsonObject().put("blacklistName", "blacklist").put("blacklistBody", array);
-				vertx.eventBus().<Integer>send(thisVertxName + VxApiEventBusAddressConstant.REPLACE_BLACKLIST, body, res -> {
+				vertx.eventBus().<Integer>request(thisVertxName + VxApiEventBusAddressConstant.REPLACE_BLACKLIST, body, res -> {
 					if (res.succeeded()) {
 						msg.reply(res.result().body());
 						// 广播更新自己ip地址

@@ -6,7 +6,7 @@ import java.util.Map;
 
 import io.netty.handler.codec.http.QueryStringDecoder;
 import io.vertx.core.MultiMap;
-import io.vertx.core.http.CaseInsensitiveHeaders;
+
 
 /**
  * HTTP相关的工具
@@ -42,7 +42,7 @@ public class HttpUtils {
 			}
 			QueryStringDecoder decode = new QueryStringDecoder(uri, charset, false);
 			Map<String, List<String>> paramMap = decode.parameters();
-			MultiMap params = new CaseInsensitiveHeaders();
+			MultiMap params = MultiMap.caseInsensitiveMultiMap();
 			if (!paramMap.isEmpty()) {
 				for (Map.Entry<String, List<String>> entry : paramMap.entrySet()) {
 					params.add(entry.getKey(), entry.getValue());
@@ -50,7 +50,7 @@ public class HttpUtils {
 			}
 			return params;
 		} catch (Exception e) {
-			return new CaseInsensitiveHeaders();
+			return MultiMap.caseInsensitiveMultiMap();
 		}
 	}
 }
